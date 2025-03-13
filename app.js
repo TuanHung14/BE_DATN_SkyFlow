@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cors = require('cors');
 
 //Tự mình xuất ra 
 const swaggerSetup = require('./swagger');
@@ -18,6 +19,15 @@ const userRouter = require('./routes/userRouter');
 
 //Sử dụng engine Pug
 app.set('view engine', 'pug');
+
+//Implement cors
+app.use(cors());
+app.options('*', cors());
+
+// app.use(cors({
+//     origin: 'https://example.com'
+// }));
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 
