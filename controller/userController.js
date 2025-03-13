@@ -1,0 +1,95 @@
+const multer = require('multer');
+const sharp = require('sharp');
+const User = require('../model/userModel');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
+const Factory = require('./handleFactory');
+
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, 'public/img/users');
+//     },
+//     filename: function (req, file, cb) {
+//         const ext = file.mimetype.split('/')[1];
+//         cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+//     }
+// })
+
+const multerStorage = multer.memoryStorage();
+const multerFilter = (req, file, cb) => {
+    if(file.mimetype.startsWith('image')) {
+        cb(null, true);
+    } else{
+        cb(new AppError('Please upload an image file', 400), false);
+    }
+}
+
+
+const upload = multer({
+    multerStorage,
+    fileFilter: multerFilter
+});
+
+const filterObj = (obj, ...allowedFields) => {
+    const newObj = {};
+    Object.keys(obj).forEach(el => {
+        if(allowedFields.includes(el)) newObj[el] = obj[el];
+    })
+    return newObj;
+};
+
+
+
+exports.uploadUserPhoto = upload.single('photo');
+
+//resize upload
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+    if(!req.file) return next();
+
+    req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+    await sharp(req.file.buffer).resize(500, 500).toFormat('jpeg').jpeg({quantity: 90}).toFile(`public/img/users/${req.file.filename}`);
+    
+    next();
+});
+
+exports.getMe = (req, res, next) => {
+    req.params.id = req.user.id;
+    next();
+}
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+    if(req.body.password || req.body.passwordConfirmation) {
+        return next(new AppError('This route is not for password updates. Please use /updateMyPassword', 400));
+    }
+
+    const filteredBody = filterObj(req.body, 'name', 'email');
+    if(req.file) filteredBody.photo = req.file.filename;
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {
+        new: true,
+        runValidators: true
+    });
+
+    res.status(200).json({
+        status:'success',
+        data: {
+            user: updatedUser
+        }
+    });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+    await User.findByIdAndUpdate(req.user._id, {
+        isActive: false,
+    });
+    res.status(204).json({
+        status:'success',
+        data: null
+    });
+});
+
+exports.getAllUsers =Factory.getAll(User);
+exports.getUser = Factory.getOne(User);
+exports.updateUser = Factory.updateOne(User);
+exports.deleteUser = Factory.deleteOne(User);
+

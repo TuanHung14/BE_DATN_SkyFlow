@@ -1,0 +1,71 @@
+// Thư Viện
+const express = require('express');
+const path = require('path');
+const app = express();
+const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+
+//Tự mình xuất ra 
+const swaggerSetup = require('./swagger');
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controller/errorController');
+const userRouter = require('./routes/userRouter');
+
+//Sử dụng engine Pug
+app.set('view engine', 'pug');
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+//Hiện endpoint trong terminal
+if(process.env.NODE_ENV === 'development'){
+    app.use(morgan('dev'));
+}
+
+// Cho phép lấy cookie
+app.use(cookieParser());
+
+//Set security HTTP headers
+app.use(helmet());
+
+//Được phép gửi 100 cái requests trong 15p
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 100,
+    message: 'Too many requests from this IP, please try again in 15 minutes.'
+})
+app.use('/api', limiter);
+
+// Body parser, reading data from body into req.body
+app.use(express.json({ limit: "10kb" }));
+
+//Làm sạch dữ liệu chống lại việc tiêm truy vấn NO SQL
+app.use(mongoSanitize());
+
+//Làm sạch dữ liệu chống lại XSS
+app.use(xss());
+
+// Tránh sự trùng lặp khi truy vấn filter có thể ngoại trừ trong whitelist
+app.use(hpp({
+    whitelist:[]
+ }));
+
+//Swagger
+swaggerSetup(app);
+
+// Use Route by middleware
+app.use('/api/v1/users', userRouter);
+
+// Error handling middleware nếu kh có api n
+app.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
+});
+
+// Global error handling middleware
+app.use(globalErrorHandler);
+
+module.exports = app;

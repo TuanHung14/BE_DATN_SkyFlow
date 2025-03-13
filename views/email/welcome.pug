@@ -1,0 +1,27 @@
+extends baseEmail
+
+block content
+  p Xin chào #{firstName},
+  p Chào mừng bạn đến với SkyFlow, nền tảng thương mại điện tử hàng đầu! Chúng tôi rất vui mừng khi có bạn tham gia cùng cộng đồng của chúng tôi 🎉
+  p Tài khoản của bạn đã được tạo thành công. Bây giờ bạn có thể dễ dàng mua sắm trên sàn thương mại của chúng tôi với nhiều ưu đãi hấp dẫn.
+  table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    tbody
+      tr
+        td(align='left')
+          table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+              tr
+                td
+                  a(href=`${url}`, target='_blank') Khám phá ngay
+  p Bạn đang muốn kinh doanh trên SkyFlow? Đăng ký cửa hàng của riêng bạn để bắt đầu bán hàng và tiếp cận hàng triệu khách hàng tiềm năng!
+  table.btn.btn-secondary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    tbody
+      tr
+        td(align='left')
+          table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+              tr
+                td
+                  a(href=`${url}`, target='_blank') Cập nhập trang cá nhân tại đây
+  p Nếu bạn cần hỗ trợ hoặc có bất kỳ câu hỏi nào, đội ngũ chăm sóc khách hàng của chúng tôi luôn sẵn sàng phục vụ bạn.
+  p - Đội ngũ SkyFlow
