@@ -64,7 +64,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         default: "local"
       },
-});
+}, { timestamps: true});
 
 // document middleware
 // save chỉ có tác dụng với .save hay .create

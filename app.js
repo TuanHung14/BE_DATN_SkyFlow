@@ -16,6 +16,7 @@ const swaggerSetup = require('./swagger');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controller/errorController');
 const userRouter = require('./routes/userRouter');
+const fileRouter = require('./routes/fileRouter');
 
 //Sử dụng engine Pug
 app.set('view engine', 'pug');
@@ -69,6 +70,7 @@ swaggerSetup(app);
 
 // Use Route by middleware
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/file', fileRouter);
 
 // Error handling middleware nếu kh có api n
 app.all('*', (req, res, next) => {

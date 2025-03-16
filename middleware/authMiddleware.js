@@ -31,7 +31,6 @@ const auth = catchAsync(async (req, res, next) => {
     next();
 })
 
-// eslint-disable-next-line arrow-body-style
 const restrictTo = (...roles) => {
     return (req, res, next) => {
         if(!roles.includes(req.user.role)) {
