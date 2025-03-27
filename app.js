@@ -11,7 +11,9 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cors = require('cors');
 
-//Tự mình xuất ra 
+//Tự mình xuất ra
+const initCronJobs = require('./cron_jobs/cronjobs');
+const initializeSocket = require('./config/socket');
 const swaggerSetup = require('./swagger');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controller/errorController');
@@ -64,6 +66,12 @@ app.use(xss());
 app.use(hpp({
     whitelist:[]
  }));
+
+//Chạy cron cron_jobs
+initCronJobs();
+
+//Kết nối socket
+initializeSocket();
 
 //Swagger
 swaggerSetup(app);
