@@ -1,13 +1,14 @@
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
+const AppError = require("../utils/appError");
 
 
 const storage = new CloudinaryStorage(
     {
         cloudinary: cloudinary,
         params: {
-            folder: 'public/images',
+            folder: 'SkyFlow/images',
             allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'],
             // transformation: [{ width: 1000, height: 1000, crop: 'limit' }]
           }
@@ -18,7 +19,8 @@ const checkFileFilter = (req, file, cb) => {
     if(file.mimetype.startsWith('image')) {
         cb(null, true);
     } else {
-        cb(new Error('Only image files are allowed!'), false);
+        // cb(new Error('Only image files are allowed!'), false);
+        cb(new AppError('Only image files are allowed!', 500), false);
     }
 }
 
@@ -26,4 +28,4 @@ module.exports = multer({
     storage,
     fileFilter: checkFileFilter,
     limits: { fileSize: 1024 * 1024 * 5 } //5MB
-})
+});
