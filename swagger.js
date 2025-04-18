@@ -1,6 +1,14 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+let url = 'http://localhost:3000';
+let description = 'Development server';
+
+if(process.env.NODE_ENV !== 'development'){
+    url = process.env.CLIENT_HOST;
+    description = 'Production server';
+}
+
 const swaggerDefinition = {
     openapi: '3.0.0',
     info: {
@@ -11,12 +19,8 @@ const swaggerDefinition = {
     },
     servers: [
         {
-            url: 'http://localhost:3000',
-            description: 'Development server',
-        },
-        {
-            url: 'https://api-skyflow.onrender.com',
-            description: 'Production server',
+            url: url,
+            description: description,
         },
     ],
 };
