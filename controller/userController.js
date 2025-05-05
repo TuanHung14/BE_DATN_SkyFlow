@@ -1,5 +1,3 @@
-const multer = require('multer');
-const sharp = require('sharp');
 const User = require('../model/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
@@ -21,12 +19,13 @@ exports.getMe = (req, res, next) => {
 }
 
 exports.updateMe = catchAsync(async (req, res, next) => {
-    if(req.body.password || req.body.passwordConfirmation) {
+    if(req.body.password) {
         return next(new AppError('This route is not for password updates. Please use /updateMyPassword', 400));
     }
 
+
     //Sử dụng filterObj để chỉ lấy ra các field cần thiết
-    const filteredBody = filterObj(req.body, 'name', 'email');
+    const filteredBody = filterObj(req.body, 'name', 'email', 'photo', 'phone', 'dateOfBirth');
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {
         new: true,
@@ -41,18 +40,24 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.deleteMe = catchAsync(async (req, res, next) => {
-    await User.findByIdAndUpdate(req.user._id, {
-        isActive: false,
-    });
-    res.status(204).json({
-        status:'success',
-        data: null
-    });
-});
+// exports.deleteMe = catchAsync(async (req, res, next) => {
+//     await User.findByIdAndUpdate(req.user._id, {
+//         isActive: false,
+//     });
+//     res.status(204).json({
+//         status:'success',
+//         data: null
+//     });
+// });
 
-exports.getAllUsers =Factory.getAll(User);
+exports.fieldUpdate = (req, res, next) => {
+    req.body = filterObj(req.body, 'name', 'email', 'role');
+    next();
+}
+
+
+exports.getAllUsers = Factory.getAll(User);
 exports.getUser = Factory.getOne(User);
 exports.updateUser = Factory.updateOne(User);
-exports.deleteUser = Factory.deleteOne(User);
+// exports.deleteUser = Factory.deleteOne(User);
 

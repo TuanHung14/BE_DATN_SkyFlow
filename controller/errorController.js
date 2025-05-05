@@ -19,12 +19,12 @@ const handleValidatorErrorDB = (err) => {
 };
 
 const handleJWTError = () => {
-    const message = `Invalid token. Please log in again.`;
+    const message = `Token không hợp lệ! Vui lòng đăng nhập lại`;
     return new AppError(message, 401);
 }
 
 const handleJWTExpiredError = () => {
-    const message = `Token expired. Please log in again.`;
+    const message = `Token đã hết hạn! Vui lòng đăng nhập lại`;
     return new AppError(message, 401);
 }
 
