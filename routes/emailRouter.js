@@ -1,0 +1,82 @@
+const express = require('express');
+const otpController = require('../controller/otpController');
+const router = express.Router();
+
+/**
+ * @swagger
+ * /api/v1/email/verify:
+ *   post:
+ *     tags:
+ *       - Email
+ *     summary: Xác thực mã OTP
+ *     description: Xác thực mã OTP cho đăng ký hoặc quên mật khẩu
+ *     operationId: verifyOTP
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - code
+ *               - type
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               code:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [forgotPassword, register]
+ *     responses:
+ *       200:
+ *         description: Xác thực OTP thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ hoặc mã OTP không hợp lệ/hết hạn
+ *       404:
+ *         description: Không tìm thấy người dùng với email đã cung cấp
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+router.post('/verify', otpController.verifyOTP);
+
+/**
+ * @swagger
+ * /api/v1/email/resend:
+ *   post:
+ *     tags:
+ *       - Email
+ *     summary: Gửi lại mã OTP
+ *     description: Gửi lại mã OTP cho người dùng dựa trên loại hành động (đăng ký hoặc quên mật khẩu)
+ *     operationId: resendOTP
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - type
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               type:
+ *                 type: string
+ *                 enum: [forgotPassword, register]
+ *     responses:
+ *       200:
+ *         description: Mã OTP đã được gửi lại thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ hoặc người dùng chưa/đã xác thực
+ *       404:
+ *         description: Không tìm thấy người dùng với email đã cung cấp
+ *       500:
+ *         description: Lỗi khi gửi mã OTP
+ */
+router.post('/resend', otpController.resendOTP);
+
+module.exports = router;
