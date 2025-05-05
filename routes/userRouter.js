@@ -149,7 +149,6 @@ router.post('/forgotPassword', authController.forgotPassword);
  *       - name: token
  *         in: path
  *         required: true
- *         description: Token được gửi qua email để xác thực đặt lại mật khẩu
  *         schema:
  *           type: string
  *           example: 0c6cfa8fe3b54f28958e36d84e7a145d
