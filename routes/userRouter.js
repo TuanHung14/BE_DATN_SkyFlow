@@ -12,8 +12,7 @@ const router = express.Router();
  *   post:
  *     tags:
  *       - Users
- *     summary: Login for users
- *     description: Authenticate user and return token
+ *     summary: Đăng nhập tài khoản
  *     operationId: loginUser
  *     requestBody:
  *       required: true
@@ -44,8 +43,7 @@ router.post('/login', authController.login);
  *   post:
  *     tags:
  *       - Users
- *     summary: Signup for users
- *     description: Create a new user
+ *     summary: Đăng ký tài khoản
  *     operationId: signupUser
  *     requestBody:
  *       required: true
@@ -80,8 +78,7 @@ router.post('/signup', authController.signup);
  *   post:
  *     tags:
  *       - Users
- *     summary: Login with Google
- *     description: Authenticate user using Google OAuth token
+ *     summary: Login Google
  *     operationId: loginGoogle
  *     requestBody:
  *       required: true
@@ -110,7 +107,6 @@ router.post('/loginGoogle', authController.googleLogin);
  *     tags:
  *       - Users
  *     summary: Gửi OTP quên mật khẩu
- *     description: Gửi mã OTP đến email của người dùng để đặt lại mật khẩu
  *     operationId: forgotPassword
  *     requestBody:
  *       required: true
@@ -143,7 +139,6 @@ router.post('/forgotPassword', authController.forgotPassword);
  *     tags:
  *       - Users
  *     summary: Đặt lại mật khẩu
- *     description: Đặt lại mật khẩu mới bằng cách cung cấp email, mật khẩu mới và token được gửi qua email
  *     operationId: resetPassword
  *     parameters:
  *       - name: token
@@ -186,7 +181,6 @@ router.patch('/resetPassword/:token', authController.resetPassword);
  *     tags:
  *       - Users
  *     summary: Làm mới access token
- *     description: Dùng refresh token trong cookie để tạo access token mới
  *     operationId: refreshToken
  *     responses:
  *       200:
@@ -207,7 +201,6 @@ router.use(auth);
  *     tags:
  *       - Users
  *     summary: Logout user
- *     description: Clears the refreshToken cookie and invalidates the session
  *     security:
  *       - bearer: []
  *     responses:
@@ -223,7 +216,6 @@ router.post('/logout', authController.logout);
  *     tags:
  *       - Users
  *     summary: Cập nhật mật khẩu người dùng
- *     description: Cho phép người dùng đã đăng nhập cập nhật mật khẩu của họ
  *     operationId: updateMyPassword
  *     security:
  *       - bearer: []
@@ -260,7 +252,6 @@ router.patch('/updateMyPassword', authController.updatePassword);
  *     tags:
  *       - Users
  *     summary: Lấy thông tin người dùng hiện tại
- *     description: Trả về thông tin chi tiết của người dùng đã đăng nhập
  *     operationId: getMe
  *     security:
  *       - bearer: []
@@ -283,7 +274,6 @@ router.get('/me', userController.getMe, userController.getUser);
  *     tags:
  *       - Users
  *     summary: Cập nhật thông tin cá nhân
- *     description: Cho phép người dùng đã đăng nhập cập nhật thông tin cá nhân của họ (không bao gồm mật khẩu)
  *     operationId: updateMe
  *     security:
  *       - bearer: []
@@ -331,7 +321,6 @@ router.patch('/updateMe',userController.updateMe);
  *     tags:
  *       - Users
  *     summary: Lấy danh sách người dùng
- *     description: Trả về danh sách tất cả người dùng với các tùy chọn lọc, sắp xếp, giới hạn trường và phân trang
  *     operationId: getAllUsers
  *     security:
  *       - bearer: []
@@ -387,7 +376,6 @@ router.route('/').get(userController.getAllUsers);
  *     tags:
  *       - Users
  *     summary: Lấy thông tin người dùng theo ID
- *     description: Trả về thông tin chi tiết của một người dùng dựa trên ID
  *     operationId: getUser
  *     security:
  *       - bearer: []
@@ -397,7 +385,6 @@ router.route('/').get(userController.getAllUsers);
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của người dùng cần lấy thông tin
  *     responses:
  *       200:
  *         description: Lấy thông tin người dùng thành công
@@ -411,7 +398,6 @@ router.route('/').get(userController.getAllUsers);
  *     tags:
  *       - Users
  *     summary: Cập nhật thông tin người dùng theo ID
- *     description: Cập nhật thông tin người dùng dựa trên ID (chỉ cho phép cập nhật name và email)
  *     operationId: updateUser
  *     security:
  *       - bearer: []
@@ -421,7 +407,6 @@ router.route('/').get(userController.getAllUsers);
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của người dùng cần cập nhật
  *     requestBody:
  *       required: true
  *       content:

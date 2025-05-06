@@ -11,7 +11,7 @@ const {uploadFile} = require('../controller/fileController');
  *     tags:
  *       - File
  *     summary: Upload hình ảnh
- *     description: Tải lên nhiều hình ảnh lên Cloudinary (tối đa 10 ảnh, mỗi ảnh ≤ 5MB)
+ *     description: (Tối đa 10 ảnh, mỗi ảnh ≤ 5MB)
  *     operationId: uploadFile
  *     security:
  *       - bearer: []
