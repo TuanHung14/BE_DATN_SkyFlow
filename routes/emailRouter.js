@@ -9,7 +9,6 @@ const router = express.Router();
  *     tags:
  *       - Email
  *     summary: Xác thực mã OTP
- *     description: Xác thực mã OTP cho đăng ký hoặc quên mật khẩu
  *     operationId: verifyOTP
  *     requestBody:
  *       required: true
@@ -49,7 +48,6 @@ router.post('/verify', otpController.verifyOTP);
  *     tags:
  *       - Email
  *     summary: Gửi lại mã OTP
- *     description: Gửi lại mã OTP cho người dùng dựa trên loại hành động (đăng ký hoặc quên mật khẩu)
  *     operationId: resendOTP
  *     requestBody:
  *       required: true
