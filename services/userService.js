@@ -48,8 +48,29 @@ const verifyToken = async (token) => {
     return payload;
 }
 
+const findUser = async (email, select = "") => {
+    if(select)
+        return await User.findOne({ email }).select(select);
+    return await User.findOne({ email })
+}
+
+const updateOne = async (userId, payload, isValidate = false) => {
+    const user =  await User.findByIdAndUpdate(
+        userId,
+        payload,
+        {
+            new: true,
+            runValidators: isValidate ? true : false
+        }
+    );
+
+    return user;
+}
+
 module.exports = {
     signToken,
     createSendToken,
-    verifyToken
+    verifyToken,
+    findUser,
+    updateOne
 }

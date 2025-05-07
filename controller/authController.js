@@ -57,7 +57,7 @@ exports.login = catchAsync(async (req, res, next) => {
         return next(new AppError('Vui lòng cung cấp email và mật khẩu', 400));
     }
 
-    const user = await User.findOne({ email }).select( "+password" );
+    const user = await userService.findUser(email, '+password');
 
     if(!user ||!(await user.correctPassword(password, user.password))) {
         return next(new AppError('Email hoặc mật khẩu không chính xác', 401));
@@ -74,13 +74,16 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.logout = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
     res.clearCookie('refreshToken');
-    await User.findByIdAndUpdate(userId, { refreshToken: null }, { new: true });
+    const payload = {
+        refreshToken: null
+    }
+    await userService.updateOne(userId, payload);
     res.status(200).json({ status:'success', message: 'Logged out successfully' });
 });
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
     const {email} = req.body;
-    const user = await User.findOne({ email });
+    const user = await userService.findUser(email);
 
     if(!user) {
         return next(new AppError('Không tìm thấy người dùng nào với email này!', 404));
@@ -112,7 +115,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
         return next(new AppError('Vui lòng cung cấp email và mật khẩu mới', 400));
     }
 
-    const user = await User.findOne({ email });
+    const user = await userService.findUser(email);
 
     if(!user) {
         return next(new AppError('Không tìm thấy người dùng nào với email này!', 404));
@@ -155,14 +158,14 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
 
     const { email, name, sub, picture } = payload;
 
-    let account = await User.findOne({ email }).select( "+password" );
+    let account = await userService.findUser(email, "+password");
     if(!account) {
         account = await User.create({
             name,
             email,
             photo: picture,
             googleId: sub,
-            isverified: true,
+            isVerified: true,
         });
     }else if(!account.googleId) {
         account.googleId = sub;
