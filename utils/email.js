@@ -11,7 +11,6 @@ module.exports = class Email {
     }
 
     newTransport(){
-        //Producttion thì gửi thật còn developer thì gửi qua mail
         if(process.env.NODE_ENV === 'production') {
             // Sendgrid
             return nodemailer.createTransport({

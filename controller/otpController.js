@@ -4,6 +4,7 @@ const User = require('../model/userModel');
 const otpService = require('../services/otpService');
 const resetPasswordService = require('../services/resetPasswordService');
 const Email = require("../utils/email");
+const userService = require("../services/userService");
 
 exports.verifyOTP = catchAsync(async (req, res, next) => {
     const {email, code, type} = req.body;
@@ -11,9 +12,7 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
         return next(new AppError('Vui lòng nhập đầy đủ thông tin', 400));
     }
 
-    const user = await User.findOne({
-        email
-    });
+    const user = await userService.findUser(email);
 
     if (!user) {
         return next(new AppError('Người dùng không tồn tại', 404));
@@ -37,11 +36,7 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
                 },
             });
         case 'register':
-            const updatedUser = await User.findByIdAndUpdate(
-                user._id,
-                {isVerified: true},
-                {new: true}
-            );
+            await userService.updateOne(user._id,{isVerified: true});
             return res.status(200).json({
                 status: 'success',
                 message: 'Xác thực thành công',
@@ -56,9 +51,7 @@ exports.resendOTP = catchAsync(async (req, res, next) => {
         return next(new AppError('Vui lòng nhập đầy đủ thông tin', 400));
     }
 
-    const user = await User.findOne({
-        email
-    });
+    const user = await userService.findUser(email);
 
     if(!user) {
         return next(new AppError('Người dùng không tồn tại', 404));
