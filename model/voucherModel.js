@@ -35,7 +35,7 @@ const voucherSchema = new mongoose.Schema(
     },
     is_active: {
       type: Boolean,
-      required: [true, "Không được để trống"],
+      default: true,
     },
   },
   { timestamps: true }
