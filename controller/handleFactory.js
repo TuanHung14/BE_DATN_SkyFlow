@@ -48,8 +48,8 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
 
 exports.updateOne = Model => catchAsync(async (req, res, next) => {
     const doc = await Model.findByIdAndUpdate(req.params.id, req.body, {
-        new: true, // trả về tour mới nhất vừa cập nhập
-        runValidators: true //validators trong schema
+        new: true,
+        runValidators: true
     });
 
     if(!doc) {

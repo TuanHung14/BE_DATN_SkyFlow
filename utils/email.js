@@ -1,19 +1,16 @@
-
 const nodemailer = require('nodemailer');
-
 const {htmlToText} = require('html-to-text');
 const pug = require('pug');
 
 module.exports = class Email {
-    constructor(user, url) {
+    constructor(user, emailContent) {
         this.to = user.email;
-        this.firstName = user.name.split(' ')[0];
-        this.url = url;
+        this.firstName = user.name;
+        this.emailContent = emailContent;
         this.from = `SkyFlow <${process.env.EMAIL_FROM}>`;
     }
 
     newTransport(){
-        //Producttion thì gửi thật còn developer thì gửi qua mail
         if(process.env.NODE_ENV === 'production') {
             // Sendgrid
             return nodemailer.createTransport({
@@ -38,7 +35,7 @@ module.exports = class Email {
     async send(template, subject){
         const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
             firstName: this.firstName,
-            url: this.url,
+            emailContent: this.emailContent,
             subject
         });
 
@@ -54,11 +51,11 @@ module.exports = class Email {
     }
 
     async sendWelcome(){
-        await this.send('welcome', 'Welcome to the Natours Family!');
+        await this.send('welcome', 'Chào mừng bạn đến với SkyFlow');
     }
 
     async sendPasswordReset(){
-        await this.send('passwordReset', 'Your password reset token (valid for only 10 minutes)');
+        await this.send('passwordReset', 'Mã đặt lại mật khẩu của bạn (chỉ có giá trị trong 10 phút)');
     }
 }
 

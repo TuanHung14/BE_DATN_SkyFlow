@@ -12,7 +12,7 @@ const auth = catchAsync(async (req, res, next) => {
         token = req.headers.authorization.split(' ')[1];
     }
     if(!token) {
-        return next(new AppError('You are not logged in', 401));
+        return next(new AppError('Bạn chưa đăng nhập', 401));
     }
     // promisify để chuyển hàm jwt.verify thành promises
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_ACCESS_SECRET);
@@ -20,11 +20,11 @@ const auth = catchAsync(async (req, res, next) => {
     const currentUser = await User.findById(decoded.id);
 
     if(!currentUser) {
-        return next(new AppError('The token belonging to this User does no longer exists', 401));
+        return next(new AppError('Token thuộc về người dùng này không còn tồn tại', 401));
     }
 
     if(currentUser.changePasswordAfter(decoded.iat)) {
-        return next(new AppError('User recently changed password! Please log in again', 401));
+        return next(new AppError('Người dùng gần đây đã thay đổi mật khẩu! Vui lòng đăng nhập lại', 401));
     }
 
     req.user = currentUser;
