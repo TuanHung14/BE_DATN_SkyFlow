@@ -34,9 +34,9 @@ const voucherSchema = new mongoose.Schema(
   }
 );
 
-voucherSchema.methods.isValid = function () {
-  return this.status === "active" && this.expiry_date > new Date();
-};
+// voucherSchema.methods.isValid = function () {
+//   return this.status === "active" && this.expiry_date > new Date();
+// };
 
 const Voucher = mongoose.model("Voucher", voucherSchema);
 module.exports = Voucher;

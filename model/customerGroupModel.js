@@ -18,11 +18,19 @@ const customerGroupSchema = new mongoose.Schema(
     },
     min_age: {
       type: Number,
+      min: [0, "min_age must be >= 0"],
       required: true,
     },
     max_age: {
       type: Number,
       required: true,
+      min: [0, "max_age must be >= 0"],
+      validate: {
+        validator: function (value) {
+          return value > this.min_age;
+        },
+        message: "max_age must be greater than min_age",
+      },
     },
   },
   { timestamps: true }

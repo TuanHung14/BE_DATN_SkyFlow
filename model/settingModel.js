@@ -6,10 +6,13 @@ const settingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    address: String,
-    contact_email: String,
-    phone_number: String,
-    logo_url: String,
+    address: {
+      type: String,
+      required: true,
+    },
+    contact_email: { type: String, required: true },
+    phone_number: { type: String, required: true },
+    logo_url: { type: String, required: true },
   },
   { timestamps: true }
 );
