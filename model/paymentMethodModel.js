@@ -2,10 +2,6 @@ const mongoose = require("mongoose");
 
 const paymentMethodSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: [true, "Không được để trống"],
-    },
     type: {
       type: String,
       enum: ["Tiền mặt", "VnPay", "Momo"],
