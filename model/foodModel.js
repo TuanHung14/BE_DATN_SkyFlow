@@ -4,23 +4,23 @@ const foodSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Không được để trống"],
     },
     type: {
       type: String,
-      enum: ["drink", "snack", "combo"], // bạn có thể thay đổi giá trị enum tùy theo hệ thống
-      required: true,
+      enum: ["Đồ uống", "Thức ăn", "Combo"], // bạn có thể thay đổi giá trị enum tùy theo hệ thống
+      required: [true, "Không được để trống"],
     },
     price: {
       type: Number,
-      required: true,
+      required: [true, "Không được để trống"],
     },
     image_url: String,
     description: String,
     status: {
       type: String,
-      enum: ["available", "unavailable"],
-      default: "available",
+      enum: ["Còn", "Hết"],
+      default: "Còn",
     },
   },
   { timestamps: true }

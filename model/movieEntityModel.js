@@ -4,12 +4,12 @@ const movieEntitySchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["director", "genre", "cast"],
-      required: true,
+      enum: ["Đạo diễn", "Thể loại", "Diễn viên"],
+      required: [true, "Không được để trống"],
     },
     name: {
       type: String,
-      required: true,
+      required: [true, "Không được để trống"],
     },
   },
   { timestamps: true }

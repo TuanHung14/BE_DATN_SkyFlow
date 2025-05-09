@@ -5,11 +5,11 @@ const customerGroupSchema = new mongoose.Schema(
     age_type: {
       type: String,
       enum: ["child", "teen", "adult", "senior"],
-      required: true,
+      required: [true, "Không được để trống"],
     },
     description: {
       type: String,
-      required: true,
+      required: [true, "Không được để trống"],
     },
     status: {
       type: String,
@@ -18,18 +18,18 @@ const customerGroupSchema = new mongoose.Schema(
     },
     min_age: {
       type: Number,
-      min: [0, "min_age must be >= 0"],
-      required: true,
+      min: [0, "Tuổi không được nhỏ hơn 0"],
+      required: [true, "Không được để trống"],
     },
     max_age: {
       type: Number,
-      required: true,
-      min: [0, "max_age must be >= 0"],
+      required: [true, "Không được để trống"],
+      min: [0, "Tuổi không được nhỏ hơn 0"],
       validate: {
         validator: function (value) {
           return value > this.min_age;
         },
-        message: "max_age must be greater than min_age",
+        message: "Không được nhỏ hơn tuổi tối thiểu",
       },
     },
   },

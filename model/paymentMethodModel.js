@@ -4,12 +4,12 @@ const paymentMethodSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Tên phương thức thanh toán là bắt buộc"],
+      required: [true, "Không được để trống"],
     },
     type: {
       type: String,
-      enum: ["cash", "card", "e-wallet", "bank_transfer"],
-      required: true,
+      enum: ["Tiền mặt", "VnPay", "Momo"],
+      required: [true, "Không được để trống"],
     },
     status: {
       type: String,

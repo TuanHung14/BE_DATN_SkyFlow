@@ -4,39 +4,41 @@ const voucherSchema = new mongoose.Schema(
   {
     voucher_code: {
       type: String,
-      required: [true, "Mã voucher là bắt buộc"],
+      required: [true, "Không được để trống"],
       unique: true,
+      trim: true,
     },
-    discount_type: {
+    voucher_name: {
       type: String,
-      enum: ["percentage", "fixed"],
-      required: true,
+      required: [true, "Không được để trống"],
+      trim: true,
     },
     discount_value: {
       type: Number,
-      required: true,
+      required: [true, "Không được để trống"],
+      min: 0,
     },
-    min_order_value: {
+    points: {
       type: Number,
+      required: [true, "Không được để trống"],
+      min: 0,
     },
-    expiry_date: {
-      type: Date,
-      required: true,
-    },
-    status: {
+    description: {
       type: String,
-      enum: ["active", "expired", "used"],
-      default: "active",
+      required: [true, "Không được để trống"],
+      trim: true,
+    },
+    image_url: {
+      type: String,
+      required: [true, "Không được để trống"],
+      trim: true,
+    },
+    is_active: {
+      type: Boolean,
+      required: [true, "Không được để trống"],
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// voucherSchema.methods.isValid = function () {
-//   return this.status === "active" && this.expiry_date > new Date();
-// };
-
-const Voucher = mongoose.model("Voucher", voucherSchema);
-module.exports = Voucher;
+module.exports = mongoose.model("Voucher", voucherSchema);
