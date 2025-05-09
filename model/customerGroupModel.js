@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const customerGroupSchema = new mongoose.Schema(
   {
-    age_type: {
+    ageType: {
       type: String,
       enum: ["child", "teen", "adult", "senior"],
       required: [true, "Không được để trống"],
@@ -16,12 +16,12 @@ const customerGroupSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
-    min_age: {
+    minAge: {
       type: Number,
       min: [0, "Tuổi không được nhỏ hơn 0"],
       required: [true, "Không được để trống"],
     },
-    max_age: {
+    maxAge: {
       type: Number,
       required: [true, "Không được để trống"],
       min: [0, "Tuổi không được nhỏ hơn 0"],

@@ -2,18 +2,18 @@ const mongoose = require("mongoose");
 
 const voucherSchema = new mongoose.Schema(
   {
-    voucher_code: {
+    voucherCode: {
       type: String,
       required: [true, "Không được để trống"],
       unique: true,
       trim: true,
     },
-    voucher_name: {
+    voucherName: {
       type: String,
       required: [true, "Không được để trống"],
       trim: true,
     },
-    discount_value: {
+    discountValue: {
       type: Number,
       required: [true, "Không được để trống"],
       min: 0,
@@ -28,12 +28,12 @@ const voucherSchema = new mongoose.Schema(
       required: [true, "Không được để trống"],
       trim: true,
     },
-    image_url: {
+    imageUrl: {
       type: String,
       required: [true, "Không được để trống"],
       trim: true,
     },
-    is_active: {
+    isActive: {
       type: Boolean,
       default: true,
     },
