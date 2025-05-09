@@ -15,7 +15,7 @@ const foodSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Không được để trống"],
     },
-    image_url: String,
+    imageUrl: String,
     description: String,
     status: {
       type: String,

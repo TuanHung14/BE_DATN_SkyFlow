@@ -4,7 +4,7 @@ const customerGroupSchema = new mongoose.Schema(
   {
     ageType: {
       type: String,
-      enum: ["child", "teen", "adult", "senior"],
+      enum: ["Trẻ em", "Người lớn", "Người cao tuổi"],
       required: [true, "Không được để trống"],
     },
     description: {
