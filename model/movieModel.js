@@ -4,7 +4,7 @@ const slugify = require('slugify');
 const movieSchema = new mongoose.Schema({
     director_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'MovieEntity',
+        ref: 'MovieEntity', // Đổi thành 'Director' nếu cần
         required: [true, 'Phim phải có đạo diễn'],
         validate: {
             validator: async function(value) {
@@ -21,7 +21,8 @@ const movieSchema = new mongoose.Schema({
     },
     genres_id: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'MovieEntity',
+        ref: 'MovieEntity', // Đổi thành 'Genre' nếu cần
+        required: [true, 'Phim phải có ít nhất một thể loại'],
         validate: {
             validator: async function(value) {
                 try {
@@ -37,7 +38,8 @@ const movieSchema = new mongoose.Schema({
     }],
     cast_id: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'MovieEntity',
+        ref: 'MovieEntity', // Đổi thành 'Actor' nếu cần
+        required: [true, 'Phim phải có ít nhất một diễn viên'],
         validate: {
             validator: async function(value) {
                 try {
@@ -69,7 +71,7 @@ const movieSchema = new mongoose.Schema({
         default: 0,
         min: [0, 'Điểm đánh giá không được thấp hơn 0'],
         max: [10, 'Điểm đánh giá không được vượt quá 10'],
-        set: val => Math.round(val * 10) / 10 // Làm tròn đến 1 chữ số thập phân
+        set: val => Math.round(val * 10) / 10
     },
     ratings_quantity: {
         type: Number,
@@ -81,7 +83,6 @@ const movieSchema = new mongoose.Schema({
         required: [true, 'Phim phải có ngày khởi chiếu'],
         validate: {
             validator: function(value) {
-                // Kiểm tra ngày khởi chiếu không được sớm hơn 1 năm so với hiện tại
                 const oneYearAgo = new Date();
                 oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
                 return value >= oneYearAgo;
@@ -106,21 +107,13 @@ const movieSchema = new mongoose.Schema({
     },
     poster_url: {
         type: String,
-        required: [true, 'Phim phải có poster'],
-        validate: {
-            validator: function(v) {
-                // Kiểm tra URL cơ bản
-                return /^(http|https):\/\/[^ "]+$/.test(v);
-            },
-            message: props => `${props.value} không phải là URL hợp lệ!`
-        }
+        required: [true, 'Phim phải có poster']
     },
     trailer_url: {
         type: String,
         required: [true, 'Phim phải có trailer'],
         validate: {
             validator: function(v) {
-                // Kiểm tra đường dẫn youtube
                 return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(v);
             },
             message: props => `${props.value} không phải là URL YouTube hợp lệ!`
@@ -128,13 +121,16 @@ const movieSchema = new mongoose.Schema({
     },
     slug: {
         type: String,
-        unique: true
+        unique: true,
+        required: [true, 'Phim phải có slug']
     },
     age: {
         type: Number,
         required: [true, 'Phim phải có giới hạn độ tuổi'],
-        enum: {
-            values: [0, 13, 16, 18],
+        validate: {
+            validator: function(v) {
+                return [0, 13, 16, 18].includes(v);
+            },
             message: '{VALUE} không phải là giới hạn độ tuổi hợp lệ'
         }
     },
@@ -145,15 +141,16 @@ const movieSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    toJSON: { virtuals: true },
+    toJSON: {
+        virtuals: true,
+        transform: function(doc, ret) {
+            ret.id = ret._id;
+            delete ret._id;
+            delete ret.__v;
+            return ret;
+        }
+    },
     toObject: { virtuals: true }
-});
-
-// Tạo virtual field để lấy danh sách đánh giá của phim
-movieSchema.virtual('ratings', {
-    ref: 'Rating',
-    foreignField: 'movie_id',
-    localField: '_id'
 });
 
 // tự động tạo slug từ tên phim trước khi lưu
@@ -180,61 +177,61 @@ movieSchema.pre('save', function(next) {
 });
 
 // Phương thức tĩnh để lấy danh sách phim đang chiếu
-movieSchema.statics.getNowShowing = function() {
-    return this.find({ status: 'NOW_SHOWING' })
-               .sort('-release_date');
-};
+// movieSchema.statics.getNowShowing = function() {
+//     return this.find({ status: 'NOW_SHOWING' })
+//                .sort('-release_date');
+// };
 
 // Phương thức tĩnh để lấy danh sách phim sắp chiếu
-movieSchema.statics.getComingSoon = function() {
-    return this.find({ status: 'COMING_SOON' })
-               .sort('release_date');
-};
+// movieSchema.statics.getComingSoon = function() {
+//     return this.find({ status: 'COMING_SOON' })
+//                .sort('release_date');
+// };
 
 // Phương thức của instance để cập nhật thống kê đánh giá
-movieSchema.methods.updateRatingStats = async function() {
-    const Rating = mongoose.model('Rating');
-    const stats = await Rating.aggregate([
-        {
-            $match: { movie_id: this._id }
-        },
-        {
-            $group: {
-                _id: '$movie_id',
-                avgRating: { $avg: '$rating' },
-                count: { $sum: 1 }
-            }
-        }
-    ]);
-
-    if (stats.length > 0) {
-        this.ratings_average = stats[0].avgRating;
-        this.ratings_quantity = stats[0].count;
-    } else {
-        this.ratings_average = 0;
-        this.ratings_quantity = 0;
-    }
-
-    return this.save();
-};
+// movieSchema.methods.updateRatingStats = async function() {
+//     const Rating = mongoose.model('Rating');
+//     const stats = await Rating.aggregate([
+//         {
+//             $match: { movie_id: this._id }
+//         },
+//         {
+//             $group: {
+//                 _id: '$movie_id',
+//                 avgRating: { $avg: '$rating' },
+//                 count: { $sum: 1 }
+//             }
+//         }
+//     ]);
+//
+//     if (stats.length > 0) {
+//         this.ratings_average = stats[0].avgRating;
+//         this.ratings_quantity = stats[0].count;
+//     } else {
+//         this.ratings_average = 0;
+//         this.ratings_quantity = 0;
+//     }
+//
+//     return this.save();
+// };
 
 // tự động populate các thông tin liên quan khi query
-movieSchema.pre(/^find/, function(next) {
-    this.populate({
-        path: 'director_id',
-        select: 'name'
-    })
-    .populate({
-        path: 'genres_id',
-        select: 'name'
-    })
-    .populate({
-        path: 'cast_id',
-        select: 'name'
-    });
-
-    next();
-});
+// movieSchema.pre(/^find/, function(next) {
+//     this.populate({
+//         path: 'director_id',
+//         select: 'name'
+//     })
+//     .populate({
+//         path: 'genres_id',
+//         select: 'name'
+//     })
+//     .populate({
+//         path: 'cast_id',
+//         select: 'name'
+//     });
+//
+//     next();
+// });
 
 const Movie = mongoose.model('Movie', movieSchema);
 module.exports = Movie;

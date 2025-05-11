@@ -8,18 +8,18 @@ const priceRuleSchema = new mongoose.Schema({
       message: '{VALUE} is not a valid seat type'
     },
     required: [true, 'Seat type is required'],
-    trim: true,
-    lowercase: true
+    trim: true
   },
   age_group: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'CustomerGroup',
     required: [true, 'Age group is required'],
+    index: true,
     validate: {
       validator: async function(value) {
         const CustomerGroup = mongoose.model('CustomerGroup');
         const group = await CustomerGroup.findById(value);
-        return group ? true : false;
+        return !!group;
       },
       message: 'Customer group does not exist'
     }
@@ -35,7 +35,7 @@ const priceRuleSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  toJSON: { 
+  toJSON: {
     virtuals: true,
     transform: function(doc, ret) {
       ret.id = ret._id;
@@ -46,6 +46,8 @@ const priceRuleSchema = new mongoose.Schema({
   },
   toObject: { virtuals: true }
 });
+
+priceRuleSchema.index({ seat_type: 1, age_group: 1 }, { unique: true });
 
 const PriceRule = mongoose.model('PriceRule', priceRuleSchema);
 

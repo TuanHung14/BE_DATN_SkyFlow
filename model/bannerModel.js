@@ -11,15 +11,7 @@ const bannerSchema = new mongoose.Schema({
   image_url: {
     type: String,
     required: [true, 'URL hình ảnh banner không được để trống'],
-    trim: true,
-    validate: {
-      validator: function(value) {
-        // Regex kiểm tra URL cơ bản
-        const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-        return urlRegex.test(value);
-      },
-      message: 'URL hình ảnh không hợp lệ'
-    }
+    trim: true
   },
   status: {
     type: String,
@@ -27,16 +19,14 @@ const bannerSchema = new mongoose.Schema({
       values: ['active', 'inActive'],
       message: '{VALUE} không phải là trạng thái hợp lệ'
     },
-    default: 'active', // Mặc định là active khi tạo mới
-    required: [true, 'Trạng thái banner không được để trống'],
-    trim: true
+    default: 'active'
   }
 }, {
   timestamps: true,
   toJSON: {
     virtuals: true,
     transform: function(doc, ret) {
-      ret.id = ret._id; // Chuyển _id thành id
+      ret.id = ret._id;
       delete ret._id;
       delete ret.__v;
       return ret;
@@ -48,19 +38,19 @@ const bannerSchema = new mongoose.Schema({
 bannerSchema.index({ title: 'text' }); // tìm kiếm theo text
 
 // Phương thức để chuyển đổi trạng thái banner
-bannerSchema.methods.toggleStatus = function() {
-  this.status = this.status === 'active' ? 'inActive' : 'active';
-  return this.save();
-};
+// bannerSchema.methods.toggleStatus = function() {
+//   this.status = this.status === 'active' ? 'inActive' : 'active';
+//   return this.save();
+// };
 
 // Phương thức static để lấy danh sách banner đang active
-bannerSchema.statics.getActiveBanners = function() {
-  return this.find({ status: 'active' });
-};
+// bannerSchema.statics.getActiveBanners = function() {
+//   return this.find({ status: 'active' });
+// };
 
 // Middleware trước khi lưu
-bannerSchema.pre('save', function(next) {
-  next();
-});
+// bannerSchema.pre('save', function(next) {
+//   next();
+// });
 
 const Banner = mongoose.model('Banner', bannerSchema);

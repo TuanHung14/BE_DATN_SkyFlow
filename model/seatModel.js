@@ -5,12 +5,13 @@ const seatSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room',
         required: [true, "ID phòng chiếu là bắt buộc"],
+        index: true,
         validate: {
             validator: async function(value) {
                 try {
                     const Room = mongoose.model("Room");
                     const room = await Room.findById(value);
-                    return room !== null;
+                    return !!room;
                 } catch (error) {
                     return false;
                 }
@@ -33,6 +34,7 @@ const seatSchema = new mongoose.Schema({
         type: Number,
         required: [true, "Số ghế là bắt buộc"],
         min: [1, "Số ghế phải lớn hơn 0"],
+        max: [150, "Số ghế không được vượt quá 150"],
         validate: {
             validator: Number.isInteger,
             message: '{VALUE} không phải là số nguyên!'
@@ -52,20 +54,32 @@ const seatSchema = new mongoose.Schema({
         default: 'active'
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: {
+        virtuals: true,
+        transform: function(doc, ret) {
+            ret.id = ret._id;
+            delete ret._id;
+            delete ret.__v;
+            return ret;
+        }
+    },
+    toObject: { virtuals: true }
 });
 
-seatSchema.statics.getSeatsByRoom = function(roomId) {
-    return this.find({ room_id: roomId })
-               .sort({ seat_row: 1, seat_number: 1 });
-};
+seatSchema.index({ room_id: 1, seat_row: 1, seat_number: 1 }, { unique: true });
 
-seatSchema.statics.getAvailableSeatsByRoom = function(roomId) {
-    return this.find({ 
-        room_id: roomId,
-        status: 'active'
-    }).sort({ seat_row: 1, seat_number: 1 });
-};
+// seatSchema.statics.getSeatsByRoom = function(roomId) {
+//     return this.find({ room_id: roomId })
+//                .sort({ seat_row: 1, seat_number: 1 });
+// };
+
+// seatSchema.statics.getAvailableSeatsByRoom = function(roomId) {
+//     return this.find({
+//         room_id: roomId,
+//         status: 'active'
+//     }).sort({ seat_row: 1, seat_number: 1 });
+// };
 
 // đảm bảo số lượng ghế không vượt quá capacity của phòng
 seatSchema.pre('save', async function(next) {

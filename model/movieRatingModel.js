@@ -5,48 +5,42 @@ const movieRatingSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Movie',
     required: [true, 'ID phim không được để trống'],
-    trim: true,
     index: true,
     validate: {
       validator: async function(value) {
         const Movie = mongoose.model('Movie');
         const movie = await Movie.findById(value);
-        return movie ? true : false;
+        return !!movie;
       },
       message: 'Phim không tồn tại trong hệ thống'
     }
   },
-
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'ID người dùng không được để trống'],
-    trim: true,
     index: true,
     validate: {
       validator: async function(value) {
         const User = mongoose.model('User');
         const user = await User.findById(value);
-        return user ? true : false;
+        return !!user;
       },
       message: 'Người dùng không tồn tại trong hệ thống'
     }
   },
-
   comment: {
     type: String,
     trim: true,
     maxlength: [500, 'Bình luận không được vượt quá 500 ký tự'],
     validate: {
       validator: function(value) {
-        // Kiểm tra nội dung comment không chứa từ ngữ không phù hợp
         const invalidWords = ['fuck', 'shit', 'dm'];
         return !invalidWords.some(word => value.toLowerCase().includes(word));
       },
       message: 'Bình luận chứa nội dung không phù hợp'
     }
   },
-
   rating: {
     type: Number,
     required: [true, 'Điểm đánh giá không được để trống'],

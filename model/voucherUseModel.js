@@ -5,34 +5,30 @@ const voucherUseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'ID người dùng không được để trống'],
-    trim: true,
     index: true,
     validate: {
       validator: async function(value) {
         const User = mongoose.model('User');
         const user = await User.findById(value);
-        return user ? true : false;
+        return !!user;
       },
       message: 'Người dùng không tồn tại trong hệ thống'
     }
   },
-
   voucher_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Voucher',
     required: [true, 'ID voucher không được để trống'],
-    trim: true,
     index: true,
     validate: {
       validator: async function(value) {
         const Voucher = mongoose.model('Voucher');
         const voucher = await Voucher.findById(value);
-        return voucher ? true : false;
+        return !!voucher;
       },
       message: 'Voucher không tồn tại trong hệ thống'
     }
   },
-
   usage_limit: {
     type: Number,
     required: [true, 'Giới hạn sử dụng không được để trống'],
@@ -43,21 +39,26 @@ const voucherUseSchema = new mongoose.Schema({
       message: 'Giới hạn sử dụng phải là số nguyên'
     }
   },
-
   usage_count: {
     type: Number,
     default: 0,
     min: [0, 'Số lần sử dụng không thể âm'],
-    validate: {
-      validator: function(value) {
-        return Number.isInteger(value) && value <= this.usage_limit;
+    validate: [
+      {
+        validator: Number.isInteger,
+        message: 'Số lần sử dụng phải là số nguyên'
       },
-      message: 'Số lần sử dụng phải là số nguyên và không được vượt quá giới hạn'
-    }
+      {
+        validator: function(value) {
+          return value <= this.usage_limit;
+        },
+        message: 'Số lần sử dụng không được vượt quá giới hạn'
+      }
+    ]
   }
 }, {
   timestamps: true,
-  toJSON: { 
+  toJSON: {
     virtuals: true,
     transform: function(doc, ret) {
       ret.id = ret._id;
@@ -66,7 +67,18 @@ const voucherUseSchema = new mongoose.Schema({
       return ret;
     }
   },
-  toObject: { virtuals: true }
+  toObject: {
+    virtuals: true,
+    transform: function(doc, ret) {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
+
+// Thêm index kết hợp để đảm bảo mỗi user chỉ dùng một voucher một lần
+voucherUseSchema.index({ user_id: 1, voucher_id: 1 }, { unique: true });
 
 const VoucherUse = mongoose.model('VoucherUse', voucherUseSchema);
