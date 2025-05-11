@@ -141,7 +141,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 exports.updatePassword = catchAsync(async (req, res, next) => { 
     const user = await User.findById(req.user.id).select('+password');
     
-    if(!user ||!(await user.correctPassword(req.body.currentPassword, user.password))) {
+    if(!user || !(await user.correctPassword(req.body.currentPassword, user.password))) {
         return next(new AppError('Mật khẩu hiện tại của bạn bị sai', 401));
     }
     
@@ -150,6 +150,24 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
     await userService.createSendToken(user, 200, res);
 });
+
+exports.setPassword = catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id).select('+password +googleId');
+
+    if(!user){
+        return next(new AppError('Người dùng không tồn tại', 401));
+    }
+
+    if(user.password !== null){
+        return next(new AppError('Người dùng đã có mật khẩu', 401));
+    }
+
+    user.password = req.body.password;
+    user.isUpdatePassword = true;
+    await user.save();
+
+    await userService.createSendToken(user, 200, res);
+})
 
 exports.googleLogin = catchAsync(async (req, res, next) => {
     const { token } = req.body;
