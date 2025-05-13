@@ -13,16 +13,21 @@ exports.refreshToken = catchAsync(async (req, res, next) => {
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
-        return next(new AppError('You are not logged in', 401));
+        return next(new AppError('Vui lòng đăng nhập lại!', 401));
     }
 
     const decoded = await promisify(jwt.verify)(refreshToken, process.env.JWT_REFRESH_SECRET);
 
-    const currentUser = await User.findById(decoded.id);
+    const currentUser = await User.findById(decoded.id, "+refreshToken");
 
     if (!currentUser) {
-        return next(new AppError('The token belonging to this User does no longer exists', 401));
+        return next(new AppError('Token thuộc về người dùng này không còn tồn tại nữa', 401));
     }
+
+    if (currentUser.refreshToken !== refreshToken) {
+        return next(new AppError('Phiên đăng nhập của bạn không hợp lệ, vui lòng đăng nhập lại.', 403));
+    }
+
     res.clearCookie('refreshToken');
 
     await userService.createSendToken(currentUser, 200, res);
