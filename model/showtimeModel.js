@@ -6,36 +6,12 @@ const showtimeSchema = new mongoose.Schema({
         ref: 'Movie',
         required: [true, 'Suất chiếu phải có phim'],
         index: true,
-        validate: {
-            validator: async function(value) {
-                try {
-                    const Movie = mongoose.model('Movie');
-                    const movie = await Movie.findById(value);
-                    return !!movie;
-                } catch (error) {
-                    return false;
-                }
-            },
-            message: 'Phim không tồn tại'
-        }
     },
     room_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room',
         required: [true, 'Suất chiếu phải có phòng chiếu'],
         index: true,
-        validate: {
-            validator: async function(value) {
-                try {
-                    const Room = mongoose.model('Room');
-                    const room = await Room.findById(value);
-                    return !!room;
-                } catch (error) {
-                    return false;
-                }
-            },
-            message: 'Phòng chiếu không tồn tại'
-        }
     },
     showDate: {
         type: Date,
@@ -50,24 +26,6 @@ const showtimeSchema = new mongoose.Schema({
     startTime: {
         type: Date,
         required: [true, 'Suất chiếu phải có giờ bắt đầu'],
-        validate: [
-            {
-                validator: function(value) {
-                    return value >= new Date();
-                },
-                message: 'Giờ chiếu không được trong quá khứ'
-            },
-            {
-                validator: function(value) {
-                    const showDate = this.showDate;
-                    if (!showDate) return true; // Nếu showDate chưa được gán, bỏ qua validate này
-                    const showDateStart = new Date(showDate.setHours(0, 0, 0, 0));
-                    const showDateEnd = new Date(showDate.setHours(23, 59, 59, 999));
-                    return value >= showDateStart && value <= showDateEnd;
-                },
-                message: 'Giờ chiếu phải thuộc cùng ngày với ngày chiếu'
-            }
-        ]
     },
     status: {
         type: String,

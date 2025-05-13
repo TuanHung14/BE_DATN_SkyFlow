@@ -6,18 +6,6 @@ const seatSchema = new mongoose.Schema({
         ref: 'Room',
         required: [true, "ID phòng chiếu là bắt buộc"],
         index: true,
-        validate: {
-            validator: async function(value) {
-                try {
-                    const Room = mongoose.model("Room");
-                    const room = await Room.findById(value);
-                    return !!room;
-                } catch (error) {
-                    return false;
-                }
-            },
-            message: "Phòng chiếu không tồn tại"
-        }
     },
     seat_row: {
         type: String,

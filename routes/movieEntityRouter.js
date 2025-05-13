@@ -1,0 +1,171 @@
+const express = require('express');
+const movieEntityController = require('../controller/movieEntityController');
+const { auth, restrictTo } = require('../middleware/authMiddleware');
+
+const router = express.Router();
+
+/**
+ * @swagger
+ * /api/v1/movie-entities:
+ *   post:
+ *     tags:
+ *       - Movie Entities
+ *     summary: Tạo thực thể phim mới
+ *     operationId: createMovieEntity
+ *     security:
+ *       - bearer: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "The Dark Knight"
+ *     responses:
+ *       201:
+ *         description: Tạo thực thể thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Chưa đăng nhập hoặc token không hợp lệ
+ */
+router.post('/', auth, movieEntityController.createMovieEntity);
+
+/**
+ * @swagger
+ * /api/v1/movie-entities:
+ *   get:
+ *     tags:
+ *       - Movie Entities
+ *     summary: Lấy danh sách thực thể phim
+ *     operationId: getAllMovieEntities
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Số trang cần hiển thị
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Số lượng kết quả trên mỗi trang
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: Sắp xếp kết quả
+ *       - in: query
+ *         name: fields
+ *         schema:
+ *           type: string
+ *         description: Giới hạn trường được trả về
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách thực thể thành công
+ *       500:
+ *         description: Lỗi server
+ */
+router.get('/', movieEntityController.getAllMovieEntities);
+
+/**
+ * @swagger
+ * /api/v1/movie-entities/{id}:
+ *   get:
+ *     tags:
+ *       - Movie Entities
+ *     summary: Lấy thông tin thực thể phim theo ID
+ *     operationId: getMovieEntityById
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lấy thực thể thành công
+ *       404:
+ *         description: Không tìm thấy thực thể
+ *       500:
+ *         description: Lỗi server
+ */
+router.get('/:id', movieEntityController.getMovieEntityById);
+
+/**
+ * @swagger
+ * /api/v1/movie-entities/{id}:
+ *   patch:
+ *     tags:
+ *       - Movie Entities
+ *     summary: Cập nhật thông tin thực thể phim
+ *     operationId: updateMovieEntity
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Updated Movie Name"
+ *               description:
+ *                 type: string
+ *                 example: "Updated movie description"
+ *               releaseDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2024-03-20"
+ *     responses:
+ *       200:
+ *         description: Cập nhật thực thể thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       404:
+ *         description: Không tìm thấy thực thể
+ */
+router.patch('/:id', auth, movieEntityController.updateMovieEntity);
+
+/**
+ * @swagger
+ * /api/v1/movie-entities/{id}:
+ *   delete:
+ *     tags:
+ *       - Movie Entities
+ *     summary: Xóa thực thể phim
+ *     operationId: deleteMovieEntity
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Xóa thực thể thành công
+ *       404:
+ *         description: Không tìm thấy thực thể
+ *       500:
+ *         description: Lỗi server
+ */
+router.delete('/:id', auth, movieEntityController.deleteMovieEntity);
+
+module.exports = router;

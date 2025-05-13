@@ -6,18 +6,6 @@ const roomSchema = new mongoose.Schema({
         ref: 'Cinema',
         required: [true, "ID rạp chiếu phim là bắt buộc"],
         index: true,
-        validate: {
-            validator: async function(value) {
-                try {
-                    const Cinema = mongoose.model("Cinema");
-                    const cinema = await Cinema.findById(value);
-                    return !!cinema;
-                } catch (error) {
-                    return false;
-                }
-            },
-            message: "Rạp chiếu phim không tồn tại"
-        }
     },
     room_name: {
         type: String,

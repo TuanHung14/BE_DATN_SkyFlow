@@ -15,14 +15,6 @@ const priceRuleSchema = new mongoose.Schema({
     ref: 'CustomerGroup',
     required: [true, 'Age group is required'],
     index: true,
-    validate: {
-      validator: async function(value) {
-        const CustomerGroup = mongoose.model('CustomerGroup');
-        const group = await CustomerGroup.findById(value);
-        return !!group;
-      },
-      message: 'Customer group does not exist'
-    }
   },
   price: {
     type: Number,
