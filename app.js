@@ -20,7 +20,7 @@ const globalErrorHandler = require('./controller/errorController');
 const userRouter = require('./routes/userRouter');
 const fileRouter = require('./routes/fileRouter');
 const emailRouter = require('./routes/emailRouter');
-const movieEntityRouter = require('./routes/movieEntityRouter')
+const authRouter = require('./routes/authRouter');
 
 //Sử dụng engine Pug
 app.set('view engine', 'pug');
@@ -80,9 +80,9 @@ swaggerSetup(app);
 
 // Use Route by middleware
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/file', fileRouter);
 app.use('/api/v1/email', emailRouter);
-app.use('/api/v1/movieEntity', movieEntityRouter);
 
 // Error handling middleware nếu kh có api n
 app.all('*', (req, res, next) => {
