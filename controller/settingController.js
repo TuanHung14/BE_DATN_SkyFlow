@@ -15,15 +15,7 @@ const filterObj = (obj, ...allowedFields) => {
 /**
  * Lấy tất cả settings (dùng Factory)
  */
-exports.getAllSettings = catchAsync(async (req, res, next) => {
-  const settings = await settingService.getAllSettings();
-  res.status(200).json({
-    status: "success",
-    data: {
-      settings,
-    },
-  });
-});
+exports.getAllSettings = Factory.getAll(Setting);
 
 /**
  * Lấy setting theo ID
