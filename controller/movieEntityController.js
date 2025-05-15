@@ -5,6 +5,18 @@ const Factory = require('./handleFactory');
 const movieEntityService = require('../services/movieEntityService');
 
 exports.createMovieEntity = catchAsync(async (req, res, next) => {
+    // kiểm tra không được trùng tên đối với type là 'thể loại'
+    if (req.body.type === 'Thể loại') {
+        const existingEntity = await movieEntityModel.findOne({
+            name: req.body.name,
+            type: "Thể loại"
+        });
+
+        if (existingEntity) {
+            return next(new AppError('Thể loại này đã tồn tại', 400));
+        }
+    }
+
     const movieEntity = await movieEntityService.createMovieEntity(req.body);
     res.status(201).json({
         message: 'Tạo thực thể thành công',
