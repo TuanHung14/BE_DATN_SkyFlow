@@ -20,7 +20,6 @@ const server = app.listen(port, () => {
 });
 
 
-
 //Xử lý catch kh được giải quyết global nếu lỗi ở .catch nào đều dô đây
 process.on('unhandledRejection', err => {
     console.log('Unhandled rejection! Shutting down...');
