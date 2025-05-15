@@ -21,7 +21,8 @@ const userRouter = require("./routes/userRouter");
 const fileRouter = require("./routes/fileRouter");
 const emailRouter = require("./routes/emailRouter");
 const authRouter = require("./routes/authRouter");
-
+const settingRouter = require("./routes/settingRouter");
+const bannerRouter = require("./routes/bannerRouter");
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 
@@ -86,7 +87,7 @@ app.use("/api/v1/file", fileRouter);
 app.use("/api/v1/email", emailRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", settingRouter);
-
+app.use("/api/v1/banners", bannerRouter);
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));

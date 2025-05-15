@@ -1,3 +1,6 @@
+const express = require("express");
+const settingController = require("../controller/settingController");
+const router = express.Router();
 /**
  * @swagger
  * tags:
@@ -118,3 +121,4 @@ router.patch("/:id", settingController.updateSetting);
  *         description: Xóa thành công
  */
 router.delete("/:id", settingController.deleteSetting);
+module.exports = router;
