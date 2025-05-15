@@ -4,6 +4,8 @@ const { auth, restrictTo } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
+// router.use(auth);
+
 /**
  * @swagger
  * /api/v1/movie-entities:
@@ -22,10 +24,17 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - name
+ *               - type
  *             properties:
  *               name:
  *                 type: string
  *                 example: "The Dark Knight"
+ *                 description: "Tên của thực thể phim"
+ *               type:
+ *                 type: string
+ *                 enum: ["the_category", "the_director", "the_actor"]
+ *                 example: Thể loại
+ *                 description: "Loại thực thể, chọn một giá trị từ danh sách"
  *     responses:
  *       201:
  *         description: Tạo thực thể thành công
@@ -34,7 +43,7 @@ const router = express.Router();
  *       401:
  *         description: Chưa đăng nhập hoặc token không hợp lệ
  */
-router.post('/', auth, movieEntityController.createMovieEntity);
+router.post('/', movieEntityController.createMovieEntity);
 
 /**
  * @swagger
@@ -115,6 +124,8 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *         required: true
  *         schema:
  *           type: string
+ *         description: "ID của thực thể phim cần cập nhật. Để xem thông tin chi tiết của thực thể này trước khi cập nhật, sử dụng endpoint GET /api/v1/movie-entities/{id}."
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
  *     requestBody:
  *       required: true
  *       content:
@@ -125,22 +136,46 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *               name:
  *                 type: string
  *                 example: "Updated Movie Name"
+ *                 description: "Tên mới của thực thể phim (nếu muốn cập nhật)"
  *               description:
  *                 type: string
  *                 example: "Updated movie description"
+ *                 description: "Mô tả mới của thực thể phim (nếu muốn cập nhật)"
  *               releaseDate:
  *                 type: string
  *                 format: date
  *                 example: "2024-03-20"
+ *                 description: "Ngày phát hành mới của thực thể phim (nếu muốn cập nhật)"
+ *             minProperties: 1
  *     responses:
  *       200:
  *         description: Cập nhật thực thể thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "123e4567-e89b-12d3-a456-426614174000"
+ *                 name:
+ *                   type: string
+ *                   example: "Updated Movie Name"
+ *                 description:
+ *                   type: string
+ *                   example: "Updated movie description"
+ *                 releaseDate:
+ *                   type: string
+ *                   format: date
+ *                   example: "2024-03-20"
  *       400:
  *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Chưa đăng nhập hoặc token không hợp lệ
  *       404:
  *         description: Không tìm thấy thực thể
  */
-router.patch('/:id', auth, movieEntityController.updateMovieEntity);
+router.patch('/:id', movieEntityController.updateMovieEntity);
 
 /**
  * @swagger
@@ -166,6 +201,6 @@ router.patch('/:id', auth, movieEntityController.updateMovieEntity);
  *       500:
  *         description: Lỗi server
  */
-router.delete('/:id', auth, movieEntityController.deleteMovieEntity);
+router.delete('/:id', movieEntityController.deleteMovieEntity);
 
 module.exports = router;

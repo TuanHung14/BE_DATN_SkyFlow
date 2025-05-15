@@ -21,6 +21,7 @@ const userRouter = require('./routes/userRouter');
 const fileRouter = require('./routes/fileRouter');
 const emailRouter = require('./routes/emailRouter');
 const authRouter = require('./routes/authRouter');
+const movieEntityRouter = require('./routes/movieEntityRouter');
 
 //Sử dụng engine Pug
 app.set('view engine', 'pug');
@@ -83,6 +84,7 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/file', fileRouter);
 app.use('/api/v1/email', emailRouter);
+app.use('/api/v1/movie-entities', movieEntityRouter);
 
 // Error handling middleware nếu kh có api n
 app.all('*', (req, res, next) => {
