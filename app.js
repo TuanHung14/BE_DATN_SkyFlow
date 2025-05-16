@@ -12,19 +12,6 @@ const hpp = require("hpp");
 const cors = require("cors");
 
 //Tự mình xuất ra
-<<<<<<< HEAD
-const initCronJobs = require('./cron_jobs/cronjobs');
-const initializeSocket = require('./config/socket');
-const swaggerSetup = require('./swagger');
-const AppError = require('./utils/appError');
-const globalErrorHandler = require('./controller/errorController');
-const userRouter = require('./routes/userRouter');
-const fileRouter = require('./routes/fileRouter');
-const emailRouter = require('./routes/emailRouter');
-const authRouter = require('./routes/authRouter');
-const movieEntityRouter = require('./routes/movieEntityRouter');
-
-=======
 const initCronJobs = require("./cron_jobs/cronjobs");
 const initializeSocket = require("./config/socket");
 const swaggerSetup = require("./swagger");
@@ -36,7 +23,8 @@ const emailRouter = require("./routes/emailRouter");
 const authRouter = require("./routes/authRouter");
 const settingRouter = require("./routes/settingRouter");
 const bannerRouter = require("./routes/bannerRouter");
->>>>>>> 72eb21d7702b67afd39fe896cdeddb876f627248
+const movieEntityRouter = require('./routes/movieEntityRouter');
+
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 
@@ -95,21 +83,14 @@ initializeSocket();
 swaggerSetup(app);
 
 // Use Route by middleware
-<<<<<<< HEAD
-app.use('/api/v1/users', userRouter);
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/file', fileRouter);
-app.use('/api/v1/email', emailRouter);
-app.use('/api/v1/movie-entities', movieEntityRouter);
-=======
->>>>>>> 72eb21d7702b67afd39fe896cdeddb876f627248
-
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/file", fileRouter);
 app.use("/api/v1/email", emailRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", settingRouter);
 app.use("/api/v1/banners", bannerRouter);
+app.use('/api/v1/movie-entities', movieEntityRouter);
+
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
