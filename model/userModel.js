@@ -1,80 +1,87 @@
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/newline-after-import
 const validator = require('validator');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const bcrypt = require('bcryptjs');
-
-const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'A User must have a name'],
+        required: [true, 'Tên không được để trống'],
         trim: true
     },
     email: {
         type: String,
-        required: [true, 'A User must have an email'],
+        required: [true, 'Email không được để trống'],
         unique: true,
         lowercase: true,
-        validate: [validator.isEmail, 'Please provide a valid email']
+        validate: [validator.isEmail, 'Email không hợp lệ'],
     },
     photo: {
         type: String,
         default: 'default.jpg' 
     },
+    phone: {
+        type: String,
+        validate: {
+            validator: function(v) {
+                return /\d{10}/.test(v);
+            },
+            message: props => `${props.value} không phải là số điện thoại hợp lệ!`
+        }
+    },
+    dateOfBirth: {
+        type: Date
+    },
     role: {
         type: String,
-        enum: ['user', 'guide', 'lead-guide', 'admin'],
+        enum: ['user', 'sub_admin', 'admin'],
         default: 'user'
     },
     password: {
         type: String,
-        required: [
-            function () {
-                return this.authProvider !== "google";
-            }, "Mật khẩu là bắt buộc khi đăng ký bằng email"],
-        minlength: 8,
+        default: null,
         select: false
     },
-    passwordConfirmation: {
-        type: String,
-        required: [function () {
-            return this.authProvider !== "google";
-          }, "Xác nhận mật khẩu là bắt buộc khi đăng ký bằng email"],
-        validate: {
-            validator: function(el) {
-                return el === this.password;
-            },
-            message: 'Passwords do not match'
-        }
+    memberShipPoints: {
+        type: Number,
+        default: 0
     },
     passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
-    isActive: {
+    isAdmin: {
         type: Boolean,
-        default: true,
+        default: false,
         select: false
     },
-    googleId: String,
-    authProvider: {
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    isUpdatePassword: {
+        type: Boolean,
+        default: true
+    },
+    googleId: {
         type: String,
-        enum: ["local", "google"],
-        required: true,
-        default: "local"
-      },
+        select: false
+    },
+    refreshToken: {
+        type: String,
+        select: false
+    },
+    status: {
+        type: String,
+        enum: ['active', 'inactive'],
+        default: 'active'
+    },
 }, { timestamps: true});
 
 // document middleware
 // save chỉ có tác dụng với .save hay .create
 userSchema.pre('save', async function(next){
     //Dùng để check mật khẩu có thay đổi hay kh nếu không thay đổi thì next()
-    if(!this.isModified('password')) return next();
+    if(!this.isModified('password') || !this.password) return next();
 
     this.password = await bcrypt.hashSync(this.password, 12);
 
-    this.passwordConfirmation = undefined;
     next();
 })
 
@@ -84,10 +91,12 @@ userSchema.pre('save', function(next){
     next();
 });
 
-userSchema.pre(/^find/, function(next){
-    this.find({ isActive: {$ne: false} })
+userSchema.pre('save',  function(next){
+    if(this.googleId && !this.password){
+        this.isUpdatePassword = false;
+    }
     next();
-});
+})
 
 userSchema.methods.correctPassword = async function(cadidatePassword, userPassword) {
     return await bcrypt.compare(cadidatePassword, userPassword);
@@ -102,15 +111,6 @@ userSchema.methods.changePasswordAfter = function(JWTTimestamp){
     return false;
 }
 
-userSchema.methods.createPasswordResetToken = function(){
-    const resetToken = crypto.randomBytes(32).toString('hex');
-
-    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    
-    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-    
-    return resetToken;
-}
 
 const User = mongoose.model('User', userSchema);
 
