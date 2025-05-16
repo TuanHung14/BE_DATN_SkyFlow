@@ -11,6 +11,10 @@ const movieEntitySchema = new mongoose.Schema(
       type: String,
       required: [true, "Không được để trống"],
     },
+      isDeleted: {
+        type: Boolean,
+        default: false,
+      }
   },
   { timestamps: true }
 );

@@ -26,17 +26,7 @@ const priceRuleSchema = new mongoose.Schema({
     }
   }
 }, {
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  },
-  toObject: { virtuals: true }
+  timestamps: true
 });
 
 priceRuleSchema.index({ seat_type: 1, age_group: 1 }, { unique: true });

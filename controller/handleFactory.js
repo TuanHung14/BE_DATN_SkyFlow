@@ -6,7 +6,8 @@ const APIFeatures = require('../utils/apiFeatures');
 exports.getAll = Model => catchAsync(async (req, res, next) => {
 
     const filter = {};
-    if(req.params.tourId) filter.tour = req.params.tourId;
+    // Sau này dùng cho phần đánh giá nên comment để đây
+    // if(req.params.tourId) filter.tour = req.params.tourId;
     
     const features = new APIFeatures(Model.find(filter), req.query).filter().sort().limitFields().pagination();
     const doc = await features.query;

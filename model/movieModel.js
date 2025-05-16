@@ -74,17 +74,7 @@ const movieSchema = new mongoose.Schema({
         trim: true
     }
 }, {
-    timestamps: true,
-    toJSON: {
-        virtuals: true,
-        transform: function(doc, ret) {
-            ret.id = ret._id;
-            delete ret._id;
-            delete ret.__v;
-            return ret;
-        }
-    },
-    toObject: { virtuals: true }
+    timestamps: true
 });
 
 // Tự động tạo slug từ tên phim
