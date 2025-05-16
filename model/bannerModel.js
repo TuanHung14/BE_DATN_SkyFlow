@@ -1,41 +1,44 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const bannerSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: [true, 'Tiêu đề banner không được để trống'],
-    trim: true,
-    minlength: [3, 'Tiêu đề banner phải có ít nhất 3 ký tự'],
-    maxlength: [100, 'Tiêu đề banner không được vượt quá 100 ký tự']
-  },
-  image_url: {
-    type: String,
-    required: [true, 'URL hình ảnh banner không được để trống'],
-    trim: true
-  },
-  status: {
-    type: String,
-    enum: {
-      values: ['active', 'inActive'],
-      message: '{VALUE} không phải là trạng thái hợp lệ'
+const bannerSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, "Tiêu đề banner không được để trống"],
+      trim: true,
+      minlength: [3, "Tiêu đề banner phải có ít nhất 3 ký tự"],
+      maxlength: [100, "Tiêu đề banner không được vượt quá 100 ký tự"],
     },
-    default: 'active'
-  }
-}, {
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
+    image_url: {
+      type: String,
+      required: [true, "URL hình ảnh banner không được để trống"],
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: {
+        values: ["active", "inActive"],
+        message: "{VALUE} không phải là trạng thái hợp lệ",
+      },
+      default: "active",
+    },
   },
-  toObject: { virtuals: true }
-});
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: { virtuals: true },
+  }
+);
 
-bannerSchema.index({ title: 'text' }); // tìm kiếm theo text
+bannerSchema.index({ title: "text" }); // tìm kiếm theo text
 
 // Phương thức để chuyển đổi trạng thái banner
 // bannerSchema.methods.toggleStatus = function() {
@@ -53,4 +56,5 @@ bannerSchema.index({ title: 'text' }); // tìm kiếm theo text
 //   next();
 // });
 
-const Banner = mongoose.model('Banner', bannerSchema);
+const Banner = mongoose.model("Banner", bannerSchema);
+module.exports = Banner;

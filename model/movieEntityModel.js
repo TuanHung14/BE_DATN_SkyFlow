@@ -4,7 +4,7 @@ const movieEntitySchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["Đạo diễn", "Thể loại", "Diễn viên"],
+      enum: ["genre", "cast", "director"],
       required: [true, "Không được để trống"],
     },
     name: {
