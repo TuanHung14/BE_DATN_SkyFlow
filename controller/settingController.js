@@ -1,7 +1,7 @@
 const Setting = require("../model/settingModel"); // Sửa: 'model' -> 'models'
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const settingService = require("../services/settingService");
+
 const Factory = require("./handleFactory");
 // Giới hạn field được update
 
