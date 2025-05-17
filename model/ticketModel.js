@@ -6,14 +6,6 @@ const ticketSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Seat',
       required: [true, 'ID ghế không được để trống'],
-      validate: {
-        validator: async function(value) {
-          const Seat = mongoose.model('Seat');
-          const seat = await Seat.findById(value);
-          return !!seat;
-        },
-        message: 'Ghế không tồn tại trong hệ thống'
-      }
     },
     price: {
       type: Number,
@@ -30,14 +22,6 @@ const ticketSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Food',
       required: [true, 'ID đồ ăn không được để trống'],
-      validate: {
-        validator: async function(value) {
-          const Food = mongoose.model('Food');
-          const food = await Food.findById(value);
-          return !!food;
-        },
-        message: 'Đồ ăn không tồn tại trong hệ thống'
-      }
     },
     quantity: {
       type: Number,
@@ -83,42 +67,18 @@ const ticketSchema = new mongoose.Schema({
     ref: 'Showtime',
     required: [true, 'ID suất chiếu không được để trống'],
     index: true,
-    validate: {
-      validator: async function(value) {
-        const Showtime = mongoose.model('Showtime');
-        const showtime = await Showtime.findById(value);
-        return !!showtime;
-      },
-      message: 'Suất chiếu không tồn tại trong hệ thống'
-    }
   },
   payment_method_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'PaymentMethod',
     required: [true, 'ID phương thức thanh toán không được để trống'],
     index: true,
-    validate: {
-      validator: async function(value) {
-        const PaymentMethod = mongoose.model('PaymentMethod');
-        const paymentMethod = await PaymentMethod.findById(value);
-        return !!paymentMethod;
-      },
-      message: 'Phương thức thanh toán không tồn tại trong hệ thống'
-    }
   },
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'ID người dùng không được để trống'],
     index: true,
-    validate: {
-      validator: async function(value) {
-        const User = mongoose.model('User');
-        const user = await User.findById(value);
-        return !!user;
-      },
-      message: 'Người dùng không tồn tại trong hệ thống'
-    }
   }
 }, {
   timestamps: true,

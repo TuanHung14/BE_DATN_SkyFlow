@@ -5,65 +5,28 @@ const movieRatingSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Movie',
     required: [true, 'ID phim không được để trống'],
-    index: true,
-    validate: {
-      validator: async function(value) {
-        const Movie = mongoose.model('Movie');
-        const movie = await Movie.findById(value);
-        return !!movie;
-      },
-      message: 'Phim không tồn tại trong hệ thống'
-    }
+    index: true
   },
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'User', 
     required: [true, 'ID người dùng không được để trống'],
-    index: true,
-    validate: {
-      validator: async function(value) {
-        const User = mongoose.model('User');
-        const user = await User.findById(value);
-        return !!user;
-      },
-      message: 'Người dùng không tồn tại trong hệ thống'
-    }
+    index: true
   },
   comment: {
     type: String,
     trim: true,
-    maxlength: [500, 'Bình luận không được vượt quá 500 ký tự'],
-    validate: {
-      validator: function(value) {
-        const invalidWords = ['fuck', 'shit', 'dm'];
-        return !invalidWords.some(word => value.toLowerCase().includes(word));
-      },
-      message: 'Bình luận chứa nội dung không phù hợp'
-    }
+    maxlength: [500, 'Bình luận không được vượt quá 500 ký tự']
   },
   rating: {
     type: Number,
     required: [true, 'Điểm đánh giá không được để trống'],
     min: [1, 'Điểm đánh giá phải từ 1-5'],
-    max: [5, 'Điểm đánh giá phải từ 1-5'],
-    validate: {
-      validator: function(value) {
-        return Number.isInteger(value);
-      },
-      message: 'Điểm đánh giá phải là số nguyên'
-    }
+    max: [5, 'Điểm đánh giá phải từ 1-5']
   }
 }, {
   timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  },
+  toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 

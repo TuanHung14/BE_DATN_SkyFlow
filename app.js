@@ -23,6 +23,8 @@ const emailRouter = require("./routes/emailRouter");
 const authRouter = require("./routes/authRouter");
 const settingRouter = require("./routes/settingRouter");
 const bannerRouter = require("./routes/bannerRouter");
+const movieEntityRouter = require('./routes/movieEntityRouter');
+
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 
@@ -81,13 +83,14 @@ initializeSocket();
 swaggerSetup(app);
 
 // Use Route by middleware
-
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/file", fileRouter);
 app.use("/api/v1/email", emailRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", settingRouter);
 app.use("/api/v1/banners", bannerRouter);
+app.use('/api/v1/movie-entities', movieEntityRouter);
+
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));

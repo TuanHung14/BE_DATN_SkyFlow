@@ -6,28 +6,12 @@ const voucherUseSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'ID người dùng không được để trống'],
     index: true,
-    validate: {
-      validator: async function(value) {
-        const User = mongoose.model('User');
-        const user = await User.findById(value);
-        return !!user;
-      },
-      message: 'Người dùng không tồn tại trong hệ thống'
-    }
   },
   voucher_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Voucher',
     required: [true, 'ID voucher không được để trống'],
     index: true,
-    validate: {
-      validator: async function(value) {
-        const Voucher = mongoose.model('Voucher');
-        const voucher = await Voucher.findById(value);
-        return !!voucher;
-      },
-      message: 'Voucher không tồn tại trong hệ thống'
-    }
   },
   usage_limit: {
     type: Number,
@@ -43,18 +27,6 @@ const voucherUseSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: [0, 'Số lần sử dụng không thể âm'],
-    validate: [
-      {
-        validator: Number.isInteger,
-        message: 'Số lần sử dụng phải là số nguyên'
-      },
-      {
-        validator: function(value) {
-          return value <= this.usage_limit;
-        },
-        message: 'Số lần sử dụng không được vượt quá giới hạn'
-      }
-    ]
   }
 }, {
   timestamps: true,
