@@ -1,7 +1,7 @@
 const express = require('express');
 const movieEntityController = require('../controller/movieEntityController');
 const { auth, restrictTo } = require('../middleware/authMiddleware');
-const checkDuplicate = require('../middleware/checkDuplicateName');
+const {checkDuplicateName} = require("../controller/movieEntityController")
 
 const router = express.Router();
 
@@ -44,7 +44,7 @@ const router = express.Router();
  *       401:
  *         description: Chưa đăng nhập hoặc token không hợp lệ
  */
-router.post('/', checkDuplicate ,movieEntityController.createMovieEntity);
+router.post('/', checkDuplicateName ,movieEntityController.createMovieEntity);
 
 /**
  * @swagger
@@ -176,7 +176,7 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *       404:
  *         description: Không tìm thấy thực thể
  */
-router.patch('/:id', checkDuplicate ,movieEntityController.updateMovieEntity);
+router.patch('/:id', checkDuplicateName ,movieEntityController.updateMovieEntity);
 
 /**
  * @swagger
