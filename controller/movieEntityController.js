@@ -2,6 +2,7 @@ const movieEntityModel = require('../model/movieEntityModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const Factory = require('./handleFactory');
+const APIFeatures = require('../utils/apiFeatures');
 
 exports.checkDuplicateName = catchAsync(async (req, res, next) => {
     const { name, type } = req.body;
@@ -38,8 +39,80 @@ exports.checkDuplicateName = catchAsync(async (req, res, next) => {
 
 });
 
+// LẤY TẤT CẢ THỰC THỂ CHO BÊN NGƯỜI DÙNG
+exports.getAllMovieEntities = catchAsync(async (req, res, next) => {
+    const filter = { isDeleted: false };
+
+    const features = new APIFeatures(movieEntityModel.find(filter), req.query).filter().sort().limitFields().pagination();
+
+    const doc = await features.query;
+
+    if (!doc) {
+        return next(new AppError('Không tìm thấy dữ liệu', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        results: doc.length,
+        data: {
+            data: doc
+        }
+    });
+})
+
+// XOÁ MỀM THỰC THỂ CHỈ LÀ THAY ĐỔI FIELD idDelete thành true để ẩn bên người dùng
+exports.deleteMovieEntity = catchAsync(async (req, res, next) => {
+    const doc = await movieEntityModel.findByIdAndUpdate(
+        req.params.id,
+        {
+            isDeleted: true,
+            deletedAt: Date.now()
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
+
+    if (!doc) {
+        return next(new AppError('Không có thực thể với id này.', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            data: doc
+        }
+    });
+})
+
+// Khôi phục lại thực thể bị xoá mềm
+exports.restoreMovieEntity = catchAsync(async (req, res, next) => {
+    const doc = await movieEntityModel.findByIdAndUpdate(
+        req.params.id,
+        {
+            isDeleted: false,
+            deletedAt: null
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
+
+    if (!doc) {
+        return next(new AppError(`Không có thực thể với id này.`, 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            data: doc
+        }
+    });
+})
+
 exports.createMovieEntity = Factory.createOne(movieEntityModel);
 exports.getMovieEntityById = Factory.getOne(movieEntityModel);
-exports.getAllMovieEntities = Factory.getAll(movieEntityModel);
+exports.getAllMovieEntitiesAdmin = Factory.getAll(movieEntityModel);
 exports.updateMovieEntity = Factory.updateOne(movieEntityModel);
-exports.deleteMovieEntity = Factory.deleteOne(movieEntityModel);
