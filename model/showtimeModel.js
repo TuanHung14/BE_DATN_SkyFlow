@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const showtimeSchema = new mongoose.Schema({
-    movie_id: {
+    movieId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie',
         required: [true, 'Suất chiếu phải có phim'],
         index: true,
     },
-    room_id: {
+    roomId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room',
         required: [true, 'Suất chiếu phải có phòng chiếu'],
@@ -36,25 +36,7 @@ const showtimeSchema = new mongoose.Schema({
         default: 'Available'
     }
 }, {
-    timestamps: true,
-    toJSON: {
-        virtuals: true,
-        transform: function(doc, ret) {
-            ret.id = ret._id;
-            delete ret._id;
-            delete ret.__v;
-            return ret;
-        }
-    },
-    toObject: {
-        virtuals: true,
-        transform: function(doc, ret) {
-            ret.id = ret._id;
-            delete ret._id;
-            delete ret.__v;
-            return ret;
-        }
-    }
+    timestamps: true
 });
 
 showtimeSchema.index({ room_id: 1, showDate: 1, startTime: 1 }, { unique: true });

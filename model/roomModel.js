@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const roomSchema = new mongoose.Schema({
-    cinema_id: {
+    cinemaId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Cinema',
         required: [true, "ID rạp chiếu phim là bắt buộc"],
         index: true,
     },
-    room_name: {
+    roomName: {
         type: String,
         required: [true, "Tên phòng chiếu là bắt buộc"],
         trim: true,
@@ -36,17 +36,7 @@ const roomSchema = new mongoose.Schema({
         default: 'active'
     }
 }, {
-    timestamps: true,
-    toJSON: {
-        virtuals: true,
-        transform: function(doc, ret) {
-            ret.id = ret._id;
-            delete ret._id;
-            delete ret.__v;
-            return ret;
-        }
-    },
-    toObject: { virtuals: true }
+    timestamps: true
 });
 
 roomSchema.index({ cinema_id: 1, room_name: 1 }, { unique: true });

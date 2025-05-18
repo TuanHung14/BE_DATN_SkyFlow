@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const ticketSchema = new mongoose.Schema({
-  seats_id: [{
-    seat_id: {
+  seatsId: [{
+    seatId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Seat',
       required: [true, 'ID ghế không được để trống'],
@@ -17,8 +17,8 @@ const ticketSchema = new mongoose.Schema({
       }
     }
   }],
-  foods_id: [{
-    food_id: {
+  foodsId: [{
+    foodId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Food',
       required: [true, 'ID đồ ăn không được để trống'],
@@ -33,11 +33,11 @@ const ticketSchema = new mongoose.Schema({
       }
     }
   }],
-  booking_date: {
+  bookingDate: {
     type: Date,
     default: Date.now
   },
-  total_amount: {
+  totalAmount: {
     type: Number,
     required: [true, 'Tổng tiền không được để trống'],
     min: [0, 'Tổng tiền không thể âm'],
@@ -46,7 +46,7 @@ const ticketSchema = new mongoose.Schema({
       message: '{VALUE} không phải là tổng tiền hợp lệ'
     }
   },
-  payment_status: {
+  paymentStatus: {
     type: String,
     enum: {
       values: ['Pending', 'Paid', 'Failed', 'Refunded'],
@@ -54,7 +54,7 @@ const ticketSchema = new mongoose.Schema({
     },
     default: 'Pending'
   },
-  booking_status: {
+  bookingStatus: {
     type: String,
     enum: {
       values: ['Reserved', 'Confirmed', 'Cancelled'],
@@ -62,48 +62,30 @@ const ticketSchema = new mongoose.Schema({
     },
     default: 'Reserved'
   },
-  showtime_id: {
+  showtimeId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Showtime',
     required: [true, 'ID suất chiếu không được để trống'],
     index: true,
   },
-  payment_method_id: {
+  paymentMethodId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'PaymentMethod',
     required: [true, 'ID phương thức thanh toán không được để trống'],
     index: true,
   },
-  user_id: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'ID người dùng không được để trống'],
     index: true,
   }
 }, {
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  },
-  toObject: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  }
+  timestamps: true
 });
 
 // Thêm index cho seat_id
-ticketSchema.index({ 'seats_id.seat_id': 1 });
-ticketSchema.index({ showtime_id: 1, 'seats_id.seat_id': 1 }, { unique: true });
+ticketSchema.index({ 'seatsId.seatId': 1 });
+ticketSchema.index({ showtimeId: 1, 'seatsId.seatId': 1 }, { unique: true });
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
