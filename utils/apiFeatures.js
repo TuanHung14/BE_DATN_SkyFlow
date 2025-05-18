@@ -6,13 +6,27 @@ class APIFeatures {
 
     filter(){
         const queryObj = {...this.queryString}; // Tạo đối tượng mới không ảnh hưởng đến req.query
-        const excludedFields = ['page', 'sort', "limit", 'fields'];
+        const excludedFields = ['page', 'sort', "limit", 'fields', 'search'];
         excludedFields.forEach(el => delete queryObj[el]);
 
         let queryString = JSON.stringify(queryObj);
         queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
         
         this.query = this.query.find(JSON.parse(queryString));
+        return this;
+    }
+
+    search(){
+        if (this.queryString.search) {
+            //Chuyển đổi obj thành array VD: search{name: "abc"} => ['name', 'abc']
+            const orConditions = Object.entries(this.queryString.search).map(([field, value]) => ({
+                [field]: { $regex: value, $options: 'i' }
+            }));
+            if (orConditions.length > 0) {
+                this.query = this.query.find({ $or: orConditions });
+            }
+        }
+
         return this;
     }
 

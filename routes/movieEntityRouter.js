@@ -33,7 +33,6 @@ const router = express.Router();
  *                 description: "Tên của thực thể phim"
  *               type:
  *                 type: string
- *                 enum: ["genre", "director", "cast"]
  *                 example: genre
  *                 description: "Loại thực thể, chọn một giá trị từ danh sách"
  *     responses:
