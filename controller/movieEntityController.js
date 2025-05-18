@@ -39,9 +39,9 @@ exports.checkDuplicateName = catchAsync(async (req, res, next) => {
 
 });
 
-// LẤY TẤT CẢ THỰC THỂ CHO BÊN NGƯỜI DÙNG
-exports.getAllMovieEntities = catchAsync(async (req, res, next) => {
-    const filter = { isDeleted: false };
+// LẤY TẤT CẢ THỰC THỂ CHO BÊN ADMIN
+exports.getAllMovieEntitiesAdmin = catchAsync(async (req, res, next) => {
+    const filter = {};
 
     const features = new APIFeatures(movieEntityModel.find(filter), req.query).filter().sort().limitFields().pagination();
 
@@ -60,32 +60,6 @@ exports.getAllMovieEntities = catchAsync(async (req, res, next) => {
     });
 })
 
-// XOÁ MỀM THỰC THỂ CHỈ LÀ THAY ĐỔI FIELD idDelete thành true để ẩn bên người dùng
-exports.deleteMovieEntity = catchAsync(async (req, res, next) => {
-    const doc = await movieEntityModel.findByIdAndUpdate(
-        req.params.id,
-        {
-            isDeleted: true,
-            deletedAt: Date.now()
-        },
-        {
-            new: true,
-            runValidators: true
-        }
-    );
-
-    if (!doc) {
-        return next(new AppError('Không có thực thể với id này.', 404));
-    }
-
-    res.status(200).json({
-        status: 'success',
-        data: {
-            data: doc
-        }
-    });
-})
-
 // Khôi phục lại thực thể bị xoá mềm
 exports.restoreMovieEntity = catchAsync(async (req, res, next) => {
     const doc = await movieEntityModel.findByIdAndUpdate(
@@ -93,10 +67,6 @@ exports.restoreMovieEntity = catchAsync(async (req, res, next) => {
         {
             isDeleted: false,
             deletedAt: null
-        },
-        {
-            new: true,
-            runValidators: true
         }
     );
 
@@ -114,5 +84,6 @@ exports.restoreMovieEntity = catchAsync(async (req, res, next) => {
 
 exports.createMovieEntity = Factory.createOne(movieEntityModel);
 exports.getMovieEntityById = Factory.getOne(movieEntityModel);
-exports.getAllMovieEntitiesAdmin = Factory.getAll(movieEntityModel);
+exports.getAllMovieEntities = Factory.getAll(movieEntityModel);
 exports.updateMovieEntity = Factory.updateOne(movieEntityModel);
+exports.deleteMovieEntity = Factory.softDeleteOne(movieEntityModel);
