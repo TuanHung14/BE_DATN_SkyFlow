@@ -5,11 +5,11 @@ const APIFeatures = require('../utils/apiFeatures');
 
 exports.getAll = Model => catchAsync(async (req, res, next) => {
 
-    const filter = {};
+    const filter = Model.schema.path('isDeleted') ? { isDeleted: false } : {};
     // Sau này dùng cho phần đánh giá nên comment để đây
     // if(req.params.tourId) filter.tour = req.params.tourId;
     
-    const features = new APIFeatures(Model.find(filter), req.query).filter().sort().limitFields().pagination();
+    const features = new APIFeatures(Model.find(filter), req.query).filter().search().sort().limitFields().pagination();
     const doc = await features.query;
 
 
@@ -71,12 +71,27 @@ exports.deleteOne = Model => catchAsync(async (req, res, next) => {
         return next(new AppError(`No document found with that id`), 404);
     }
 
-    res.status(204).json({
+    res.status(200).json({
         status:'success',
         data: null
     })
 });
 
+exports.softDeleteOne = Model => catchAsync(async (req, res, next) => {
+    const doc = await Model.findByIdAndUpdate(req.params.id, {
+        isDeleted: true
+    })
+
+    if(!doc){
+        return next(new AppError(`Không tìm thấy dữ liệu theo id này: ${req.params.id}`), 404);
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Dữ liệu xóa thành công',
+        data: null
+    })
+})
 
 
 

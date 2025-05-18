@@ -14,6 +14,10 @@ const cinemaSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false,
     }
 }, { timestamps: true});
 
