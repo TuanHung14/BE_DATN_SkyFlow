@@ -25,6 +25,8 @@ const settingRouter = require("./routes/settingRouter");
 const bannerRouter = require("./routes/bannerRouter");
 const movieEntityRouter = require('./routes/movieEntityRouter');
 const cinemaRouter = require('./routes/cinemaRouter');
+const formatRouter = require('./routes/formatRouter');
+const roomRouter = require('./routes/roomRouter');
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
@@ -92,6 +94,8 @@ app.use("/api/v1/settings", settingRouter);
 app.use("/api/v1/banners", bannerRouter);
 app.use('/api/v1/movie-entities', movieEntityRouter);
 app.use('/api/v1/cinemas', cinemaRouter);
+app.use('/api/v1/formats', formatRouter);
+app.use('/api/v1/rooms', roomRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {

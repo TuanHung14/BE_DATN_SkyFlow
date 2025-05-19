@@ -3,14 +3,14 @@ const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
 
 
-exports.getAll = Model => catchAsync(async (req, res, next) => {
+exports.getAll = (Model, popOptions) => catchAsync(async (req, res, next) => {
 
     const filter = Model.schema.path('isDeleted') ? { isDeleted: false } : {};
     // Sau này dùng cho phần đánh giá nên comment để đây
     // if(req.params.tourId) filter.tour = req.params.tourId;
     
     const features = new APIFeatures(Model.find(filter), req.query).filter().search().sort().limitFields().pagination();
-    const doc = await features.query;
+    const doc = await features.query.populate(popOptions);
 
 
     res.status(200).json({
@@ -23,8 +23,11 @@ exports.getAll = Model => catchAsync(async (req, res, next) => {
 });
 
 exports.getOne = (Model, popOptions) => catchAsync(async (req, res, next) => {
-    let query = await Model.findOne({_id:req.params.id});
+    const filter = Model.schema.path('isDeleted') ? { _id: req.params.id, isDeleted: false } : { _id: req.params.id };
+
+    let query = await Model.findOne(filter);
     if(popOptions) query = query.populate(popOptions);
+
     const doc = await query;
     if(!doc) {
         return next(new AppError(`No document found with that id`), 404);
