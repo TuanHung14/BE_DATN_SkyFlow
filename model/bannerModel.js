@@ -9,7 +9,7 @@ const bannerSchema = new mongoose.Schema(
       minlength: [3, "Tiêu đề banner phải có ít nhất 3 ký tự"],
       maxlength: [100, "Tiêu đề banner không được vượt quá 100 ký tự"],
     },
-    image_url: {
+    imageUrl: {
       type: String,
       required: [true, "URL hình ảnh banner không được để trống"],
       trim: true,
@@ -24,17 +24,7 @@ const bannerSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true,
-    toJSON: {
-      virtuals: true,
-      transform: function (doc, ret) {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-      },
-    },
-    toObject: { virtuals: true },
+    timestamps: true
   }
 );
 

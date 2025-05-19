@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const priceRuleSchema = new mongoose.Schema({
-  seat_type: {
+  seatType: {
     type: String,
     enum: {
       values: ['normal', 'vip', 'couple'],
@@ -10,7 +10,7 @@ const priceRuleSchema = new mongoose.Schema({
     required: [true, 'Seat type is required'],
     trim: true
   },
-  age_group: {
+  ageGroup: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'CustomerGroup',
     required: [true, 'Age group is required'],

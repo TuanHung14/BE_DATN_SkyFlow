@@ -29,25 +29,7 @@ const voucherUseSchema = new mongoose.Schema({
     min: [0, 'Số lần sử dụng không thể âm'],
   }
 }, {
-  timestamps: true,
-  toJSON: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  },
-  toObject: {
-    virtuals: true,
-    transform: function(doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    }
-  }
+  timestamps: true
 });
 
 // Thêm index kết hợp để đảm bảo mỗi user chỉ dùng một voucher một lần

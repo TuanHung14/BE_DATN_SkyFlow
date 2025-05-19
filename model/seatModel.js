@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const seatSchema = new mongoose.Schema({
-    room_id: {
+    roomId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room',
         required: [true, "ID phòng chiếu là bắt buộc"],
         index: true,
     },
-    seat_row: {
+    seatRow: {
         type: String,
         required: [true, "Hàng ghế là bắt buộc"],
         uppercase: true,
@@ -18,7 +18,7 @@ const seatSchema = new mongoose.Schema({
             message: props => `${props.value} không phải là ký hiệu hàng hợp lệ (phải là chữ cái in hoa A-Z)!`
         }
     },
-    seat_number: {
+    seatNumber: {
         type: Number,
         required: [true, "Số ghế là bắt buộc"],
         min: [1, "Số ghế phải lớn hơn 0"],
@@ -28,7 +28,7 @@ const seatSchema = new mongoose.Schema({
             message: '{VALUE} không phải là số nguyên!'
         }
     },
-    seat_type: {
+    seatType: {
         type: String,
         enum: {
             values: ['standard', 'vip', 'couple'],
@@ -42,20 +42,10 @@ const seatSchema = new mongoose.Schema({
         default: 'active'
     }
 }, {
-    timestamps: true,
-    toJSON: {
-        virtuals: true,
-        transform: function(doc, ret) {
-            ret.id = ret._id;
-            delete ret._id;
-            delete ret.__v;
-            return ret;
-        }
-    },
-    toObject: { virtuals: true }
+    timestamps: true
 });
 
-seatSchema.index({ room_id: 1, seat_row: 1, seat_number: 1 }, { unique: true });
+seatSchema.index({ roomId: 1, seatRow: 1, seatNumber: 1 }, { unique: true });
 
 // seatSchema.statics.getSeatsByRoom = function(roomId) {
 //     return this.find({ room_id: roomId })
@@ -73,8 +63,8 @@ seatSchema.index({ room_id: 1, seat_row: 1, seat_number: 1 }, { unique: true });
 seatSchema.pre('save', async function(next) {
     if (this.isNew) {
         const Room = mongoose.model('Room');
-        const room = await Room.findById(this.room_id);
-        const currentSeats = await this.constructor.countDocuments({ room_id: this.room_id });
+        const room = await Room.findById(this.roomId);
+        const currentSeats = await this.constructor.countDocuments({ roomId: this.roomId });
         
         if (currentSeats >= room.capacity) {
             next(new Error('Số lượng ghế đã đạt giới hạn của phòng'));
@@ -87,9 +77,9 @@ seatSchema.pre('save', async function(next) {
 seatSchema.pre('save', async function(next) {
     try {
         const existingSeat = await this.constructor.findOne({
-            room_id: this.room_id,
-            seat_row: this.seat_row,
-            seat_number: this.seat_number,
+            roomId: this.roomId,
+            seatRow: this.seatRow,
+            seatNumber: this.seatNumber,
             _id: { $ne: this._id }
         });
 

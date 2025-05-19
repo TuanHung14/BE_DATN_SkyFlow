@@ -2,17 +2,17 @@ const mongoose = require('mongoose');
 const slugify = require('slugify');
 
 const movieSchema = new mongoose.Schema({
-    director_id: {
+    directorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MovieEntity',
         required: [true, 'Phim phải có đạo diễn']
     },
-    genres_id: [{
+    genresId: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MovieEntity',
         required: [true, 'Phim phải có ít nhất một thể loại']
     }],
-    cast_id: [{
+    castId: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MovieEntity',
         required: [true, 'Phim phải có ít nhất một diễn viên']
@@ -27,17 +27,17 @@ const movieSchema = new mongoose.Schema({
         required: [true, 'Phim phải có thời lượng'],
         min: [1, 'Thời lượng phim phải lớn hơn 0 phút']
     },
-    ratings_average: {
+    ratingsAverage: {
         type: Number,
         default: 0,
         min: 0,
         max: 10
     },
-    ratings_quantity: {
+    ratingsQuantity: {
         type: Number,
         default: 0
     },
-    release_date: {
+    releaseDate: {
         type: Date,
         required: [true, 'Phim phải có ngày khởi chiếu']
     },
@@ -51,11 +51,11 @@ const movieSchema = new mongoose.Schema({
         required: [true, 'Phim phải có mô tả'],
         trim: true
     },
-    poster_url: {
+    posterUrl: {
         type: String,
         required: [true, 'Phim phải có poster']
     },
-    trailer_url: {
+    trailerUrl: {
         type: String,
         required: [true, 'Phim phải có trailer']
     },

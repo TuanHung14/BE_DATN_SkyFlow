@@ -29,11 +29,11 @@ const router = express.Router();
  *             properties:
  *               name:
  *                 type: string
- *                 example: "The Dark Knight"
+ *                 example: "Kinh dị"
  *                 description: "Tên của thực thể phim"
  *               type:
  *                 type: string
- *                 example: genre
+ *                 example: genre | director | cast
  *                 description: "Loại thực thể, chọn một giá trị từ danh sách"
  *     responses:
  *       201:
@@ -59,28 +59,97 @@ router.post('/', checkDuplicateName ,movieEntityController.createMovieEntity);
  *         schema:
  *           type: integer
  *           default: 1
+ *           minimum: 1
  *         description: Số trang cần hiển thị
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *           default: 10
+ *           default: 12
+ *           minimum: 1
+ *           maximum: 100
  *         description: Số lượng kết quả trên mỗi trang
  *       - in: query
  *         name: sort
  *         schema:
  *           type: string
- *         description: Sắp xếp kết quả
+ *         description: Sắp xếp kết quả (Ví dụ -createdAt,+name. Dấu - để sắp xếp giảm dần, + để sắp xếp tăng dần)
  *       - in: query
- *         name: fields
+ *         name: type
  *         schema:
  *           type: string
- *         description: Giới hạn trường được trả về
+ *           enum: [genre, director, cast]
+ *         description: Lọc theo loại thực thể
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *           pattern: ^.*$
+ *         description: Tìm kiếm theo tên
  *     responses:
  *       200:
  *         description: Lấy danh sách thực thể thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 results:
+ *                   type: number
+ *                   example: 10
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "65f2d6789abcdef01234567"
+ *                           name:
+ *                             type: string
+ *                             example: "Kinh dị"
+ *                           type:
+ *                             type: string
+ *                             enum: [genre, director, cast]
+ *                             example: "genre"
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *       400:
+ *         description: Bad request - Dữ liệu không hợp lệ
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Invalid input data
  *       500:
  *         description: Lỗi server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
  */
 router.get('/', movieEntityController.getAllMovieEntities);
 
@@ -124,8 +193,6 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *         required: true
  *         schema:
  *           type: string
- *         description: "ID của thực thể phim cần cập nhật. Để xem thông tin chi tiết của thực thể này trước khi cập nhật, sử dụng endpoint GET /api/v1/movie-entities/{id}."
- *         example: "123e4567-e89b-12d3-a456-426614174000"
  *     requestBody:
  *       required: true
  *       content:
@@ -137,6 +204,10 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *                 type: string
  *                 example: "Updated Movie Name"
  *                 description: "Tên mới của thực thể phim (nếu muốn cập nhật)"
+ *               type:
+ *                 type: string
+ *                 example: "genre"
+ *                 description: "Kiểu mới của thực thể phim (nếu muốn cập nhật)"
  *               description:
  *                 type: string
  *                 example: "Updated movie description"
@@ -157,10 +228,12 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *               properties:
  *                 id:
  *                   type: string
- *                   example: "123e4567-e89b-12d3-a456-426614174000"
  *                 name:
  *                   type: string
  *                   example: "Updated Movie Name"
+ *                 type:
+ *                   type: string
+ *                   example: "genre"
  *                 description:
  *                   type: string
  *                   example: "Updated movie description"
@@ -183,7 +256,7 @@ router.patch('/:id', checkDuplicateName ,movieEntityController.updateMovieEntity
  *   delete:
  *     tags:
  *       - Movie Entities
- *     summary: Xóa thực thể phim
+ *     summary: Xóa thực thể phim (xoá mềm)
  *     operationId: deleteMovieEntity
  *     security:
  *       - bearer: []

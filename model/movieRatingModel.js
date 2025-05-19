@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const movieRatingSchema = new mongoose.Schema({
-  movie_id: {
+  movieId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Movie',
     required: [true, 'ID phim không được để trống'],
     index: true
   },
-  user_id: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', 
     required: [true, 'ID người dùng không được để trống'],
@@ -25,9 +25,7 @@ const movieRatingSchema = new mongoose.Schema({
     max: [5, 'Điểm đánh giá phải từ 1-5']
   }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  timestamps: true
 });
 
 const MovieRating = mongoose.model('MovieRating', movieRatingSchema);
