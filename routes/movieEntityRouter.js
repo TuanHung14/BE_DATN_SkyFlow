@@ -81,10 +81,11 @@ router.post('/', checkDuplicateName ,movieEntityController.createMovieEntity);
  *           enum: [genre, director, cast]
  *         description: Lọc theo loại thực thể
  *       - in: query
- *         name: fields
+ *         name: name
  *         schema:
  *           type: string
- *         description: Chọn các trường cần hiển thị (Ví dụ fields=name,type,createdAt)
+ *           pattern: ^.*$
+ *         description: Tìm kiếm theo tên
  *     responses:
  *       200:
  *         description: Lấy danh sách thực thể thành công
@@ -151,113 +152,6 @@ router.post('/', checkDuplicateName ,movieEntityController.createMovieEntity);
  *                   example: Internal server error
  */
 router.get('/', movieEntityController.getAllMovieEntities);
-
-/**
- * @swagger
- * /api/v1/movie-entities/admin:
- *   get:
- *     tags:
- *       - Movie Entities
- *     summary: Lấy danh sách thực thể phim cho admin
- *     operationId: getAllMovieEntitiesAdmin
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *           minimum: 1
- *         description: Số trang cần hiển thị
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 12
- *           minimum: 1
- *           maximum: 100
- *         description: Số lượng kết quả trên mỗi trang
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *         description: Sắp xếp kết quả (Ví dụ -createdAt,+name. Dấu - để sắp xếp giảm dần, + để sắp xếp tăng dần)
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *           enum: [genre, director, cast]
- *         description: Lọc theo loại thực thể
- *       - in: query
- *         name: fields
- *         schema:
- *           type: string
- *         description: Chọn các trường cần hiển thị (Ví dụ fields=name,type,createdAt)
- *     responses:
- *       200:
- *         description: Lấy danh sách thực thể thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 results:
- *                   type: number
- *                   example: 10
- *                 data:
- *                   type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           _id:
- *                             type: string
- *                             example: "65f2d6789abcdef01234567"
- *                           name:
- *                             type: string
- *                             example: "Kinh dị"
- *                           type:
- *                             type: string
- *                             enum: [genre, director, cast]
- *                             example: "genre"
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                           updatedAt:
- *                             type: string
- *                             format: date-time
- *       400:
- *         description: Bad request - Dữ liệu không hợp lệ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 message:
- *                   type: string
- *                   example: Invalid input data
- *       500:
- *         description: Lỗi server
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 message:
- *                   type: string
- *                   example: Internal server error
- */
-router.get('/admin', movieEntityController.getAllMovieEntitiesAdmin);
 
 /**
  * @swagger
@@ -381,25 +275,5 @@ router.patch('/:id', checkDuplicateName ,movieEntityController.updateMovieEntity
  *         description: Lỗi server
  */
 router.delete('/:id', movieEntityController.deleteMovieEntity);
-
-/**
- * @swagger
- * /api/v1/movie-entities/{id}/restore:
- *    patch:
- *      tags:
- *       - Movie Entities
- *      summary: Khôi phục thể loại đã xóa mềm
- *      parameters:
- *        - in: path
- *          name: id
- *          required: true
- *          description: ID của thể loại cần khôi phục
- *      responses:
- *        200:
- *          description: Khôi phục thành công
- *        404:
- *          description: Không tìm thấy thể loại
- */
-router.patch('/:id/restore', movieEntityController.restoreMovieEntity);
 
 module.exports = router;
