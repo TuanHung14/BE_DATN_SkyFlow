@@ -13,6 +13,11 @@ const showtimeSchema = new mongoose.Schema({
         required: [true, 'Suất chiếu phải có phòng chiếu'],
         index: true,
     },
+    formatId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Format",
+        required: [true, 'Suất chiếu phải có định dạng']
+    },
     showDate: {
         type: Date,
         required: [true, 'Suất chiếu phải có ngày chiếu'],
