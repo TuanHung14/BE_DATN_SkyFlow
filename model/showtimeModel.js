@@ -39,6 +39,14 @@ const showtimeSchema = new mongoose.Schema({
             message: '{VALUE} không phải là trạng thái hợp lệ'
         },
         default: 'Available'
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
+    },
+    deleteAt: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true
