@@ -20,7 +20,7 @@ const router = express.Router();
  *     operationId: getAllMovies
  *     parameters:
  *       - in: query
- *         name: search
+ *         name: search[name]
  *         schema:
  *           type: string
  *         description: Tìm kiếm theo tên phim
