@@ -39,7 +39,7 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
     // Kiểm tra trùng lịch trong cùng phòng
     const conflictShowtime = await showTimeModel.findOne({
         roomId: req.body.roomId,
-        isDeleted: false, // Chỉ kiểm tra với các suất chiếu chưa bị xóa
+        isDeleted: false,
         $or: [
             // Suất chiếu khác bắt đầu trong khoảng thời gian của suất này
             {
@@ -73,7 +73,6 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         return next(new AppError('Đã có suất chiếu khác trong khoảng thời gian này', 409));
     }
 
-    // Nếu không có vấn đề, tạo suất chiếu mới
     const doc = await showTimeModel.create(req.body);
     res.status(201).json({
         status: 'success',
@@ -99,12 +98,6 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
         if (startTimeInMinutes < earliestAllowed || startTimeInMinutes > latestAllowed) {
             return next(new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 400));
         }
-
-        // Kiểm tra thời gian bắt đầu có phải là bội số của 30 phút từ 8:30 không
-        // const minutesSince830 = startTimeInMinutes - earliestAllowed;
-        // if (minutesSince830 % 30 !== 0) {
-        //     return next(new AppError('Thời gian bắt đầu phải cách nhau 30 phút (8:30, 9:00, 9:30, ...)', 400));
-        // }
 
         // Lấy thông tin suất chiếu hiện tại
         const showtime = await showTimeModel.findById(req.params.id);
