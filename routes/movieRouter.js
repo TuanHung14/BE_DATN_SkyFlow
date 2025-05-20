@@ -25,6 +25,18 @@ const router = express.Router();
  *           type: string
  *         description: Tìm kiếm theo tên phim
  *       - in: query
+ *         name: diretor
+ *         schema:
+ *           type: string
+ *           enum: [Victor Vũ, Nguyễn Quang Dũng]
+ *         description: Lọc theo đạo diễn
+ *       - in: query
+ *         name: cast
+ *         schema:
+ *           type: string
+ *           enum: [Jun vũ, Ngô Kiến Huy, Trấn Thành]
+ *         description: Lọc theo diễn viên
+ *       - in: query
  *         name: sort
  *         schema:
  *           type: string
@@ -109,6 +121,18 @@ router.get("/:id", movieController.getMovie);
  *           type: string
  *         description: Tìm kiếm theo tên phim
  *       - in: query
+ *         name: diretor
+ *         schema:
+ *           type: [string]
+ *           enum: [Victor Vũ, Nguyễn Quang Dũng]
+ *         description: Lọc theo đạo diễn
+ *       - in: query
+ *         name: cast
+ *         schema:
+ *           type: [string]
+ *           enum: [Jun vũ, Ngô Kiến Huy, Trấn Thành]
+ *         description: Lọc theo diễn viên
+ *       - in: query
  *         name: sort
  *         schema:
  *           type: string
@@ -149,7 +173,7 @@ router.get("/:id", movieController.getMovie);
  *         description: Lỗi máy chủ
  */
 
-router.get("/", auth, restrictTo("admin"), movieController.getAllMovies);
+router.get("/", movieController.getAllMovies);
 
 /**
  * @swagger
@@ -171,7 +195,7 @@ router.get("/", auth, restrictTo("admin"), movieController.getAllMovies);
  *         description: Thông tin phim
  */
 
-router.get("/:id", auth, restrictTo("admin"), movieController.getMovie);
+router.get("/:id", movieController.getMovie);
 /**
  * @swagger
  * /api/v1/admin/movies:
@@ -227,17 +251,17 @@ router.get("/:id", auth, restrictTo("admin"), movieController.getMovie);
  *                 example: "https://youtube.com/watch?v=TcMBFSGVi1c"
  *               directorId:
  *                 type: string
- *                 example: "664b88ecf75b1e92a7f2e321"
+ *                 example: 682afc04b6acee1fab2f084f
  *               genresId:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["664b8912f75b1e92a7f2e323", "664b891cf75b1e92a7f2e324"]
+ *                 example: 682afc04b6acee1fab2f084f
  *               castId:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example: ["664b892df75b1e92a7f2e325", "664b8938f75b1e92a7f2e326"]
+ *                 example: 682afc04b6acee1fab2f084f
  *     responses:
  *       201:
  *         description: Phim đã được tạo thành công
@@ -245,7 +269,7 @@ router.get("/:id", auth, restrictTo("admin"), movieController.getMovie);
  *         description: Dữ liệu gửi lên không hợp lệ
  */
 
-router.post("/", auth, restrictTo("admin"), movieController.createMovie);
+router.post("/", movieController.createMovie);
 /**
  * @swagger
  * /api/v1/admin/movies/{id}:
@@ -296,13 +320,13 @@ router.post("/", auth, restrictTo("admin"), movieController.createMovie);
  *                 example: "https://youtube.com/watch?v=TcMBFSGVi1c"
  *               directorId:
  *                 type: string
- *                 example: "664b88ecf75b1e92a7f2e321"
+ *                 example: "682afc04b6acee1fab2f084f"
  *               genresId:
  *                 type: string
- *                 example: "664b88ecf75b1e92a7f2e321"
+ *                 example: "682afc04b6acee1fab2f084f"
  *               castId:
  *                 type: string
- *                 example: "664b88ecf75b1e92a7f2e321"
+ *                 example: "682afc04b6acee1fab2f084f"
  *     responses:
  *       200:
  *         description: Cập nhật thành công
@@ -311,7 +335,7 @@ router.post("/", auth, restrictTo("admin"), movieController.createMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/:id", auth, restrictTo("admin"), movieController.updateMovie);
+router.patch("/:id", movieController.updateMovie);
 
 /**
  * @swagger
@@ -334,10 +358,5 @@ router.patch("/:id", auth, restrictTo("admin"), movieController.updateMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete(
-  "/:id",
-  auth,
-  restrictTo("admin"),
-  movieController.softDeleteMovie
-);
+router.delete("/:id", movieController.softDeleteMovie);
 module.exports = router;
