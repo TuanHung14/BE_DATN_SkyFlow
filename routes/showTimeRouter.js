@@ -4,6 +4,44 @@ const {auth} = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/v1/show-times/filter:
+ *   get:
+ *     summary: Lấy danh sách suất chiếu theo bộ lọc
+ *     description: Trả về danh sách suất chiếu phim dựa trên các tham số lọc như ngày, tỉnh/thành phố và rạp chiếu
+ *     tags:
+ *       - Showtimes
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Ngày muốn xem lịch chiếu (định dạng YYYY-MM-DD)
+ *         example: 2024-06-15
+ *       - in: query
+ *         name: province
+ *         schema:
+ *           type: string
+ *         description: ID của tỉnh/thành phố
+ *         example: 60d5ec9af682f34e008c47bc
+ *       - in: query
+ *         name: cinemaId
+ *         schema:
+ *           type: string
+ *         description: ID của rạp chiếu phim
+ *         example: 60d5ecb2f682f34e008c47bd
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       500:
+ *         description: Lỗi server
+ */
+router.get('/filter', showTimeController.getShowTimeFilter);
+
 // router.use(auth);
 
 /**
@@ -224,93 +262,10 @@ router.post('/', showTimeController.createShowTime);
  *     responses:
  *       200:
  *         description: Lấy danh sách suất chiếu thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 results:
- *                   type: integer
- *                   example: 10
- *                 data:
- *                   type: object
- *                   properties:
- *                     showtimes:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           _id:
- *                             type: string
- *                             example: "507f1f77bcf86cd799439011"
- *                           movieId:
- *                             type: object
- *                             properties:
- *                               _id:
- *                                 type: string
- *                                 example: "507f1f77bcf86cd799439012"
- *                               name:
- *                                 type: string
- *                                 example: "Avengers: Endgame"
- *                           roomId:
- *                             type: object
- *                             properties:
- *                               _id:
- *                                 type: string
- *                                 example: "507f1f77bcf86cd799439013"
- *                               roomName:
- *                                 type: string
- *                                 example: "Room A1"
- *                           formatId:
- *                             type: object
- *                             properties:
- *                               _id:
- *                                 type: string
- *                                 example: "507f1f77bcf86cd799439014"
- *                               name:
- *                                 type: string
- *                                 example: "2D"
- *                           showDate:
- *                             type: string
- *                             format: date
- *                             example: "2024-04-20"
- *                           startTime:
- *                             type: string
- *                             format: date-time
- *                             example: "2024-04-20T18:30:00.000Z"
- *                           status:
- *                             type: string
- *                             enum: [Available, Occupied, Maintenance]
- *                             example: "Available"
  *       400:
  *         description: Dữ liệu đầu vào không hợp lệ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 message:
- *                   type: string
- *                   example: Invalid input data
  *       500:
  *         description: Lỗi máy chủ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 message:
- *                   type: string
- *                   example: Internal server error
  */
 router.get('/', showTimeController.getAllShowTime);
 
