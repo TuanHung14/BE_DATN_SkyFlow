@@ -1,6 +1,5 @@
 const express = require("express");
 const movieController = require("../controller/movieController");
-const { auth, restrictTo } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -77,11 +76,11 @@ const router = express.Router();
  *         description: Lỗi máy chủ
  */
 
-router.get("/admin", movieController.getAllMovies);
+router.get("/admin", movieController.getAllMoviesAdmin);
 
 /**
  * @swagger
- * /api/v1/movies/admin/{id}:
+ * /api/v1/movies/{id}:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -98,11 +97,11 @@ router.get("/admin", movieController.getAllMovies);
  *       200:
  *         description: Thông tin phim
  */
+router.get("/:id", movieController.getMovie);
 
-router.get("/admin/:id", movieController.getMovie);
 /**
  * @swagger
- * /api/v1/movies/admin/:
+ * /api/v1/movies/:
  *   post:
  *     security:
  *       - bearerAuth: []
@@ -172,11 +171,11 @@ router.get("/admin/:id", movieController.getMovie);
  *       400:
  *         description: Dữ liệu gửi lên không hợp lệ
  */
+router.post("/", movieController.createMovie);
 
-router.post("/admin", movieController.createMovie);
 /**
  * @swagger
- * /api/v1/movies/admin/{id}:
+ * /api/v1/movies/{id}:
  *   patch:
  *     security:
  *       - bearerAuth: []
@@ -239,11 +238,11 @@ router.post("/admin", movieController.createMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/admin/:id", movieController.updateMovie);
+router.patch("/:id", movieController.updateMovie);
 
 /**
  * @swagger
- * /api/v1/movies/admin/{id}:
+ * /api/v1/movies/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
@@ -262,7 +261,8 @@ router.patch("/admin/:id", movieController.updateMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete("/admin/:id", movieController.softDeleteMovie);
+router.delete("/:id", movieController.softDeleteMovie);
+
 /**
  * @swagger
  * /api/v1/movies:
@@ -326,7 +326,6 @@ router.delete("/admin/:id", movieController.softDeleteMovie);
  *       500:
  *         description: Lỗi máy chủ
  */
-
 router.get("/", movieController.getAllMovies);
 
 /**
@@ -348,6 +347,5 @@ router.get("/", movieController.getAllMovies);
  *       404:
  *         description: Không tìm thấy phim
  */
-
 router.get("/slug/:slug", movieController.getMovieBySlug);
 module.exports = router;

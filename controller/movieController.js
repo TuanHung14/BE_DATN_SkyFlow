@@ -1,8 +1,7 @@
 const Movie = require("../model/movieModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const slugify = require("slugify");
-const factory = require("./handleFactory");
+const Factory = require("./handleFactory");
 const { filterObj } = require("../utils/helper");
 
 // CREATE MOVIE
@@ -92,36 +91,30 @@ exports.updateMovie = catchAsync(async (req, res, next) => {
   });
 });
 exports.getMovieBySlug = async (req, res, next) => {
-  try {
-    const movie = await Movie.findOne({ slug: req.params.slug });
+  const movie = await Movie.findOne({
+    slug: req.params.slug,
+    isDeleted: false,
+    publishStatus: { $ne: "DRAFT" },
+  });
 
-    if (!movie) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Không tìm thấy phim với slug này",
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: movie,
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message: "Lỗi máy chủ",
+  if (!movie) {
+    return next({
+      statusCode: 404,
+      message: "Không tìm thấy phim với slug này",
     });
   }
+
+  res.status(200).json({
+    status: "success",
+    data: movie,
+  });
 };
 exports.getAllMovies = (req, res, next) => {
-  if (req.user?.role !== "admin") {
-    req.filter = { publishStatus: "PUBLISHED" };
-  }
-  return factory.getAll(Movie, "castId genresId directorId")(req, res, next);
+  req.query.publishStatus = "PUBLISHED";
+  return Factory.getAll(Movie, "castId genresId directorId")(req, res, next);
 };
-
-// GET ONE
-exports.getMovie = factory.getOne(Movie, "castId genresId directorId");
+exports.getAllMoviesAdmin = Factory.getAll(Movie, "castId genresId directorId");
+exports.getMovie = Factory.getOne(Movie, "castId genresId directorId");
 
 // SOFT DELETE
-exports.softDeleteMovie = factory.softDeleteOne(Movie);
+exports.softDeleteMovie = Factory.softDeleteOne(Movie);

@@ -4,10 +4,8 @@ const APIFeatures = require("../utils/apiFeatures");
 
 exports.getAll = (Model, popOptions) =>
   catchAsync(async (req, res, next) => {
-    const filter = {
-      ...(Model.schema.path("isDeleted") ? { isDeleted: false } : {}),
-      ...(req.filter || {}),
-    };
+    const filter = Model.schema.path("isDeleted") ? { isDeleted: false } : {};
+
     // Sau này dùng cho phần đánh giá nên comment để đây
     // if(req.params.tourId) filter.tour = req.params.tourId;
 
