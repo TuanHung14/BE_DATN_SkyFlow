@@ -97,7 +97,7 @@ app.use("/api/v1/cinemas", cinemaRouter);
 app.use("/api/v1/formats", formatRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/movies", movieRouter);
-app.use("/api/v1/admin/movies", movieRouter);
+
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));

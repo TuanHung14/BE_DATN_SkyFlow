@@ -8,16 +8,18 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Movies
- *     description: Quản lý phim (người dùng)
+ *     description: Quản lý phim (người dùng và admin)
  */
 
 /**
  * @swagger
- * /api/v1/movies:
+ * /api/v1/movies/admin:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     tags: [Movies]
  *     summary: Lấy danh sách phim có lọc, sắp xếp, phân trang
- *     operationId: getAllMovies
+ *     operationId: getAllMoviesAdmin
  *     parameters:
  *       - in: query
  *         name: search[name]
@@ -25,16 +27,14 @@ const router = express.Router();
  *           type: string
  *         description: Tìm kiếm theo tên phim
  *       - in: query
- *         name: diretor
+ *         name: directorId
  *         schema:
  *           type: string
- *           enum: [Victor Vũ, Nguyễn Quang Dũng]
  *         description: Lọc theo đạo diễn
  *       - in: query
- *         name: cast
+ *         name: castId
  *         schema:
  *           type: string
- *           enum: [Jun vũ, Ngô Kiến Huy, Trấn Thành]
  *         description: Lọc theo diễn viên
  *       - in: query
  *         name: sort
@@ -77,12 +77,14 @@ const router = express.Router();
  *         description: Lỗi máy chủ
  */
 
-router.get("/", movieController.getAllMovies);
+router.get("/admin", movieController.getAllMovies);
 
 /**
  * @swagger
- * /api/v1/movies/{id}:
+ * /api/v1/movies/admin/{id}:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     summary: Lấy chi tiết một phim
  *     tags: [Movies]
  *     parameters:
@@ -97,113 +99,15 @@ router.get("/", movieController.getAllMovies);
  *         description: Thông tin phim
  */
 
-router.get("/:id", movieController.getMovie);
+router.get("/admin/:id", movieController.getMovie);
 /**
  * @swagger
- * tags:
- *   - name: AdminMovies
- *     description: Quản lý phim (Admin)
- */
-
-/**
- * @swagger
- * /api/v1/admin/movies:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [AdminMovies]
- *     summary: Lấy danh sách phim có lọc, sắp xếp, phân trang
- *     operationId: getAllMovies
- *     parameters:
- *       - in: query
- *         name: search[name]
- *         schema:
- *           type: string
- *         description: Tìm kiếm theo tên phim
- *       - in: query
- *         name: diretor
- *         schema:
- *           type: [string]
- *           enum: [Victor Vũ, Nguyễn Quang Dũng]
- *         description: Lọc theo đạo diễn
- *       - in: query
- *         name: cast
- *         schema:
- *           type: [string]
- *           enum: [Jun vũ, Ngô Kiến Huy, Trấn Thành]
- *         description: Lọc theo diễn viên
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *         description: "Sắp xếp kết quả (ví dụ: sort=name,-releaseDate)"
- *       - in: query
- *         name: fields
- *         schema:
- *           type: string
- *         description: "Giới hạn trường được trả về (ví dụ: fields=name,slug)"
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Số trang
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Số lượng phim mỗi trang
- *       - in: query
- *         name: genre
- *         schema:
- *           type: string
- *           enum: [horror, action, comedy, drama]
- *         description: Lọc theo thể loại
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [NOW_SHOWING, COMING_SOON]
- *         description: Lọc theo trạng thái
- *     responses:
- *       200:
- *         description: Lấy danh sách phim thành công
- *       500:
- *         description: Lỗi máy chủ
- */
-
-router.get("/", movieController.getAllMovies);
-
-/**
- * @swagger
- * /api/v1/admin/movies/{id}:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     summary: Lấy chi tiết một phim
- *     tags: [AdminMovies]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID của phim
- *     responses:
- *       200:
- *         description: Thông tin phim
- */
-
-router.get("/:id", movieController.getMovie);
-/**
- * @swagger
- * /api/v1/admin/movies:
+ * /api/v1/movies/admin/:
  *   post:
  *     security:
  *       - bearerAuth: []
  *     summary: Tạo một phim mới
- *     tags: [AdminMovies]
+ *     tags: [Movies]
  *     requestBody:
  *       required: true
  *       content:
@@ -269,15 +173,15 @@ router.get("/:id", movieController.getMovie);
  *         description: Dữ liệu gửi lên không hợp lệ
  */
 
-router.post("/", movieController.createMovie);
+router.post("/admin", movieController.createMovie);
 /**
  * @swagger
- * /api/v1/admin/movies/{id}:
+ * /api/v1/movies/admin/{id}:
  *   patch:
  *     security:
  *       - bearerAuth: []
  *     summary: Cập nhật thông tin phim
- *     tags: [AdminMovies]
+ *     tags: [Movies]
  *     parameters:
  *       - in: path
  *         name: id
@@ -335,16 +239,16 @@ router.post("/", movieController.createMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/:id", movieController.updateMovie);
+router.patch("/admin/:id", movieController.updateMovie);
 
 /**
  * @swagger
- * /api/v1/admin/movies/{id}:
+ * /api/v1/movies/admin/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     summary: Xoá mềm một phim
- *     tags: [AdminMovies]
+ *     tags: [Movies]
  *     parameters:
  *       - in: path
  *         name: id
@@ -358,5 +262,92 @@ router.patch("/:id", movieController.updateMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete("/:id", movieController.softDeleteMovie);
+router.delete("/admin/:id", movieController.softDeleteMovie);
+/**
+ * @swagger
+ * /api/v1/movies:
+ *   get:
+ *     tags: [Movies]
+ *     summary: Lấy danh sách phim có lọc, sắp xếp, phân trang
+ *     operationId: getAllMoviesUser
+ *     parameters:
+ *       - in: query
+ *         name: search[name]
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tên phim
+ *       - in: query
+ *         name: directorId
+ *         schema:
+ *           type: string
+ *         description: Lọc theo đạo diễn
+ *       - in: query
+ *         name: castId
+ *         schema:
+ *           type: string
+ *         description: Lọc theo diễn viên
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: "Sắp xếp kết quả (ví dụ: sort=name,-releaseDate)"
+ *       - in: query
+ *         name: fields
+ *         schema:
+ *           type: string
+ *         description: "Giới hạn trường được trả về (ví dụ: fields=name,slug)"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Số trang
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Số lượng phim mỗi trang
+ *       - in: query
+ *         name: genre
+ *         schema:
+ *           type: string
+ *           enum: [horror, action, comedy, drama]
+ *         description: Lọc theo thể loại
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [NOW_SHOWING, COMING_SOON]
+ *         description: Lọc theo trạng thái
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách phim thành công
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+
+router.get("/", movieController.getAllMovies);
+
+/**
+ * @swagger
+ * /api/v1/movies/slug/{slug}:
+ *   get:
+ *     summary: Lấy phim theo slug
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Slug của phim (ví dụ: avengers-endgame)"
+ *     responses:
+ *       200:
+ *         description: Thông tin phim theo slug
+ *       404:
+ *         description: Không tìm thấy phim
+ */
+
+router.get("/slug/:slug", movieController.getMovieBySlug);
 module.exports = router;

@@ -58,6 +58,11 @@ const movieSchema = new mongoose.Schema(
       type: String,
       required: [true, "Phim phải có poster"],
     },
+    publishStatus: {
+      type: String,
+      enum: ["DRAFT", "PUBLISHED"],
+      default: "PUBLISHED",
+    },
     trailerUrl: {
       type: String,
       required: [true, "Phim phải có trailer"],
