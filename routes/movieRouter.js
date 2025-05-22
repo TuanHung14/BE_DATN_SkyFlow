@@ -58,7 +58,7 @@ const router = express.Router();
  *           default: 10
  *         description: Số lượng phim mỗi trang
  *       - in: query
- *         name: genre
+ *         name: genresId
  *         schema:
  *           type: string
  *         description: Lọc theo thể loại
@@ -308,7 +308,7 @@ router.delete("/:id", movieController.softDeleteMovie);
  *           default: 10
  *         description: Số lượng phim mỗi trang
  *       - in: query
- *         name: genre
+ *         name: genresId
  *         schema:
  *           type: string
  *         description: Lọc theo thể loại
