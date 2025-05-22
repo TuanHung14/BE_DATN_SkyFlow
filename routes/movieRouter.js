@@ -61,7 +61,6 @@ const router = express.Router();
  *         name: genre
  *         schema:
  *           type: string
- *           enum: [horror, action, comedy, drama]
  *         description: Lọc theo thể loại
  *       - in: query
  *         name: status
@@ -312,7 +311,6 @@ router.delete("/:id", movieController.softDeleteMovie);
  *         name: genre
  *         schema:
  *           type: string
- *           enum: [horror, action, comedy, drama]
  *         description: Lọc theo thể loại
  *       - in: query
  *         name: status

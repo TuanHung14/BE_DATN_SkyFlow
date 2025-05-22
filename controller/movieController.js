@@ -90,7 +90,7 @@ exports.updateMovie = catchAsync(async (req, res, next) => {
     data: { data: movie },
   });
 });
-exports.getMovieBySlug = async (req, res, next) => {
+exports.getMovieBySlug = catchAsync(async (req, res, next) => {
   const movie = await Movie.findOne({
     slug: req.params.slug,
     isDeleted: false,
@@ -108,7 +108,7 @@ exports.getMovieBySlug = async (req, res, next) => {
     status: "success",
     data: movie,
   });
-};
+});
 exports.getAllMovies = (req, res, next) => {
   req.query.publishStatus = "PUBLISHED";
   return Factory.getAll(Movie, "castId genresId directorId")(req, res, next);
