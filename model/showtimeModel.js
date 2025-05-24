@@ -32,6 +32,10 @@ const showtimeSchema = new mongoose.Schema({
         type: Date,
         required: [true, 'Suất chiếu phải có giờ bắt đầu'],
     },
+    endTime: {
+      type: Date,
+      required: [true, 'Suất chiếu phải có thời gian kết thúc'],
+    },
     status: {
         type: String,
         enum: {
