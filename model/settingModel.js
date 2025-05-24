@@ -4,7 +4,7 @@ const settingSchema = new mongoose.Schema(
   {
     companyName: {
       type: String,
-      required: [true, "Không được để trống"],
+      default: "Công ty TNHH ABC",
     },
     address: {
       type: String,
