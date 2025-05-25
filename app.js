@@ -29,6 +29,7 @@ const formatRouter = require("./routes/formatRouter");
 const roomRouter = require("./routes/roomRouter");
 const movieRouter = require("./routes/movieRouter");
 const showTimeRouter = require("./routes/showTimeRouter");
+const movieRatingRouter = require("./routes/movieRatingRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
@@ -104,6 +105,7 @@ app.use("/api/v1/formats", formatRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/movies", movieRouter);
 app.use('/api/v1/show-times', showTimeRouter);
+app.use("/api/v1/movie-rating", movieRatingRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
