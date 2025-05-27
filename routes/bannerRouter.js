@@ -130,8 +130,11 @@ router.post("/", bannerController.createBanner);
  *             properties:
  *               title:
  *                 type: string
+ *               imageUrl:
+ *                 type: string
  *             example:
  *               title: Banner da cap nhat
+ *               imageUrl: https://example.com/banner-updated.jpg
  *     responses:
  *       200:
  *         description: Cập nhật thành công
