@@ -5,7 +5,6 @@ const AppError = require("../utils/appError");
 const crypto = require("crypto");
 const axios = require("axios");
 
-
 const validatePaymentData = (data, next) => {
     const required = ['userId', 'orderId', 'amount', 'gateway'];
     for (const field of required) {
