@@ -28,6 +28,7 @@ const cinemaRouter = require("./routes/cinemaRouter");
 const formatRouter = require("./routes/formatRouter");
 const roomRouter = require("./routes/roomRouter");
 const movieRouter = require("./routes/movieRouter");
+const paymentRouter = require("./routes/paymentRouter");
 const showTimeRouter = require("./routes/showTimeRouter");
 
 //Sử dụng engine Pug
@@ -94,16 +95,13 @@ app.use("/api/v1/email", emailRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", settingRouter);
 app.use("/api/v1/banners", bannerRouter);
-app.use('/api/v1/movie-entities', movieEntityRouter);
-app.use('/api/v1/cinemas', cinemaRouter);
-app.use('/api/v1/formats', formatRouter);
-app.use('/api/v1/rooms', roomRouter);
 app.use("/api/v1/movie-entities", movieEntityRouter);
 app.use("/api/v1/cinemas", cinemaRouter);
 app.use("/api/v1/formats", formatRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/movies", movieRouter);
-app.use('/api/v1/show-times', showTimeRouter);
+app.use("/api/v1/payments", paymentRouter);
+app.use("/api/v1/show-time", showTimeRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
