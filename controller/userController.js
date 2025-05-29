@@ -49,7 +49,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 // });
 
 exports.fieldUpdate = (req, res, next) => {
-    req.body = filterObj(req.body, 'name', 'email', 'role');
+    req.body = filterObj(req.body, 'name', 'email', 'photo', 'role');
     next();
 }
 
