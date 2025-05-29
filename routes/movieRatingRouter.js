@@ -2,68 +2,28 @@ const express = require('express');
 const movieRatingController = require('../controller/movieRatingController');
 const { auth, restrictTo } = require('../middleware/authMiddleware');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 /**
  * @swagger
- * /api/v1/movie-rating/{id}:
- *   get:
- *     summary: Lấy thông tin đánh giá theo ID
- *     tags: [Movie Rating]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của đánh giá
- *     responses:
- *       200:
- *         description: Thông tin chi tiết đánh giá
- *       404:
- *         description: Không tìm thấy đánh giá
- */
-router
-  .route('/:id')
-  .get(movieRatingController.getMovieRatingById);
-
-/**
- * @swagger
- * /api/v1/movie-rating/user/{userId}:
- *   get:
- *     summary: Lấy tất cả đánh giá của một người dùng
- *     tags: [Movie Rating]
- *     parameters:
- *       - in: path
- *         name: userId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của người dùng
- *     responses:
- *       200:
- *         description: Danh sách đánh giá của người dùng
- */
-router
-  .route('/user/:userId')
-  .get(movieRatingController.getAllRatingByUserId);
-
-// router.use(auth);
-
-/**
- * @swagger
- * /api/v1/movie-rating:
+ * /api/v1/movies/{id}/movie-ratings:
  *   get:
  *     summary: Lấy tất cả đánh giá phim
- *     tags: [Movie Rating]
+ *     description: Lấy danh sách tất cả các đánh giá phim
+ *     tags: [Movie Ratings]
  *     responses:
  *       200:
- *         description: Danh sách tất cả đánh giá phim
+ *         description: Danh sách các đánh giá phim
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+/**
+ * @swagger
+ * /api/v1/movies/{id}/movie-ratings:
  *   post:
  *     summary: Tạo đánh giá phim mới
- *     tags: [Movie Rating]
- *     security:
- *       - bearerAuth: []
+ *     description: Tạo đánh giá mới cho một bộ phim
+ *     tags: [Movie Ratings]
  *     requestBody:
  *       required: true
  *       content:
@@ -76,26 +36,26 @@ router
  *               - rating
  *             properties:
  *               userId:
- *                  type: string
- *                  example: 68314e9f33e810b1c25e55df
+ *                 type: string
+ *                 example: "68314e4833e810b1c25e55da"
  *               movieId:
  *                 type: string
- *                 example: 60d21b4667d0d8992e610c85
+ *                 example: "682f5b7ab23c54d8e5f1627e"
  *               rating:
- *                 type: number
- *                 minimum: 1
- *                 maximum: 5
- *                 example: 4
- *               comment:
- *                 type: string
- *                 example: Phim rất hay và ý nghĩa
+ *                 type: integer
+ *                 example: 5
  *     responses:
  *       201:
- *         description: Đánh giá đã được tạo
+ *         description: Đánh giá được tạo thành công
+ *       400:
+ *         description: Dữ liệu yêu cầu không hợp lệ
+ *       401:
+ *         description: Không được ủy quyền
+ *       500:
+ *         description: Lỗi máy chủ
  */
-router
-    .route('/')
-    .get(movieRatingController.getAllRatings)
-    .post(movieRatingController.createMovieRating);
+
+router.get("/", movieRatingController.getAllRatings);
+router.post("/", movieRatingController.createMovieRating);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const movieModel = require('./movieModel');
 
 const movieRatingSchema = new mongoose.Schema({
   movieId: {
@@ -47,18 +48,11 @@ movieRatingSchema.statics.calcAverageRating = async function(movieId) {
   ]);
 
   // cập nhập movie với thống kê mới
-  const movie = mongoose.model('Movie');
   if (stats.length > 0) {
-    await movie.findByIdAndUpdate(movieId, {
+    await movieModel.findByIdAndUpdate(movieId, {
       ratingsAverage: stats[0].avgRating,
       ratingsQuantity: stats[0].nRating
     });
-  } else {
-      // giá trị mặc định nếu không có đánh giá.
-      await movie.findByIdAndUpdate(movieId, {
-        ratingsAverage: 0,
-        ratingsQuantity: 0
-      });
   }
 }
 
@@ -74,13 +68,11 @@ movieRatingSchema.pre(/^findOneAnd/, async function(next) {
   next();
 });
 
-movieRatingSchema.post(/^findOneAnd/, async function() {
-  // Lưu ý: this.r chứa document trước khi cập nhật/xóa
-  // Nếu this.r tồn tại, tính toán lại thống kê đánh giá
-  if (this.r) {
-    await this.r.constructor.calcAverageRating(this.r.movieId);
+movieRatingSchema.post(/^findOneAnd/, async function(docs) {
+  if (docs) {
+    await this.model.calcAverageRating(docs.movieId);
   }
-});
+})
 
 const MovieRating = mongoose.model('MovieRating', movieRatingSchema);
 
