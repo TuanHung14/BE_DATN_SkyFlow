@@ -101,7 +101,7 @@ app.use("/api/v1/formats", formatRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/movies", movieRouter);
 app.use("/api/v1/payments", paymentRouter);
-app.use("/api/v1/show-time", showTimeRouter);
+app.use("/api/v1/show-times", showTimeRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
