@@ -262,6 +262,15 @@ router.get('/filter', showTimeController.getShowTimeFilter);
  *           schema:
  *             type: object
  *             properties:
+ *               movieId:
+ *                 type: string
+ *                 example: "682c3ca47bd1a298b7bcc3a8"
+ *               roomId:
+ *                 type: string
+ *                 example: "682aeacf83153ed5450fead5"
+ *               formatId:
+ *                 type: string
+ *                 example: "682abe49ab5bb018690c1219"
  *               showDate:
  *                 type: string
  *                 format: date
