@@ -1,6 +1,7 @@
 const express = require("express");
 const settingController = require("../controller/settingController");
 const router = express.Router();
+
 /**
  * @swagger
  * tags:
@@ -17,6 +18,25 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Danh sách settings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   companyName:
+ *                     type: string
+ *                   address:
+ *                     type: string
+ *                   contactEmail:
+ *                     type: string
+ *                   phoneNumber:
+ *                     type: string
+ *                   logoUrl:
+ *                     type: string
  */
 router.get("/", settingController.getAllSettings);
 
@@ -36,6 +56,25 @@ router.get("/", settingController.getAllSettings);
  *     responses:
  *       200:
  *         description: Thông tin setting
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 companyName:
+ *                   type: string
+ *                 address:
+ *                   type: string
+ *                 contactEmail:
+ *                   type: string
+ *                 phoneNumber:
+ *                   type: string
+ *                 logoUrl:
+ *                   type: string
+ *       404:
+ *         description: Không tìm thấy setting
  */
 router.get("/:id", settingController.getSettingById);
 
@@ -51,20 +90,49 @@ router.get("/:id", settingController.getSettingById);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - companyName
+ *               - address
+ *               - contactEmail
+ *               - phoneNumber
  *             properties:
- *               company_name:
+ *               companyName:
  *                 type: string
+ *                 default: "Công ty SkyFlow"
  *               address:
  *                 type: string
- *               contact_email:
+ *                 default: "123 Đường ABC, Quận 1, TP.HCM"
+ *               contactEmail:
  *                 type: string
- *               phone_number:
+ *                 default: "contact@abc.com"
+ *               phoneNumber:
  *                 type: string
- *               logo_url:
+ *                 default: "0123456789"
+ *               logoUrl:
  *                 type: string
+ *                 default: "https://example.com/logo.png"
  *     responses:
  *       201:
  *         description: Setting đã được tạo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 companyName:
+ *                   type: string
+ *                 address:
+ *                   type: string
+ *                 contactEmail:
+ *                   type: string
+ *                 phoneNumber:
+ *                   type: string
+ *                 logoUrl:
+ *                   type: string
+ *       400:
+ *         description: Dữ liệu không hợp lệ
  */
 router.post("/", settingController.createSetting);
 
@@ -87,19 +155,44 @@ router.post("/", settingController.createSetting);
  *           schema:
  *             type: object
  *             properties:
- *               company_name:
+ *               companyName:
  *                 type: string
  *               address:
  *                 type: string
- *               contact_email:
+ *               contactEmail:
  *                 type: string
- *               phone_number:
+ *               phoneNumber:
  *                 type: string
- *               logo_url:
+ *               logoUrl:
  *                 type: string
+ *             example:
+ *               companyName: Công ty TNHH XYZ
+ *               address: 456 Đường XYZ, Quận 3, TP.HCM
+ *               contactEmail: support@xyz.com
+ *               phoneNumber: "0987654321"
+ *               logoUrl: https://example.com/new-logo.png
  *     responses:
  *       200:
  *         description: Đã cập nhật thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 companyName:
+ *                   type: string
+ *                 address:
+ *                   type: string
+ *                 contactEmail:
+ *                   type: string
+ *                 phoneNumber:
+ *                   type: string
+ *                 logoUrl:
+ *                   type: string
+ *       404:
+ *         description: Không tìm thấy setting
  */
 router.patch("/:id", settingController.updateSetting);
 
@@ -118,7 +211,10 @@ router.patch("/:id", settingController.updateSetting);
  *         description: ID của setting
  *     responses:
  *       204:
- *         description: Xóa thành công
+ *         description: Xoá thành công, không có nội dung trả về
+ *       404:
+ *         description: Không tìm thấy setting
  */
 router.delete("/:id", settingController.deleteSetting);
+
 module.exports = router;

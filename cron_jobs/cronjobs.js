@@ -1,9 +1,12 @@
-const cron = require('node-cron');
+const cron = require("node-cron");
+const { updateMovieStatusLogic } = require("../services/movieService");
 
 module.exports = () => {
-    cron.schedule('* * * * *', () => {
-        console.log('running a task every minute');
-    });
-    console.log('Running cron cron_jobs');
-}
-
+  cron.schedule("0 0 * * *", async () => {
+    try {
+      const count = await updateMovieStatusLogic();
+    } catch (error) {
+      console.error("Cronjob error:", error);
+    }
+  });
+};

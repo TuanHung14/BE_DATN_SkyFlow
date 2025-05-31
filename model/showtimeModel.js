@@ -56,27 +56,5 @@ const showtimeSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// showtimeSchema.statics.getShowtimesByDate = function(date) {
-//     const startOfDay = new Date(date);
-//     startOfDay.setHours(0, 0, 0, 0);
-//
-//     const endOfDay = new Date(date);
-//     endOfDay.setHours(23, 59, 59, 999);
-//
-//     return this.find({
-//         showDate: {
-//             $gte: startOfDay,
-//             $lte: endOfDay
-//         }
-//     }).sort('startTime');
-// };
-
-// showtimeSchema.statics.getShowtimesByMovie = function(movieId) {
-//     return this.find({
-//         movie_id: movieId,
-//         startTime: { $gte: new Date() }
-//     }).sort('startTime');
-// };
-
 const Showtime = mongoose.model('Showtime', showtimeSchema);
 module.exports = Showtime;

@@ -34,165 +34,8 @@ const router = express.Router();
  *         description: Dữ liệu đầu vào không hợp lệ
  *       500:
  *         description: Lỗi máy chủ
- *
- * /api/v1/show-times/cinemas/{cinemaId}/dates:
- *   get:
- *     summary: Lấy danh sách các ngày có suất chiếu của một rạp
- *     tags: [Showtimes]
- *     parameters:
- *       - in: path
- *         name: cinemaId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của rạp chiếu phim
- *     responses:
- *       200:
- *         description: Danh sách các ngày có suất chiếu
- *       400:
- *         description: Dữ liệu đầu vào không hợp lệ
- *       500:
- *         description: Lỗi máy chủ
- *
- * /api/v1/show-times/cinemas/{cinemaId}/dates/{date}:
- *   get:
- *     summary: Lấy danh sách suất chiếu theo ngày của một rạp
- *     tags: [Showtimes]
- *     parameters:
- *       - in: path
- *         name: cinemaId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của rạp chiếu phim
- *       - in: path
- *         name: date
- *         schema:
- *           type: string
- *           format: date
- *         required: true
- *         description: Ngày muốn xem lịch (định dạng YYYY-MM-DD)
- *     responses:
- *       200:
- *         description: Danh sách suất chiếu theo ngày
- *       400:
- *         description: Dữ liệu đầu vào không hợp lệ
- *       500:
- *         description: Lỗi máy chủ
- *
- * /api/v1/show-times/movies/{movieId}/provinces:
- *   get:
- *     summary: Lấy danh sách tỉnh/thành phố có chiếu một phim cụ thể
- *     tags: [Showtimes]
- *     parameters:
- *       - in: path
- *         name: movieId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của phim
- *     responses:
- *       200:
- *         description: Danh sách tỉnh/thành phố
- *       400:
- *         description: Dữ liệu đầu vào không hợp lệ
- *       500:
- *         description: Lỗi máy chủ
- *
- * /api/v1/show-times/movies/{movieId}/provinces/{province}/cinemas:
- *   get:
- *     summary: Lấy danh sách rạp chiếu một phim cụ thể trong tỉnh/thành phố
- *     tags: [Showtimes]
- *     parameters:
- *       - in: path
- *         name: movieId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của phim
- *       - in: path
- *         name: province
- *         schema:
- *           type: string
- *         required: true
- *         description: Tên tỉnh/thành phố
- *     responses:
- *       200:
- *         description: Danh sách rạp chiếu
- *       400:
- *         description: Dữ liệu đầu vào không hợp lệ
- *       500:
- *         description: Lỗi máy chủ
- *
- * /api/v1/show-times/movies/{movieId}/cinemas/{cinemaId}/dates:
- *   get:
- *     summary: Lấy danh sách ngày chiếu phim tại một rạp cụ thể
- *     tags: [Showtimes]
- *     parameters:
- *       - in: path
- *         name: movieId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của phim
- *       - in: path
- *         name: cinemaId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của rạp
- *     responses:
- *       200:
- *         description: Danh sách ngày chiếu
- *       400:
- *         description: Dữ liệu đầu vào không hợp lệ
- *       500:
- *         description: Lỗi máy chủ
- *
- * /api/v1/show-times/movies/{movieId}/cinemas/{cinemaId}/dates/{date}:
- *   get:
- *     summary: Lấy danh sách suất chiếu của một phim tại một rạp vào một ngày cụ thể
- *     tags: [Showtimes]
- *     parameters:
- *       - in: path
- *         name: movieId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của phim
- *       - in: path
- *         name: cinemaId
- *         schema:
- *           type: string
- *         required: true
- *         description: ID của rạp
- *       - in: path
- *         name: date
- *         schema:
- *           type: string
- *           format: date
- *         required: true
- *         description: Ngày chiếu (định dạng YYYY-MM-DD)
- *     responses:
- *       200:
- *         description: Danh sách suất chiếu
- *       400:
- *         description: Dữ liệu đầu vào không hợp lệ
- *       500:
- *         description: Lỗi máy chủ
  */
 router.get('/filter', showTimeController.getShowTimeFilter);
-
-// ========== Flow 1: Cinema -> Dates -> Showtimes ==========
-router.get('/cinemas/:cinemaId/dates', showTimeController.getAvailableDates);
-router.get('/cinemas/:cinemaId/dates/:date', showTimeController.getShowtimesByDateAndCinema);
-
-// ========== Flow 2: Movie -> Province -> Cinema -> Date -> Showtimes ==========
-router.get('/movies/:movieId/provinces', showTimeController.getProvincesByMovie);
-router.get('/movies/:movieId/provinces/:province/cinemas', showTimeController.getCinemasByMovieAndProvince);
-router.get('/movies/:movieId/cinemas/:cinemaId/dates', showTimeController.getDatesByMovieAndCinema);
-router.get('/movies/:movieId/cinemas/:cinemaId/dates/:date', showTimeController.getShowtimesByMovieCinemaAndDate);
-
 
 // router.use(auth);
 
@@ -290,7 +133,7 @@ router.get('/movies/:movieId/cinemas/:cinemaId/dates/:date', showTimeController.
  *           type: string
  *         description: Sắp xếp theo trường
  *       - in: query
- *         name: search[name]
+ *         name: name
  *         schema:
  *           type: string
  *         description: Tìm kiếm theo tên
@@ -305,7 +148,13 @@ router.get('/movies/:movieId/cinemas/:cinemaId/dates/:date', showTimeController.
  *         schema:
  *           type: string
  *         description: Lọc theo ID phòng
- *         example: "60d21b4667d0d8992e610c85"
+ *         example: "682c3ca47bd1a298b7bcc3a8"
+ *       - in: query
+ *         name: cinemaId
+ *         schema:
+ *           type: string
+ *         description: Lọc theo ID rạp
+ *         example: "68293c98a16fbe5f854e5328"
  *     responses:
  *       200:
  *         description: Lấy danh sách suất chiếu thành công
@@ -413,6 +262,15 @@ router.get('/movies/:movieId/cinemas/:cinemaId/dates/:date', showTimeController.
  *           schema:
  *             type: object
  *             properties:
+ *               movieId:
+ *                 type: string
+ *                 example: "682c3ca47bd1a298b7bcc3a8"
+ *               roomId:
+ *                 type: string
+ *                 example: "682aeacf83153ed5450fead5"
+ *               formatId:
+ *                 type: string
+ *                 example: "682abe49ab5bb018690c1219"
  *               showDate:
  *                 type: string
  *                 format: date

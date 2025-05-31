@@ -3,7 +3,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Factory = require("./handleFactory");
 const { filterObj } = require("../utils/helper");
-
+const { updateMovieStatusLogic } = require("../services/movieService");
 // CREATE MOVIE
 exports.createMovie = catchAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -118,3 +118,11 @@ exports.getMovie = Factory.getOne(Movie, "castId genresId directorId");
 
 // SOFT DELETE
 exports.softDeleteMovie = Factory.softDeleteOne(Movie);
+exports.updateMovieStatusHandler = catchAsync(async (req, res, next) => {
+  const count = await updateMovieStatusLogic();
+
+  res.status(200).json({
+    status: "success",
+    message: `Cập nhật ${count} phim`,
+  });
+});
