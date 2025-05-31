@@ -28,7 +28,12 @@ const cinemaRouter = require("./routes/cinemaRouter");
 const formatRouter = require("./routes/formatRouter");
 const roomRouter = require("./routes/roomRouter");
 const movieRouter = require("./routes/movieRouter");
+<<<<<<< HEAD
 const postRouter = require("./routes/postRouter");
+=======
+const paymentRouter = require("./routes/paymentRouter");
+
+>>>>>>> 812ba2bfb57d4c16d2ed4c92a326064d0308608e
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 
@@ -98,7 +103,11 @@ app.use("/api/v1/cinemas", cinemaRouter);
 app.use("/api/v1/formats", formatRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/movies", movieRouter);
+<<<<<<< HEAD
 app.use("/api/v1/posts", postRouter);
+=======
+app.use("/api/v1/payments", paymentRouter);
+>>>>>>> 812ba2bfb57d4c16d2ed4c92a326064d0308608e
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {

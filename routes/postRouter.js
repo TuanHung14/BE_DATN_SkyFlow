@@ -1,6 +1,6 @@
 const express = require("express");
 const postController = require("../controller/postController");
-const authController = require("../controller/authController");
+const { auth } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -17,6 +17,8 @@ const router = express.Router();
  *   get:
  *     summary: Lấy tất cả bài viết
  *     tags: [Posts]
+ *     security:
+ *       - bearer: []
  *     responses:
  *       200:
  *         description: Danh sách bài viết
@@ -30,7 +32,7 @@ router.get("/", postController.getAllPosts);
  *     summary: Tạo bài viết mới
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     requestBody:
  *       required: true
  *       content:
@@ -40,13 +42,15 @@ router.get("/", postController.getAllPosts);
  *             properties:
  *               title:
  *                 type: string
+ *                 description: Tiêu đề bài viết
  *               description:
  *                 type: string
+ *                 description: Nội dung bài viết
  *     responses:
  *       201:
  *         description: Tạo thành công
  */
-router.post("/", postController.createPost);
+router.post("/", auth, postController.createPost);
 
 /**
  * @swagger
@@ -55,21 +59,21 @@ router.post("/", postController.createPost);
  *     summary: Lấy danh sách bài viết đã like
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     responses:
  *       200:
  *         description: Danh sách yêu thích
  */
-router.get("/favorites", postController.getFavoritePosts);
+router.get("/favorites", auth, postController.getFavoritePosts);
 
 /**
  * @swagger
  * /api/v1/posts/{id}/like:
  *   post:
- *     summary: Toggle like/unlike bài viết
+ *     summary: Like hoặc Unlike bài viết
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -79,13 +83,13 @@ router.get("/favorites", postController.getFavoritePosts);
  *           type: string
  *     responses:
  *       200:
- *         description: Đã unlike
+ *         description: Đã unlike bài viết
  *       201:
- *         description: Đã like
+ *         description: Đã like bài viết
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.post("/:id/like", postController.likePost);
+router.post("/:id/like", auth, postController.likePost);
 
 /**
  * @swagger
@@ -93,6 +97,8 @@ router.post("/:id/like", postController.likePost);
  *   get:
  *     summary: Lấy bài viết theo ID
  *     tags: [Posts]
+ *     security:
+ *       - bearer: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -102,7 +108,9 @@ router.post("/:id/like", postController.likePost);
  *           type: string
  *     responses:
  *       200:
- *         description: Thành công
+ *         description: Trả về bài viết
+ *       404:
+ *         description: Không tìm thấy bài viết
  */
 router.get("/:id", postController.getPostById);
 
@@ -113,7 +121,7 @@ router.get("/:id", postController.getPostById);
  *     summary: Cập nhật bài viết
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -130,22 +138,26 @@ router.get("/:id", postController.getPostById);
  *             properties:
  *               title:
  *                 type: string
- *               content:
+ *                 description: Tiêu đề mới
+ *               description:
  *                 type: string
+ *                 description: Nội dung mới
  *     responses:
  *       200:
  *         description: Cập nhật thành công
+ *       404:
+ *         description: Không tìm thấy bài viết
  */
-router.patch("/:id", postController.updatePost);
+router.patch("/:id", auth, postController.updatePost);
 
 /**
  * @swagger
  * /api/v1/posts/{id}:
  *   delete:
- *     summary: Xóa mềm bài viết
+ *     summary: Xóa bài viết (mềm)
  *     tags: [Posts]
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -156,7 +168,72 @@ router.patch("/:id", postController.updatePost);
  *     responses:
  *       204:
  *         description: Xóa thành công
+ *       404:
+ *         description: Không tìm thấy bài viết
  */
-router.delete("/:id", postController.deletePost);
-
+router.delete("/:id", auth, postController.deletePost);
+/**
+ * @swagger
+ * /api/v1/posts/slug/{slug}:
+ *   get:
+ *     summary: Lấy bài viết theo slug (tăng lượt xem)
+ *     tags: [Posts]
+ *     parameters:
+ *       - name: slug
+ *         in: path
+ *         required: true
+ *         description: Slug bài viết
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Trả về bài viết theo slug
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     post:
+ *                       $ref: '#/components/schemas/Post'
+ *       404:
+ *         description: Không tìm thấy bài viết
+ */
+router.get("/slug/:slug", postController.getPostBySlug);
+/**
+ * @swagger
+ * /api/v1/posts/{id}/liked:
+ *   get:
+ *     summary: Kiểm tra người dùng đã like bài viết hay chưa
+ *     tags: [Posts]
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID bài viết
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Trạng thái like
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 liked:
+ *                   type: boolean
+ *                   example: true
+ */
+router.get("/:id/liked", auth, postController.checkLikedPost);
 module.exports = router;
