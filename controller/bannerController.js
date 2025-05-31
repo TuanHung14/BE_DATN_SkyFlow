@@ -7,4 +7,4 @@ exports.getAllBanners = Factory.getAll(Banner);
 exports.getBannerById = Factory.getOne(Banner);
 exports.createBanner = Factory.createOne(Banner);
 exports.updateBanner = Factory.updateOne(Banner);
-exports.deleteBanner = Factory.deleteOne(Banner);
+exports.deleteBanner = Factory.softDeleteOne(Banner);

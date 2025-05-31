@@ -11,6 +11,12 @@ exports.createMomoPayment = async (paymentData) => {
         .update(rawSignature)
         .digest('hex');
 
+    let ipnUrl = process.env.MOMO_IPN_URL;
+
+    if(process.env.NODE_ENV === 'production') {
+        ipnUrl = process.env.CLIENT_HOST;
+    }
+
     const requestBody = JSON.stringify({
         partnerCode: process.env.MOMO_PARTNER_CODE,
         accessKey: process.env.MOMO_ACCESS_KEY,
@@ -19,7 +25,7 @@ exports.createMomoPayment = async (paymentData) => {
         orderId,
         orderInfo,
         redirectUrl: process.env.MOMO_REDIRECT_URL,
-        ipnUrl: process.env.MOMO_IPN_URL,
+        ipnUrl: ipnUrl,
         lang: 'vi',
         extraData,
         requestType: 'captureWallet',
