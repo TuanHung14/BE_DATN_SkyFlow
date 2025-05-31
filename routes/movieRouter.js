@@ -1,7 +1,10 @@
 const express = require("express");
 const movieController = require("../controller/movieController");
+const movieRatingRouter = require("../routes/movieRatingRouter");
 
 const router = express.Router();
+
+router.use("/:movieId/movie-ratings", movieRatingRouter);
 
 /**
  * @swagger
