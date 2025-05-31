@@ -1,4 +1,4 @@
-const {createMomoPayment, verifyMomoCallback} = require('./gateways/momoGateway');
+const {createMomoPayment, verifyMomoCallback} = require('./momoGateway');
 
 const createPaymentByGateway = async (gateway, paymentData) => {
     switch (gateway) {
