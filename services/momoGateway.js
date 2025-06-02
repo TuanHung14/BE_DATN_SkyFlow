@@ -4,18 +4,19 @@ const crypto = require('crypto');
 exports.createMomoPayment = async (paymentData) => {
     const { orderId, amount = 50000, orderInfo = 'Thanh Toán Với MoMo', extraData = '' } = paymentData;
 
-    const requestId = orderId;
-    const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${process.env.MOMO_IPN_URL}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.MOMO_REDIRECT_URL}&requestId=${requestId}&requestType=captureWallet`;
-
-    const signature = crypto.createHmac('sha256', process.env.MOMO_SECRET_KEY)
-        .update(rawSignature)
-        .digest('hex');
-
     let ipnUrl = process.env.MOMO_IPN_URL;
 
     if(process.env.NODE_ENV === 'production') {
         ipnUrl = process.env.CLIENT_HOST;
     }
+
+    const requestId = orderId;
+    const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.MOMO_REDIRECT_URL}&requestId=${requestId}&requestType=captureWallet`;
+
+    const signature = crypto.createHmac('sha256', process.env.MOMO_SECRET_KEY)
+        .update(rawSignature)
+        .digest('hex');
+
 
     const requestBody = JSON.stringify({
         partnerCode: process.env.MOMO_PARTNER_CODE,
@@ -41,6 +42,7 @@ exports.createMomoPayment = async (paymentData) => {
         },
         data: requestBody
     }
+
 
     const response = await axios(options);
     return response.data;
