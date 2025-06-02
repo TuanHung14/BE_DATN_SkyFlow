@@ -7,7 +7,7 @@ exports.createMomoPayment = async (paymentData) => {
     let ipnUrl = process.env.MOMO_IPN_URL;
 
     if(process.env.NODE_ENV === 'production') {
-        ipnUrl = process.env.CLIENT_HOST;
+        ipnUrl = `${process.env.CLIENT_HOST}/callback/momo`;
     }
 
     const requestId = orderId;
