@@ -7,7 +7,7 @@ exports.createMomoPayment = async (paymentData) => {
     let ipnUrl = process.env.MOMO_IPN_URL;
 
     if(process.env.NODE_ENV === 'production') {
-        ipnUrl = `${process.env.CLIENT_HOST}/callback/momo`;
+        ipnUrl = `${process.env.CLIENT_HOST}/api/v1/payments/callback/momo`;
     }
 
     const requestId = orderId;
@@ -50,6 +50,8 @@ exports.createMomoPayment = async (paymentData) => {
 
 exports.verifyMomoCallback = (callbackData) => {
     const { signature, ...data } = callbackData;
+
+    data.accessKey = process.env.MOMO_ACCESS_KEY;
 
     const rawSignature = Object.keys(data)
         .sort()
