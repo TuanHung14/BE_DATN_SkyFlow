@@ -92,7 +92,6 @@ userSchema.pre('save', function(next){
 });
 
 userSchema.pre('save', function(next){
-    console.log(this.role)
     if(this.role === 'user') return next();
     this.isAdmin = true;
     next();
