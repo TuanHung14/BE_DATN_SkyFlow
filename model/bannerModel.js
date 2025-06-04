@@ -22,10 +22,6 @@ const bannerSchema = new mongoose.Schema(
       },
       default: "active",
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
   },
   {
     timestamps: true,
