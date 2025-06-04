@@ -91,6 +91,13 @@ userSchema.pre('save', function(next){
     next();
 });
 
+userSchema.pre('save', function(next){
+    console.log(this.role)
+    if(this.role === 'user') return next();
+    this.isAdmin = true;
+    next();
+})
+
 userSchema.pre('save',  function(next){
     if(this.googleId && !this.password){
         this.isUpdatePassword = false;
