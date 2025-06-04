@@ -35,6 +35,42 @@ router.get('/me', userController.getMe, userController.getUser);
 
 /**
  * @swagger
+ * /api/v1/users/:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Đăng ký người dùng mới
+ *     operationId: createUser
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Tên người dùng
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email của người dùng
+ *               password:
+ *                 type: string
+ *                 description: Mật khẩu của người dùng
+ *               role:
+ *                 type: string
+ *                 enum: [user, admin, sub_admin]
+ *     responses:
+ *       201:
+ *         description: Người dùng được tạo thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ hoặc đã tồn tại email
+ */
+router.post('/', userController.fieldCreate, userController.createUser);
+
+/**
+ * @swagger
  * /api/v1/users/updateMe:
  *   patch:
  *     tags:
