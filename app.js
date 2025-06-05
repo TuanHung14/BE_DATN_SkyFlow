@@ -60,7 +60,7 @@ app.use(helmet());
 //Được phép gửi 100 cái requests trong 15p
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   message: "Too many requests from this IP, please try again in 15 minutes.",
 });
 app.use("/api", limiter);
