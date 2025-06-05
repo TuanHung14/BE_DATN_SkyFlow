@@ -16,8 +16,9 @@ const auth = catchAsync(async (req, res, next) => {
     }
     // promisify để chuyển hàm jwt.verify thành promises
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_ACCESS_SECRET);
-    
+
     const currentUser = await User.findById(decoded.id);
+
 
     if(!currentUser) {
         return next(new AppError('Token thuộc về người dùng này không còn tồn tại', 401));
