@@ -114,7 +114,33 @@ exports.getAllMovies = (req, res, next) => {
   return Factory.getAll(Movie, "castId genresId directorId")(req, res, next);
 };
 exports.getAllMoviesAdmin = Factory.getAll(Movie, "castId genresId directorId");
-exports.getMovie = Factory.getOne(Movie, "castId genresId directorId");
+exports.getMovie = catchAsync(async (req, res, next) => {
+  const movie = await Movie.findOne({
+    _id: req.params.id,
+    isDeleted: false,
+    publishStatus: "PUBLISHED",
+  }).populate("castId genresId directorId");
+
+  if (!movie) {
+    return next(new AppError("Không tìm thấy phim", 404));
+  }
+  const relatedMovies = await Movie.find({
+    genresId: { $in: movie.genresId },
+    _id: { $ne: movie._id },
+    publishStatus: "PUBLISHED",
+    isDeleted: false,
+  })
+    .limit(3)
+    .select("name slug posterUrl");
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      movie,
+      relatedMovies,
+    },
+  });
+});
 
 // SOFT DELETE
 exports.softDeleteMovie = Factory.softDeleteOne(Movie);
