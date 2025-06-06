@@ -37,8 +37,9 @@ const voucherRouter = require("./routes/voucherRouter");
 app.set("view engine", "pug");
 
 //Implement cors
+const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
 app.use(cors({
-  origin: '*',
+  origin: whiteList,
   credentials: true
 }));
 
