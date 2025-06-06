@@ -37,12 +37,17 @@ const voucherRouter = require("./routes/voucherRouter");
 app.set("view engine", "pug");
 
 //Implement cors
-app.use(cors());
-app.options("*", cors());
-
-// app.use(cors({
-//     origin: 'https://example.com'
-// }));
+const whitelist = process.env.FE_ADMIN_CLIENT_HOST.split(",");
+app.use(cors({
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true
+}));
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -60,7 +65,7 @@ app.use(helmet());
 //Được phép gửi 100 cái requests trong 15p
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 3000,
   message: "Too many requests from this IP, please try again in 15 minutes.",
 });
 app.use("/api", limiter);
