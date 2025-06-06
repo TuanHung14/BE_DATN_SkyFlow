@@ -37,12 +37,12 @@ const voucherRouter = require("./routes/voucherRouter");
 app.set("view engine", "pug");
 
 //Implement cors
-app.use(cors());
-app.options("*", cors());
-
-// app.use(cors({
-//     origin: 'https://example.com'
-// }));
+const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
+whiteList.push("http://localhost:5173", "http://localhost:4200");
+app.use(cors({
+  origin: whiteList,
+  credentials: true
+}));
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -60,7 +60,7 @@ app.use(helmet());
 //Được phép gửi 100 cái requests trong 15p
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 3000,
   message: "Too many requests from this IP, please try again in 15 minutes.",
 });
 app.use("/api", limiter);
