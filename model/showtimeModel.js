@@ -5,13 +5,11 @@ const showtimeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie',
         required: [true, 'Suất chiếu phải có phim'],
-        index: true,
     },
     roomId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room',
         required: [true, 'Suất chiếu phải có phòng chiếu'],
-        index: true,
     },
     formatId: {
         type: mongoose.Schema.Types.ObjectId,

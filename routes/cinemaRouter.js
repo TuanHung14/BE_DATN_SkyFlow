@@ -3,7 +3,9 @@ const cinemaController = require('../controller/cinemaController');
 const {auth} = require("../middleware/authMiddleware");
 const router = express.Router();
 
-router.use(auth);
+// router.use(auth);
+
+router.get('/', cinemaController.getFilteredCinemas);
 
 /**
  * @swagger
