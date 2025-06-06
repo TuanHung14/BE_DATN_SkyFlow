@@ -38,6 +38,7 @@ app.set("view engine", "pug");
 
 //Implement cors
 const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
+whiteList.push("http://localhost:5173");
 app.use(cors({
   origin: whiteList,
   credentials: true
