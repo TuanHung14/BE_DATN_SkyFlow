@@ -31,17 +31,18 @@ const movieRouter = require("./routes/movieRouter");
 const paymentRouter = require("./routes/paymentRouter");
 const showTimeRouter = require("./routes/showTimeRouter");
 const postRouter = require("./routes/postRouter");
+const voucherRouter = require("./routes/voucherRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 
 //Implement cors
-app.use(cors());
-app.options("*", cors());
-
-// app.use(cors({
-//     origin: 'https://example.com'
-// }));
+const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
+whiteList.push("http://localhost:5173");
+app.use(cors({
+  origin: whiteList,
+  credentials: true
+}));
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -59,7 +60,7 @@ app.use(helmet());
 //Được phép gửi 100 cái requests trong 15p
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 3000,
   message: "Too many requests from this IP, please try again in 15 minutes.",
 });
 app.use("/api", limiter);
@@ -104,6 +105,7 @@ app.use("/api/v1/movies", movieRouter);
 app.use("/api/v1/payments", paymentRouter);
 app.use("/api/v1/show-times", showTimeRouter);
 app.use("/api/v1/posts", postRouter);
+app.use("/api/v1/vouchers", voucherRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {

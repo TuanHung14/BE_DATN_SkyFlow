@@ -47,6 +47,11 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 //         data: null
 //     });
 // });
+exports.fieldCreate = (req, res, next) => {
+    req.body = filterObj(req.body, 'name', 'email', 'password', 'role');
+    req.body.isVerified = true;
+    next();
+}
 
 exports.fieldUpdate = (req, res, next) => {
     req.body = filterObj(req.body, 'name', 'email', 'photo', 'role');
@@ -55,6 +60,7 @@ exports.fieldUpdate = (req, res, next) => {
 
 
 exports.getAllUsers = Factory.getAll(User);
+exports.createUser = Factory.createOne(User);
 exports.getUser = Factory.getOne(User);
 exports.updateUser = Factory.updateOne(User);
 // exports.deleteUser = Factory.deleteOne(User);
