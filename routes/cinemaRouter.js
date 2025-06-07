@@ -1,6 +1,6 @@
-const express = require('express');
-const cinemaController = require('../controller/cinemaController');
-const {auth} = require("../middleware/authMiddleware");
+const express = require("express");
+const cinemaController = require("../controller/cinemaController");
+const { auth } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.use(auth);
@@ -39,18 +39,13 @@ router.use(auth);
  *         schema:
  *           type: string
  *         description: Tìm kiếm theo tên rạp
- *       - in: query
- *         name: search[province]
- *         schema:
- *           type: string
- *         description: Tìm kiếm theo địa chỉ
  *     responses:
  *       200:
  *         description: Lấy danh sách rạp chiếu phim thành công
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/admin',cinemaController.getAllCinemas);
+router.get("/admin", cinemaController.getAllCinemas);
 
 /**
  * @swagger
@@ -71,13 +66,26 @@ router.get('/admin',cinemaController.getAllCinemas);
  *             required:
  *               - name
  *               - address
+ *               - province
+ *               - district
+ *               - ward
+ *               - description
  *             properties:
  *               name:
  *                 type: string
  *                 description: Tên rạp chiếu phim
  *               province:
  *                 type: string
- *                 description: Địa chỉ rạp
+ *                 description: Thành phố hoặc tỉnh của rạp
+ *               district:
+ *                 type: string
+ *                 description: Quận huyện của rạp
+ *               ward:
+ *                 type: string
+ *                 description: Phường xã của rạp
+ *               address:
+ *                 type: string
+ *                 description: Địa chỉ chi tiết của rạp
  *               description:
  *                 type: string
  *                 description: Mô tả về rạp
@@ -89,7 +97,7 @@ router.get('/admin',cinemaController.getAllCinemas);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.post('/', cinemaController.createCinema);
+router.post("/", cinemaController.createCinema);
 
 /**
  * @swagger
@@ -142,6 +150,15 @@ router.post('/', cinemaController.createCinema);
  *               province:
  *                 type: string
  *                 description: Địa chỉ rạp
+ *               district:
+ *                 type: string
+ *                 description: Quận huyện của rạp
+ *               ward:
+ *                 type: string
+ *                 description: Phường xã của rạp
+ *               address:
+ *                 type: string
+ *                 description: Địa chỉ chi tiết của rạp
  *               description:
  *                 type: string
  *                 description: Mô tả về rạp
@@ -176,6 +193,10 @@ router.post('/', cinemaController.createCinema);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/:id').get(cinemaController.getOneCinema).patch(cinemaController.updateCinema).delete(cinemaController.deleteCinema);
+router
+  .route("/:id")
+  .get(cinemaController.getOneCinema)
+  .patch(cinemaController.updateCinema)
+  .delete(cinemaController.deleteCinema);
 
 module.exports = router;
