@@ -15,7 +15,7 @@ const validateStartTime = (startTime, next) => {
     const latestAllowed = 23 * 60;
 
     if (startTimeInMinutes < earliestAllowed || startTimeInMinutes > latestAllowed) {
-        return next(new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 400));
+        return new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 400);
     }
 
     return true;
@@ -36,23 +36,57 @@ const calculateEndTime = async (movieId, startTime, next) => {
 }
 
 const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId = null) => {
-    const conflicQuery = {
-        roomId: roomId,
-        isDeleted: false,
-        $or: [
-            {
-                startTime: { $lt: endTime },
-                endTime: { $gt: startTime }
+    try {
+        // Validate inputs
+        if (!mongoose.isValidObjectId(roomId)) {
+            throw new AppError('Room ID không hợp lệ', 400);
+        }
+
+        if (!(startTime instanceof Date) || isNaN(startTime)) {
+            throw new AppError('Thời gian bắt đầu không hợp lệ', 400);
+        }
+
+        if (!(endTime instanceof Date) || isNaN(endTime)) {
+            throw new AppError('Thời gian kết thúc không hợp lệ', 400);
+        }
+
+        if (startTime >= endTime) {
+            throw new AppError('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc', 400);
+        }
+
+        const roomIdQuery = new mongoose.Types.ObjectId(roomId);
+
+        const conflictQuery = {
+            roomId: roomIdQuery,
+            isDeleted: false,
+            $and: [
+                { startTime: { $lt: endTime } },
+                { endTime: { $gt: startTime } },
+            ],
+
+            $expr: {
+                $eq: [
+                    { $dateToString: { format: "%Y-%m-%d", date: "$startTime" } },
+                    { $dateToString: { format: "%Y-%m-%d", date: startTime } }
+                ]
             }
-        ]
-    };
+        };
 
-    if (showTimeId) {
-        conflicQuery._id = { $ne: showTimeId};
+        // Loại trừ showtime hiện tại khi update
+        if (showTimeId && mongoose.isValidObjectId(showTimeId)) {
+            conflictQuery._id = { $ne: new mongoose.Types.ObjectId(showTimeId) };
+        }
+
+        console.log('Truy vấn kiểm tra xung đột:', JSON.stringify(conflictQuery, null, 2));
+
+        const conflictingShowtime = await showTimeModel.findOne(conflictQuery);
+        return conflictingShowtime;
+
+    } catch (error) {
+        console.error('Lỗi trong checkConflictingShowtimes:', error);
+        throw error;
     }
-
-    return await showTimeModel.findOne(conflicQuery);
-}
+};
 
 exports.getShowTimeFilter = catchAsync(async (req, res, next) => {
     const { date, province, cinemaId } = req.query;
@@ -77,19 +111,52 @@ exports.getShowTimeFilter = catchAsync(async (req, res, next) => {
 });
 
 exports.createShowTime = catchAsync(async (req, res, next) => {
+    console.log('createShowTime req.body:', req.body);
     const startTime = new Date(req.body.startTime);
 
-    validateStartTime(startTime, next);
-
-    const { endTime } = await calculateEndTime(req.body.movieId, startTime, next);
-    req.body.endTime = endTime;
-
-    const conflictShowTime = await checkConflictingShowtimes(req.body.roomId, startTime, endTime);
-    if (conflictShowTime) {
-        return next(new AppError('Đã có suất chiếu khác trong thời gian này', 409));
+    if (isNaN(startTime.getTime())) {
+        return next(new AppError('Thời gian bắt đầu không hợp lệ', 400));
     }
 
+    if (!mongoose.isValidObjectId(req.body.roomId)) {
+        return next(new AppError('Room ID không hợp lệ', 400));
+    }
+
+    if (!validateStartTime(startTime, next)) {
+        return;
+    }
+
+    let endTime, movie;
+    try {
+        const result = await calculateEndTime(req.body.movieId, startTime, next);
+        endTime = result.endTime;
+        movie = result.movie;
+        console.log('Calculated endTime:', endTime);
+    } catch (error) {
+        return next(error);
+    }
+
+    req.body.endTime = endTime;
+
+    try {
+        const conflictShowTime = await checkConflictingShowtimes(
+            req.body.roomId,
+            startTime,
+            endTime
+        );
+        console.log('Conflict check result:', conflictShowTime);
+        if (conflictShowTime) {
+            return next(new AppError('Đã có suất chiếu khác trong thời gian này', 409));
+        }
+    } catch (error) {
+        console.error('Error in conflict check:', error);
+        return next(new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 500));
+    }
+
+    console.log('Creating showtime with data:', req.body);
     const doc = await showTimeModel.create(req.body);
+    console.log('Created showtime:', doc);
+
     res.status(201).json({
         status: 'success',
         data: {
