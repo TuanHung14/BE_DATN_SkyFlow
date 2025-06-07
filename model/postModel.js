@@ -5,7 +5,15 @@ const postSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   views: { type: Number, default: 0 },
-  slug: { type: String, unique: true }, // Thêm slug
+  content: {
+    type: String,
+    required: [true, "Nội dung là bắt buộc"],
+  },
+  imgUrl: {
+    type: String,
+    required: [true, "Ảnh đại diện bài viết là bắt buộc"],
+  },
+  slug: { type: String, unique: true },
 });
 
 // Tự động tạo slug từ title trước khi lưu

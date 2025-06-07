@@ -8,7 +8,7 @@ exports.getAllPosts = Factory.getAll(Post);
 exports.getPostById = Factory.getOne(Post);
 exports.createPost = Factory.createOne(Post);
 exports.updatePost = Factory.updateOne(Post);
-exports.deletePost = Factory.softDeleteOne(Post);
+exports.deletePost = Factory.deleteOne(Post);
 exports.likePost = catchAsync(async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;
