@@ -54,5 +54,6 @@ const showtimeSchema = new mongoose.Schema({
     timestamps: true
 });
 
+showtimeSchema.index({ roomId: 1, showDate: 1, startTime: 1 }, { unique: true });
 const Showtime = mongoose.model('Showtime', showtimeSchema);
 module.exports = Showtime;

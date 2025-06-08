@@ -37,50 +37,40 @@ const calculateEndTime = async (movieId, startTime, next) => {
 
 const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId = null) => {
     try {
-        // Validate inputs
         if (!mongoose.isValidObjectId(roomId)) {
             throw new AppError('Room ID không hợp lệ', 400);
         }
-
         if (!(startTime instanceof Date) || isNaN(startTime)) {
             throw new AppError('Thời gian bắt đầu không hợp lệ', 400);
         }
-
         if (!(endTime instanceof Date) || isNaN(endTime)) {
             throw new AppError('Thời gian kết thúc không hợp lệ', 400);
         }
-
         if (startTime >= endTime) {
             throw new AppError('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc', 400);
         }
 
-        const roomIdQuery = new mongoose.Types.ObjectId(roomId);
+        // Lấy ngày từ startTime
+        const showDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate());
 
+        // Xây dựng truy vấn kiểm tra xung đột
         const conflictQuery = {
-            roomId: roomIdQuery,
+            roomId: new mongoose.Types.ObjectId(roomId),
             isDeleted: false,
+            showDate: showDate,
             $and: [
                 { startTime: { $lt: endTime } },
                 { endTime: { $gt: startTime } },
             ],
-
-            $expr: {
-                $eq: [
-                    { $dateToString: { format: "%Y-%m-%d", date: "$startTime" } },
-                    { $dateToString: { format: "%Y-%m-%d", date: startTime } }
-                ]
-            }
         };
 
-        // Loại trừ showtime hiện tại khi update
+        // Loại trừ showtime hiện tại khi cập nhật
         if (showTimeId && mongoose.isValidObjectId(showTimeId)) {
             conflictQuery._id = { $ne: new mongoose.Types.ObjectId(showTimeId) };
         }
 
-        console.log('Truy vấn kiểm tra xung đột:', JSON.stringify(conflictQuery, null, 2));
-
-        const conflictingShowtime = await showTimeModel.findOne(conflictQuery);
-        return conflictingShowtime;
+        // Thực hiện truy vấn
+        return await showTimeModel.findOne(conflictQuery);
 
     } catch (error) {
         console.error('Lỗi trong checkConflictingShowtimes:', error);
@@ -111,19 +101,24 @@ exports.getShowTimeFilter = catchAsync(async (req, res, next) => {
 });
 
 exports.createShowTime = catchAsync(async (req, res, next) => {
-    console.log('createShowTime req.body:', req.body);
     const startTime = new Date(req.body.startTime);
 
     if (isNaN(startTime.getTime())) {
         return next(new AppError('Thời gian bắt đầu không hợp lệ', 400));
     }
 
+    if (!req.body.roomId) {
+        return next(new AppError('Room ID là bắt buộc', 400));
+    }
+
     if (!mongoose.isValidObjectId(req.body.roomId)) {
         return next(new AppError('Room ID không hợp lệ', 400));
     }
 
-    if (!validateStartTime(startTime, next)) {
-        return;
+    // Kiểm tra khoảng thời gian startTime
+    const validateStartTimeResult = validateStartTime(startTime, next);
+    if (validateStartTimeResult instanceof AppError) {
+        return next(validateStartTimeResult);
     }
 
     let endTime, movie;
@@ -131,7 +126,7 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         const result = await calculateEndTime(req.body.movieId, startTime, next);
         endTime = result.endTime;
         movie = result.movie;
-        console.log('Calculated endTime:', endTime);
+        // console.log('Calculated endTime:', endTime);
     } catch (error) {
         return next(error);
     }
@@ -144,7 +139,6 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
             startTime,
             endTime
         );
-        console.log('Conflict check result:', conflictShowTime);
         if (conflictShowTime) {
             return next(new AppError('Đã có suất chiếu khác trong thời gian này', 409));
         }
@@ -153,9 +147,8 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         return next(new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 500));
     }
 
-    console.log('Creating showtime with data:', req.body);
     const doc = await showTimeModel.create(req.body);
-    console.log('Created showtime:', doc);
+    // console.log('Created showtime:', doc);
 
     res.status(201).json({
         status: 'success',
