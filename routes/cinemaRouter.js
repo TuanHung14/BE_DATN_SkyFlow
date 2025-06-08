@@ -5,6 +5,28 @@ const router = express.Router();
 
 // router.use(auth);
 
+/**
+ * @swagger
+ * /api/v1/cinemas:
+ *   get:
+ *     tags:
+ *       - Cinemas
+ *     summary: Hiển thị suất chiếu trong phần chi tiết
+ *     operationId: getFilteredCinemas
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách rạp chiếu phim thành công
+ *       500:
+ *         description: Lỗi máy chủ
+ */
 router.get('/', cinemaController.getFilteredCinemas);
 
 /**
