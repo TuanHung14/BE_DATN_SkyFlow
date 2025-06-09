@@ -1,6 +1,6 @@
-const express = require('express');
-const authController = require('../controller/authController');
-const {auth, restrictTo} = require('../middleware/authMiddleware');
+const express = require("express");
+const authController = require("../controller/authController");
+const { auth, restrictTo } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ const router = express.Router();
  *       201:
  *         description: Successful login
  */
-router.post('/login', authController.login);
+router.post("/login", authController.login);
 
 /**
  * @swagger
@@ -50,13 +50,9 @@ router.post('/login', authController.login);
  *           schema:
  *             type: object
  *             required:
- *               - name
  *               - email
  *               - password
  *             properties:
- *               name:
- *                 type: string
- *                 example: user123
  *               email:
  *                 type: string
  *                 example: user@example.com
@@ -68,7 +64,7 @@ router.post('/login', authController.login);
  *       201:
  *         description: Successful signup
  */
-router.post('/signup', authController.signup);
+router.post("/signup", authController.signup);
 
 /**
  * @swagger
@@ -96,7 +92,7 @@ router.post('/signup', authController.signup);
  *       401:
  *         description: Invalid or expired Google token
  */
-router.post('/loginGoogle', authController.googleLogin);
+router.post("/loginGoogle", authController.googleLogin);
 
 /**
  * @swagger
@@ -128,7 +124,7 @@ router.post('/loginGoogle', authController.googleLogin);
  *       500:
  *         description: Lỗi khi gửi email
  */
-router.post('/forgotPassword', authController.forgotPassword);
+router.post("/forgotPassword", authController.forgotPassword);
 
 /**
  * @swagger
@@ -170,7 +166,7 @@ router.post('/forgotPassword', authController.forgotPassword);
  *       404:
  *         description: Không tìm thấy người dùng
  */
-router.patch('/resetPassword/:token', authController.resetPassword);
+router.patch("/resetPassword/:token", authController.resetPassword);
 
 /**
  * @swagger
@@ -186,7 +182,7 @@ router.patch('/resetPassword/:token', authController.resetPassword);
  *       401:
  *         description: Không có refresh token hoặc token không hợp lệ
  */
-router.get('/refreshToken', authController.refreshToken);
+router.get("/refreshToken", authController.refreshToken);
 
 router.use(auth);
 
@@ -203,7 +199,7 @@ router.use(auth);
  *       200:
  *         description: Logout successful
  */
-router.post('/logout', authController.logout);
+router.post("/logout", authController.logout);
 
 /**
  * @swagger
@@ -239,7 +235,7 @@ router.post('/logout', authController.logout);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.patch('/updateMyPassword', authController.updatePassword);
+router.patch("/updateMyPassword", authController.updatePassword);
 
 /**
  * @swagger
@@ -271,6 +267,6 @@ router.patch('/updateMyPassword', authController.updatePassword);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.patch('/setMyPassword', authController.setPassword);
+router.patch("/setMyPassword", authController.setPassword);
 
 module.exports = router;
