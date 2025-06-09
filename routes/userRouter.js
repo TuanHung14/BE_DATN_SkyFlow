@@ -1,12 +1,10 @@
-const express = require('express');
-const userController = require('../controller/userController');
-const authController = require('../controller/authController');
+const express = require("express");
+const userController = require("../controller/userController");
+const authController = require("../controller/authController");
 
-const {auth, restrictTo} = require('../middleware/authMiddleware');
-
+const { auth, restrictTo } = require("../middleware/authMiddleware");
 
 const router = express.Router();
-
 
 // Protect all routes after this middleware
 router.use(auth);
@@ -31,7 +29,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/me', userController.getMe, userController.getUser);
+router.get("/me", userController.getMe, userController.getUser);
 
 /**
  * @swagger
@@ -67,7 +65,7 @@ router.get('/me', userController.getMe, userController.getUser);
  *       400:
  *         description: Dữ liệu không hợp lệ hoặc đã tồn tại email
  */
-router.post('/', userController.fieldCreate, userController.createUser);
+router.post("/", userController.fieldCreate, userController.createUser);
 
 /**
  * @swagger
@@ -112,7 +110,7 @@ router.post('/', userController.fieldCreate, userController.createUser);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.patch('/updateMe',userController.updateMe);
+router.patch("/updateMe", userController.updateMe);
 // router.delete('/deleteMe', userController.deleteMe);
 
 // router.use(restrictTo('admin'));
@@ -169,7 +167,7 @@ router.patch('/updateMe',userController.updateMe);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/').get(userController.getAllUsers);
+router.route("/").get(userController.getAllUsers);
 
 /**
  * @swagger
@@ -238,6 +236,9 @@ router.route('/').get(userController.getAllUsers);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/:id').get(userController.getUser).patch(userController.fieldUpdate,userController.updateUser);
+router
+  .route("/:id")
+  .get(userController.getUser)
+  .patch(userController.fieldUpdate, userController.updateUser);
 
 module.exports = router;
