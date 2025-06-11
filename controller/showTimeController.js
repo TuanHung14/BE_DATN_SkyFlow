@@ -2,7 +2,6 @@ const showTimeModel = require("../model/showtimeModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Factory = require("./handleFactory");
-const showTimeService = require("../services/showTimeService");
 const movieModel = require("../model/movieModel");
 const mongoose = require('mongoose');
 
@@ -77,28 +76,6 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
         throw error;
     }
 };
-
-exports.getShowTimeFilter = catchAsync(async (req, res, next) => {
-    const { date, province, cinemaId } = req.query;
-
-    if (date && isNaN(new Date(date).getTime())) {
-        return next(new AppError('Ngày không hợp lệ', 400));
-    }
-
-    if (cinemaId && !mongoose.isValidObjectId(cinemaId)) {
-        return next(new AppError('Cinema ID không hợp lệ', 400));
-    }
-
-    const showtimes = await showTimeService.getShowtimes({date, province, cinemaId});
-
-    res.status(200).json({
-        status: 'success',
-        results: showtimes.length,
-        data: {
-            data: showtimes
-        }
-    });
-});
 
 exports.createShowTime = catchAsync(async (req, res, next) => {
     const startTime = new Date(req.body.startTime);
@@ -197,21 +174,6 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getAllShowTime = catchAsync(async (req, res, next) => {
-    const result = await showTimeService.getAllShowTimes(req.query);
-
-    if (result) {
-        res.status(200).json({
-            status: 'success',
-            results: result.totalResults,
-            data: {
-                data: result
-            }
-        });
-    } else {
-        return next(new AppError(`Không có suất chiếu nào!`, 404));
-    }
-
-})
+exports.getAllShowTime = Factory.getAll(showTimeModel, 'movieId roomId formatId');
 exports.getOneShowTimeById = Factory.getOne(showTimeModel, 'movieId roomId formatId');
 exports.deleteShowTime = Factory.softDeleteOne(showTimeModel);
