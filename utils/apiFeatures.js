@@ -20,7 +20,7 @@ class APIFeatures {
         if (this.queryString.search) {
             //Chuyển đổi obj thành array VD: search{name: "abc"} => ['name', 'abc']
             const orConditions = Object.entries(this.queryString.search).map(([field, value]) => ({
-                [field]: { $regex: value, $options: 'i' }
+                [field]: { $regex: value.trim(), $options: 'i' }
             }));
             if (orConditions.length > 0) {
                 this.query = this.query.find({ $or: orConditions });
