@@ -50,15 +50,22 @@ exports.signup = catchAsync(async (req, res, next) => {
     return next(new AppError("Vui lòng cung cấp email, tên và mật khẩu", 400));
   }
 
-  const newUser = await User.create({
-    name,
-    email,
-    password,
-  });
+  let user = await userService.findUser(email, "+password");
 
-  const otp = await otpService.generateOTP("register", newUser._id);
+  if(user && !user.isVerified){
+    user.password = password;
+    await user.save();
+  }else{
+    user = await User.create({
+      name,
+      email,
+      password,
+    });
+  }
 
-  await new Email(newUser, otp).sendWelcome();
+  const otp = await otpService.generateOTP("register", user._id);
+
+  await new Email(user, otp).sendWelcome();
 
   res.status(201).json({
     status: "success",

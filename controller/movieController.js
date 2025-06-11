@@ -91,6 +91,7 @@ exports.updateMovie = catchAsync(async (req, res, next) => {
   });
 });
 exports.getMovieBySlug = catchAsync(async (req, res, next) => {
+
   const movie = await Movie.findOne({
     slug: req.params.slug,
     isDeleted: false,

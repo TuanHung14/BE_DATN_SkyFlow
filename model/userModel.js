@@ -11,13 +11,13 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, "Email không được để trống"],
-      unique: true,
+      unique: [true, "Email đã tồn tại!"],
       lowercase: true,
       validate: [validator.isEmail, "Email không hợp lệ"],
     },
     photo: {
       type: String,
-      default: "default.jpg",
+      default: null,
     },
     phone: {
       type: String,
