@@ -39,7 +39,6 @@ exports.checkDuplicateName = catchAsync(async (req, res, next) => {
   next();
 });
 
-exports.getAllMovieEntitiesAdmin = Factory.getAllWithAdmin(movieEntityModel);
 exports.createMovieEntity = Factory.createOne(movieEntityModel);
 exports.getMovieEntityById = Factory.getOne(movieEntityModel);
 exports.getAllMovieEntities = Factory.getAll(movieEntityModel);
