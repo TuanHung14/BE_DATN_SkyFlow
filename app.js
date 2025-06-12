@@ -32,6 +32,7 @@ const paymentRouter = require("./routes/paymentRouter");
 const showTimeRouter = require("./routes/showTimeRouter");
 const postRouter = require("./routes/postRouter");
 const voucherRouter = require("./routes/voucherRouter");
+const seatRouter = require("./routes/seatRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
@@ -106,6 +107,7 @@ app.use("/api/v1/payments", paymentRouter);
 app.use("/api/v1/show-times", showTimeRouter);
 app.use("/api/v1/posts", postRouter);
 app.use("/api/v1/vouchers", voucherRouter);
+app.use("/api/v1/seats", seatRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
