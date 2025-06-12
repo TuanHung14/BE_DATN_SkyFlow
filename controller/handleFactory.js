@@ -2,38 +2,6 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/apiFeatures");
 
-exports.getAllWithAdmin = (Model, popOptions) =>
-    catchAsync(async (req, res, next) => {
-        const filter = {};
-
-        const features = new APIFeatures(Model.find(filter), req.query)
-            .filter()
-            .search()
-            .sort()
-            .limitFields()
-            .pagination();
-        const doc = await features.query.populate(popOptions);
-
-        const countQuery = new APIFeatures(Model.find(filter), req.query)
-            .filter()
-            .search();
-
-        const totalDocs = await countQuery.query.clone().countDocuments();
-
-        const page = req.query.page * 1 || 1;
-        const limit = req.query.limit * 1 || 100;
-        res.status(200).json({
-            status: "success",
-            totalDocs,
-            totalPages: Math.ceil(totalDocs / limit),
-            page,
-            limit,
-            data: {
-                data: doc,
-            },
-        });
-    });
-
 exports.getAll = (Model, popOptions) =>
   catchAsync(async (req, res, next) => {
     const filter = Model.schema.path("isDeleted") ? { isDeleted: false } : {};
