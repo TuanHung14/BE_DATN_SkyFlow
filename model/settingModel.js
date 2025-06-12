@@ -25,7 +25,11 @@ const settingSchema = new mongoose.Schema(
       type: String,
       required: [true, "Không được để trống"],
       default: "https://example.com/logo.png",
-    }
+    },
+    isDefault: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
