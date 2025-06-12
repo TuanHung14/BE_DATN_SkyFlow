@@ -1,3 +1,4 @@
+const e = require("express");
 const mongoose = require("mongoose");
 const slugify = require("slugify");
 
@@ -86,7 +87,14 @@ const movieSchema = new mongoose.Schema(
       required: [true, "Phim phải có quốc gia"],
       trim: true,
     },
+    format: {
+      type: [String],
+      enum: ["2D", "3D", "IMAX", "4DX"],
+      required: [true, "Phim phải có định dạng"],
+      default: "2D",
+    },
   },
+
   {
     timestamps: true,
   }
