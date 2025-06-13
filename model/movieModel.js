@@ -64,7 +64,7 @@ const movieSchema = new mongoose.Schema(
         publishStatus: {
             type: String,
             enum: ["DRAFT", "PUBLISHED"],
-            default: "PUBLISHED",
+            default: "DRAFT",
         },
         trailerUrl: {
             type: String,
