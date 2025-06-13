@@ -314,9 +314,7 @@ const router = express.Router();
  *                   example: No showtime found with that ID
  */
 
- router.route('/')
-     .get(showTimeController.getAllShowTime)
-     .post(showTimeController.createShowTime);
+ router.route('/').get(showTimeController.getAllShowTime).post(showTimeController.getOneShowTimeById);
 
  router.route('/:id')
      .get(showTimeController.getOneShowTimeById)

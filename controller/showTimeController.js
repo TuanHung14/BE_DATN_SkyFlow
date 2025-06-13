@@ -174,6 +174,11 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getAllShowTime = Factory.getAll(showTimeModel, 'movieId roomId formatId');
+// exports.getAllShowTime = Factory.getAll(showTimeModel, 'movieId roomId formatId');
+exports.getAllShowTime = Factory.getAll(showTimeModel, [
+    {path: 'movieId'},
+    {path: 'roomId', populate: {path: 'cinemaId', select: 'name'}},
+    {path: 'formatId'}
+])
 exports.getOneShowTimeById = Factory.getOne(showTimeModel, 'movieId roomId formatId');
 exports.deleteShowTime = Factory.softDeleteOne(showTimeModel);
