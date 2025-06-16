@@ -21,7 +21,10 @@ const showtimeSchema = new mongoose.Schema({
         required: [true, 'Suất chiếu phải có ngày chiếu'],
         validate: {
             validator: function(value) {
-                return value >= new Date();
+                const showDate = new Date(value.getFullYear(), value.getMonth(), value.getDate());
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return showDate >= today;
             },
             message: 'Ngày chiếu không được trong quá khứ'
         }
