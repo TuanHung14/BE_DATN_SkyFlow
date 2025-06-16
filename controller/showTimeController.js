@@ -121,7 +121,7 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         }
     } catch (error) {
         console.error('Error in conflict check:', error);
-        return next(new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 500));
+        return next(new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 409));
     }
 
     const doc = await showTimeModel.create(req.body);
