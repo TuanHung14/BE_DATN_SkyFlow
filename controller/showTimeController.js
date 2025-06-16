@@ -5,22 +5,16 @@ const Factory = require("./handleFactory");
 const movieModel = require("../model/movieModel");
 const mongoose = require('mongoose');
 
-const normalizeToMidnight = (date) => {
-    const normalized = new Date(date);
-    normalized.setUTCHours(0, 0, 0, 0);
-    return normalized;
-};
-
 const validateStartTime = (startTime, next) => {
     const startHour = startTime.getHours();
     const startMinute = startTime.getMinutes();
 
     const startTimeInMinutes = startHour * 60 + startMinute;
-    const earliestAllowed = 8 * 60 + 30; // 8:30 AM
-    const latestAllowed = 23 * 60; // 11:00 PM
+    const earliestAllowed = 8 * 60 + 30;
+    const latestAllowed = 23 * 60;
 
     if (startTimeInMinutes < earliestAllowed || startTimeInMinutes > latestAllowed) {
-        return new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 400);
+        return new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 500);
     }
 
     return true;
@@ -33,10 +27,12 @@ const calculateEndTime = async (movieId, startTime, next) => {
     }
     const movieDuration = movie.duration;
     const endTime = new Date(startTime);
+    // thời gian kết thúc của một bộ phim cộng với thời gian để dọn dẹp,
+    // cũng như để khách đợt sau có thời gian vào là 10 phút
     endTime.setMinutes(endTime.getMinutes() + movieDuration + 10);
 
     return { endTime, movie };
-};
+}
 
 const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId = null) => {
     try {
@@ -53,8 +49,10 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
             throw new AppError('Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc', 400);
         }
 
-        const showDate = normalizeToMidnight(startTime);
+        // Lấy ngày từ startTime
+        const showDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate());
 
+        // Xây dựng truy vấn kiểm tra xung đột
         const conflictQuery = {
             roomId: new mongoose.Types.ObjectId(roomId),
             isDeleted: false,
@@ -65,21 +63,24 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
             ],
         };
 
+        // Loại trừ showtime hiện tại khi cập nhật
         if (showTimeId && mongoose.isValidObjectId(showTimeId)) {
             conflictQuery._id = { $ne: new mongoose.Types.ObjectId(showTimeId) };
         }
 
-        const conflict = await showTimeModel.findOne(conflictQuery);
-        return conflict;
+        // Thực hiện truy vấn
+        return await showTimeModel.findOne(conflictQuery);
 
     } catch (error) {
         console.error('Lỗi trong checkConflictingShowtimes:', error);
-        throw error instanceof AppError ? error : new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 500);
+        throw error;
     }
 };
 
 exports.createShowTime = catchAsync(async (req, res, next) => {
+    console.log('Payload:', req.body);
     const startTime = new Date(req.body.startTime);
+
     if (isNaN(startTime.getTime())) {
         return next(new AppError('Thời gian bắt đầu không hợp lệ', 400));
     }
@@ -87,32 +88,12 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
     if (!req.body.roomId) {
         return next(new AppError('Room ID là bắt buộc', 400));
     }
+
     if (!mongoose.isValidObjectId(req.body.roomId)) {
         return next(new AppError('Room ID không hợp lệ', 400));
     }
-    if (!mongoose.isValidObjectId(req.body.movieId)) {
-        return next(new AppError('Movie ID không hợp lệ', 400));
-    }
-    if (!mongoose.isValidObjectId(req.body.formatId)) {
-        return next(new AppError('Format ID không hợp lệ', 400));
-    }
 
-    let showDate;
-    if (req.body.showDate) {
-        showDate = new Date(req.body.showDate);
-        if (isNaN(showDate.getTime())) {
-            return next(new AppError('Ngày chiếu không hợp lệ', 400));
-        }
-    } else {
-        showDate = startTime;
-    }
-    const normalizedShowDate = normalizeToMidnight(showDate);
-
-    const startDate = normalizeToMidnight(startTime);
-    if (normalizedShowDate.getTime() !== startDate.getTime()) {
-        return next(new AppError('Ngày chiếu phải trùng với ngày của thời gian bắt đầu', 400));
-    }
-
+    // Kiểm tra khoảng thời gian startTime
     const validateStartTimeResult = validateStartTime(startTime, next);
     if (validateStartTimeResult instanceof AppError) {
         return next(validateStartTimeResult);
@@ -123,9 +104,12 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         const result = await calculateEndTime(req.body.movieId, startTime, next);
         endTime = result.endTime;
         movie = result.movie;
+        // console.log('Calculated endTime:', endTime);
     } catch (error) {
         return next(error);
     }
+
+    req.body.endTime = endTime;
 
     try {
         const conflictShowTime = await checkConflictingShowtimes(
@@ -134,20 +118,15 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
             endTime
         );
         if (conflictShowTime) {
-            return next(new AppError(
-                `Đã có suất chiếu khác trong khoảng thời gian từ ${conflictShowTime.startTime.toISOString()} đến ${conflictShowTime.endTime.toISOString()}`,
-                409
-            ));
+            return next(new AppError('Đã có suất chiếu khác trong thời gian này', 409));
         }
     } catch (error) {
-        return next(error);
+        console.error('Error in conflict check:', error);
+        return next(new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 409));
     }
 
-    req.body.startTime = startTime;
-    req.body.endTime = endTime;
-    req.body.showDate = normalizedShowDate;
-
     const doc = await showTimeModel.create(req.body);
+    // console.log('Created showtime:', doc);
 
     res.status(201).json({
         status: 'success',
@@ -158,55 +137,25 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
 });
 
 exports.updateShowTime = catchAsync(async (req, res, next) => {
-    if (req.body.startTime || req.body.showDate || req.body.movieId || req.body.roomId) {
+    if (req.body.startTime) {
+        const startTime = new Date(req.body.startTime);
+        validateStartTime(startTime, next);
+
         const showtime = await showTimeModel.findById(req.params.id);
         if (!showtime) {
             return next(new AppError('Không tìm thấy suất chiếu', 404));
         }
 
-        const startTime = req.body.startTime ? new Date(req.body.startTime) : showtime.startTime;
-        if (req.body.startTime && isNaN(startTime.getTime())) {
-            return next(new AppError('Thời gian bắt đầu không hợp lệ', 400));
-        }
-
-        if (req.body.startTime) {
-            const validateStartTimeResult = validateStartTime(startTime, next);
-            if (validateStartTimeResult instanceof AppError) {
-                return next(validateStartTimeResult);
-            }
-        }
-
-        let showDate = req.body.showDate ? new Date(req.body.showDate) : showtime.showDate;
-        if (req.body.showDate && isNaN(showDate.getTime())) {
-            return next(new AppError('Ngày chiếu không hợp lệ', 400));
-        }
-        const normalizedShowDate = normalizeToMidnight(showDate);
-
-        const startDate = normalizeToMidnight(startTime);
-        if (normalizedShowDate.getTime() !== startDate.getTime()) {
-            return next(new AppError('Ngày chiếu phải trùng với ngày của thời gian bắt đầu', 400));
-        }
-
         const movieId = req.body.movieId || showtime.movieId;
         const roomId = req.body.roomId || showtime.roomId;
 
-        let endTime = showtime.endTime;
-        if (req.body.startTime || req.body.movieId) {
-            const result = await calculateEndTime(movieId, startTime, next);
-            endTime = result.endTime;
-        }
-
-        const conflictShowTime = await checkConflictingShowtimes(roomId, startTime, endTime, req.params.id);
-        if (conflictShowTime) {
-            return next(new AppError(
-                `Đã có suất chiếu khác trong khoảng thời gian từ ${conflictShowTime.startTime.toISOString()} đến ${conflictShowTime.endTime.toISOString()}`,
-                409
-            ));
-        }
-
-        req.body.startTime = startTime;
+        const { endTime } = await calculateEndTime(movieId, startTime, next);
         req.body.endTime = endTime;
-        req.body.showDate = normalizedShowDate;
+
+        const conflicShowTime = await checkConflictingShowtimes(roomId, startTime, endTime, req.params.id);
+        if (conflicShowTime) {
+            return next(new AppError('Đã có suất chiếu khác trong thời gian này', 409));
+        }
     }
 
     const doc = await showTimeModel.findByIdAndUpdate(req.params.id, req.body, {
@@ -227,9 +176,9 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllShowTime = Factory.getAll(showTimeModel, [
-    { path: 'movieId' },
-    { path: 'roomId', populate: { path: 'cinemaId', select: 'name' } },
-    { path: 'formatId' }
-]);
+    {path: 'movieId'},
+    {path: 'roomId', populate: {path: 'cinemaId', select: 'name'}},
+    {path: 'formatId'}
+])
 exports.getOneShowTimeById = Factory.getOne(showTimeModel, 'movieId roomId formatId');
 exports.deleteShowTime = Factory.softDeleteOne(showTimeModel);
