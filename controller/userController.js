@@ -59,9 +59,9 @@ exports.fieldUpdate = (req, res, next) => {
 }
 
 
-exports.getAllUsers = Factory.getAll(User);
+exports.getAllUsers = Factory.getAll(User, 'role');
 exports.createUser = Factory.createOne(User);
-exports.getUser = Factory.getOne(User);
+exports.getUser = Factory.getOne(User, 'role');
 exports.updateUser = Factory.updateOne(User);
 // exports.deleteUser = Factory.deleteOne(User);
 
