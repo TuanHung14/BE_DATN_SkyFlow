@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Room = require("./roomModel");
 
 const seatSchema = new mongoose.Schema({
     roomId: {
@@ -47,22 +48,9 @@ const seatSchema = new mongoose.Schema({
 
 seatSchema.index({ roomId: 1, seatRow: 1, seatNumber: 1 }, { unique: true });
 
-// seatSchema.statics.getSeatsByRoom = function(roomId) {
-//     return this.find({ room_id: roomId })
-//                .sort({ seat_row: 1, seat_number: 1 });
-// };
-
-// seatSchema.statics.getAvailableSeatsByRoom = function(roomId) {
-//     return this.find({
-//         room_id: roomId,
-//         status: 'active'
-//     }).sort({ seat_row: 1, seat_number: 1 });
-// };
-
 // đảm bảo số lượng ghế không vượt quá capacity của phòng
 seatSchema.pre('save', async function(next) {
     if (this.isNew) {
-        const Room = mongoose.model('Room');
         const room = await Room.findById(this.roomId);
         const currentSeats = await this.constructor.countDocuments({ roomId: this.roomId });
         
@@ -95,12 +83,11 @@ seatSchema.pre('save', async function(next) {
 // xử lý trước khi cập nhật
 seatSchema.pre('findOneAndUpdate', async function(next) {
     const update = this.getUpdate();
-    if (update.room_id) {
+    if (update.roomId) {
         return next(new Error('Không thể thay đổi phòng của ghế'));
     }
     next();
 });
-
 
 const Seat = mongoose.model('Seat', seatSchema);
 module.exports = Seat;

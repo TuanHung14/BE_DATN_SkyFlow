@@ -27,7 +27,7 @@ const router = express.Router();
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/', cinemaController.getFilteredCinemas);
+router.get('/show-times', cinemaController.getFilteredCinemas);
 
 /**
  * @swagger

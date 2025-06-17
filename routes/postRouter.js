@@ -6,42 +6,6 @@ const router = express.Router();
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Post:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *           description: ID bài viết
- *         title:
- *           type: string
- *           description: Tiêu đề bài viết
- *         description:
- *           type: string
- *           description: Mô tả ngắn bài viết
- *         content:
- *           type: string
- *           description: Nội dung chi tiết bài viết
- *         imgUrl:
- *           type: string
- *           description: URL ảnh đại diện
- *         slug:
- *           type: string
- *           description: Slug tự động tạo từ title
- *         views:
- *           type: number
- *           description: Lượt xem bài viết
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- */
-
-/**
- * @swagger
  * tags:
  *   name: Posts
  *   description: Quản lý bài viết

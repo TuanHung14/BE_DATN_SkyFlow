@@ -216,5 +216,56 @@ router.patch("/:id", settingController.updateSetting);
  *         description: Không tìm thấy setting
  */
 router.delete("/:id", settingController.deleteSetting);
+/**
+ * @swagger
+ * /api/v1/settings/{id}/set-default:
+ *   patch:
+ *     summary: Đặt setting làm mặc định
+ *     tags: [Settings]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của setting cần đặt làm mặc định
+ *     responses:
+ *       200:
+ *         description: Đã đặt setting làm mặc định thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Đã đặt setting mặc định
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     setting:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         companyName:
+ *                           type: string
+ *                         address:
+ *                           type: string
+ *                         contactEmail:
+ *                           type: string
+ *                         phoneNumber:
+ *                           type: string
+ *                         logoUrl:
+ *                           type: string
+ *                         isDefault:
+ *                           type: boolean
+ *       404:
+ *         description: Không tìm thấy setting với ID đã cho
+ */
+router.patch("/:id/set-default", settingController.setDefault);
 
 module.exports = router;

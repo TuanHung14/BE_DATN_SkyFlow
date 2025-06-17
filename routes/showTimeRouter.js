@@ -4,39 +4,6 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-/**
- * @swagger
- * /api/v1/show-times/filter:
- *   get:
- *     summary: Lấy danh sách suất chiếu theo bộ lọc
- *     tags: [Showtimes]
- *     parameters:
- *       - in: query
- *         name: date
- *         schema:
- *           type: string
- *           format: date
- *         description: Ngày chiếu (YYYY-MM-DD)
- *       - in: query
- *         name: province
- *         schema:
- *           type: string
- *         description: Tỉnh/thành phố
- *       - in: query
- *         name: cinemaId
- *         schema:
- *           type: string
- *         description: ID của rạp chiếu phim
- *     responses:
- *       200:
- *         description: Danh sách suất chiếu theo bộ lọc
- *       400:
- *         description: Dữ liệu đầu vào không hợp lệ
- *       500:
- *         description: Lỗi máy chủ
- */
-router.get('/filter', showTimeController.getShowTimeFilter);
-
 // router.use(auth);
 
 /**
