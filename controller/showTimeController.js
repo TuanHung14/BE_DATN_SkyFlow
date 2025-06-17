@@ -14,7 +14,7 @@ const validateStartTime = (startTime, next) => {
     const latestAllowed = 23 * 60;
 
     if (startTimeInMinutes < earliestAllowed || startTimeInMinutes > latestAllowed) {
-        return new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 500);
+        return new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 400);
     }
 
     return true;
@@ -31,7 +31,7 @@ const calculateEndTime = async (movieId, startTime, next) => {
     // cũng như để khách đợt sau có thời gian vào là 10 phút
     endTime.setMinutes(endTime.getMinutes() + movieDuration + 10);
 
-    return { endTime, movie };
+    return {endTime, movie};
 }
 
 const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId = null) => {
@@ -50,26 +50,56 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
         }
 
         // Lấy ngày từ startTime
-        const showDate = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate());
+        const showDate = new Date(Date.UTC(
+            startTime.getUTCFullYear(),
+            startTime.getUTCMonth(),
+            startTime.getUTCDate()
+        ));
 
         // Xây dựng truy vấn kiểm tra xung đột
         const conflictQuery = {
             roomId: new mongoose.Types.ObjectId(roomId),
             isDeleted: false,
             showDate: showDate,
-            $and: [
-                { startTime: { $lt: endTime } },
-                { endTime: { $gt: startTime } },
-            ],
+            $or: [
+                // Trường hợp 1: Suất chiếu mới bắt đầu trong khoảng thời gian của suất chiếu cũ
+                {
+                    startTime: {$lte: startTime},
+                    endTime: {$gt: startTime}
+                },
+                // Trường hợp 2: Suất chiếu mới kết thúc trong khoảng thời gian của suất chiếu cũ
+                {
+                    startTime: {$lt: endTime},
+                    endTime: {$gte: endTime}
+                },
+                // Trường hợp 3: Suất chiếu mới bao trùm suất chiếu cũ
+                {
+                    startTime: {$gte: startTime},
+                    endTime: {$lte: endTime}
+                }
+            ]
         };
 
         // Loại trừ showtime hiện tại khi cập nhật
         if (showTimeId && mongoose.isValidObjectId(showTimeId)) {
-            conflictQuery._id = { $ne: new mongoose.Types.ObjectId(showTimeId) };
+            conflictQuery._id = {$ne: new mongoose.Types.ObjectId(showTimeId)};
         }
 
         // Thực hiện truy vấn
-        return await showTimeModel.findOne(conflictQuery);
+        const conflictingShowtime = await showTimeModel.findOne(conflictQuery);
+
+        // Xử lý trường hợp có xung đột
+        if (conflictingShowtime) {
+            // Tính thời gian có thể tạo suất chiếu tiếp theo
+            const nextAvailableTime = new Date(conflictingShowtime.endTime);
+
+            throw new AppError(
+                `Xung đột thời gian! Suất chiếu từ ${startTime.toLocaleTimeString('vi-VN')} đến ${endTime.toLocaleTimeString('vi-VN')} xung đột với suất chiếu hiện có từ ${conflictingShowtime.startTime.toLocaleTimeString('vi-VN')} đến ${conflictingShowtime.endTime.toLocaleTimeString('vi-VN')}. Có thể tạo suất chiếu từ ${nextAvailableTime.toLocaleTimeString('vi-VN')} trở đi.`,
+                409
+            );
+        }
+
+        return null;
 
     } catch (error) {
         console.error('Lỗi trong checkConflictingShowtimes:', error);
@@ -104,7 +134,6 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         const result = await calculateEndTime(req.body.movieId, startTime, next);
         endTime = result.endTime;
         movie = result.movie;
-        // console.log('Calculated endTime:', endTime);
     } catch (error) {
         return next(error);
     }
@@ -149,7 +178,7 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
         const movieId = req.body.movieId || showtime.movieId;
         const roomId = req.body.roomId || showtime.roomId;
 
-        const { endTime } = await calculateEndTime(movieId, startTime, next);
+        const {endTime} = await calculateEndTime(movieId, startTime, next);
         req.body.endTime = endTime;
 
         const conflicShowTime = await checkConflictingShowtimes(roomId, startTime, endTime, req.params.id);
