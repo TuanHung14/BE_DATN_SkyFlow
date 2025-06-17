@@ -32,15 +32,15 @@ const seatSchema = new mongoose.Schema({
     seatType: {
         type: String,
         enum: {
-            values: ['standard', 'vip', 'couple'],
+            values: ['normal', 'vip', 'couple'],
             message: "{VALUE} không phải là loại ghế hợp lệ"
         },
-        default: 'standard'
+        default: 'normal'
     },
     status: {
         type: String,
-        enum: ['active', 'inactive'],
-        default: 'active'
+        enum: ['Available', 'Reserved', 'Occupied', 'Broken'],
+        default: 'Available'
     }
 }, {
     timestamps: true
