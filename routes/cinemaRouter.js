@@ -1,6 +1,6 @@
 const express = require("express");
 const cinemaController = require("../controller/cinemaController");
-const { auth } = require("../middleware/authMiddleware");
+const  auth  = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // router.use(auth);
