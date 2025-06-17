@@ -56,6 +56,18 @@ const findUser = async (email, select = "") => {
     return await User.findOne({ email })
 }
 
+const findUserById = async (userId) => {
+    return await User.findById(userId).populate({
+        path: 'role',
+        select: 'name isActive permission',
+        populate: {
+            path: 'permission',
+            model: 'Permission',
+            select: 'name'
+        }
+    });
+}
+
 const updateOne = async (userId, payload, isValidate = false) => {
     const user =  await User.findByIdAndUpdate(
         userId,
@@ -74,5 +86,6 @@ module.exports = {
     createSendToken,
     verifyToken,
     findUser,
+    findUserById,
     updateOne
 }

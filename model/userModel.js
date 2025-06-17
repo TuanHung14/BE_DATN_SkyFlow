@@ -33,9 +33,9 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
     role: {
-      type: String,
-      enum: ["user", "sub_admin", "admin"],
-      default: "user",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
+      default: null,
     },
     password: {
       type: String,
@@ -79,6 +79,7 @@ const userSchema = new mongoose.Schema(
 
 // document middleware
 // save chỉ có tác dụng với .save hay .create
+// Mã hóa Password
 userSchema.pre("save", async function (next) {
   //Dùng để check mật khẩu có thay đổi hay kh nếu không thay đổi thì next()
   if (!this.isModified("password") || !this.password) return next();
@@ -106,12 +107,23 @@ userSchema.pre("save", function (next) {
   }
   next();
 });
+
 userSchema.pre("save", function (next) {
   if (!this.name) {
     this.name = `user-${Date.now()}`;
   }
   next();
 });
+
+userSchema.pre("save",async function (next) {
+    if (!this.role) {
+        const userRole = await mongoose.model('Role').findOne({ name: 'user' });
+        if (userRole) {
+            this.role = userRole._id;
+        }
+    }
+    next();
+})
 
 userSchema.methods.correctPassword = async function (
   cadidatePassword,

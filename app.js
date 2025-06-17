@@ -17,6 +17,7 @@ const initializeSocket = require("./config/socket");
 const swaggerSetup = require("./swagger");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
+const chatAIRouter = require('./routes/chatAIRouter');
 const userRouter = require("./routes/userRouter");
 const fileRouter = require("./routes/fileRouter");
 const emailRouter = require("./routes/emailRouter");
@@ -32,6 +33,8 @@ const paymentRouter = require("./routes/paymentRouter");
 const showTimeRouter = require("./routes/showTimeRouter");
 const postRouter = require("./routes/postRouter");
 const voucherRouter = require("./routes/voucherRouter");
+const permissionRouter = require("./routes/permissionRouter");
+const roleRouter = require("./routes/roleRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
@@ -91,6 +94,7 @@ initializeSocket();
 swaggerSetup(app);
 
 // Use Route by middleware
+app.use('/api/v1/chatAI', chatAIRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/file", fileRouter);
 app.use("/api/v1/email", emailRouter);
@@ -106,6 +110,8 @@ app.use("/api/v1/payments", paymentRouter);
 app.use("/api/v1/show-times", showTimeRouter);
 app.use("/api/v1/posts", postRouter);
 app.use("/api/v1/vouchers", voucherRouter);
+app.use("/api/v1/permissions", permissionRouter);
+app.use("/api/v1/roles", roleRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {

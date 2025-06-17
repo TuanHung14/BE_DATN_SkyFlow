@@ -1,6 +1,6 @@
 const express = require('express');
 const movieEntityController = require('../controller/movieEntityController');
-const { auth, restrictTo } = require('../middleware/authMiddleware');
+const auth = require('../middleware/authMiddleware');
 const {checkDuplicateName} = require("../controller/movieEntityController")
 
 const router = express.Router();
