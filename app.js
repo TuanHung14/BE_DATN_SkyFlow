@@ -37,12 +37,13 @@ const permissionRouter = require("./routes/permissionRouter");
 const roleRouter = require("./routes/roleRouter");
 const seatRouter = require("./routes/seatRouter");
 const foodRouter = require("./routes/foodRouter");
+const bookingRouter = require("./routes/bookingRouter");
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 
 //Implement cors
 const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
-whiteList.push("http://localhost:5173", "http://localhost:4200");
+whiteList.push("http://localhost:5173", "http://localhost:4200", "http://localhost:63342");
 app.use(cors({
   origin: whiteList,
   credentials: true
@@ -115,6 +116,7 @@ app.use("/api/v1/roles", roleRouter);
 app.use("/api/v1/seats", seatRouter);
 app.use("/api/v1/food", foodRouter);
 app.use("/api/v1/chatAI", chatAIRouter);
+app.use("/api/v1/bookings", bookingRouter);
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
