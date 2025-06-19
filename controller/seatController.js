@@ -1,11 +1,48 @@
 const Seat = require('../model/seatModel');
 const Room = require('../model/roomModel');
+const Showtime = require("../model/showtimeModel");
 const catchAsync = require('../utils/catchAsync');
 const mongoose = require('mongoose');
 const Factory = require("./handleFactory");
 
 
-exports.getAllSeat = Factory.getAll(Seat, "roomId");
+// exports.getAllSeat = Factory.getAll(Seat, "roomId");
+
+exports.getAllSeat = async (req, res) => {
+    try {
+        let seats = [];
+
+        if (req.query.showtimeId) {
+            // Tìm showtime để lấy roomId
+            const showtime = await Showtime.findById(req.query.showtimeId);
+            if (!showtime) {
+                return res.status(404).json({
+                    status: 'fail',
+                    message: 'Không tìm thấy suất chiếu'
+                });
+            }
+
+            // Lấy tất cả ghế của phòng chiếu
+            seats = await Seat.find({ roomId: showtime.roomId });
+        } else if (req.query.roomId) {
+            // Giữ logic cũ cho roomId
+            seats = await Seat.find({ roomId: req.query.roomId });
+        } else {
+            // Lấy tất cả ghế nếu không có query
+            seats = await Seat.find();
+        }
+
+        res.status(200).json({
+            status: 'success',
+            data: seats
+        });
+    } catch (err) {
+        res.status(400).json({
+            status: 'fail',
+            message: err.message
+        });
+    }
+};
 
 exports.createSeat = catchAsync(async (req, res, next) => {
     const seatsData = req.body;

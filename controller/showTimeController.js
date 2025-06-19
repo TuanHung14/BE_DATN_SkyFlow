@@ -3,6 +3,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Factory = require("./handleFactory");
 const movieModel = require("../model/movieModel");
+const Room = require("../model/roomModel");
 const mongoose = require('mongoose');
 
 const validateStartTime = (startTime, next) => {
@@ -139,6 +140,7 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
     }
 
     req.body.endTime = endTime;
+    console.log(req.body.roomId)
 
     try {
         const conflictShowTime = await checkConflictingShowtimes(
@@ -208,6 +210,14 @@ exports.getAllShowTime = Factory.getAll(showTimeModel, [
     {path: 'movieId'},
     {path: 'roomId', populate: {path: 'cinemaId', select: 'name'}},
     {path: 'formatId'}
-])
+], async (req) => {
+    const filter = {}
+    if (req.query.cinemaId) {
+        const rooms = await Room.find({ cinemaId: req.query.cinemaId }).select('_id');
+        filter.roomId = { $in: rooms.map(room => room._id) };
+    }
+    return filter;
+})
+
 exports.getOneShowTimeById = Factory.getOne(showTimeModel, 'movieId roomId formatId');
 exports.deleteShowTime = Factory.softDeleteOne(showTimeModel);
