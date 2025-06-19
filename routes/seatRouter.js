@@ -9,17 +9,17 @@ const router = express.Router();
  *   get:
  *     tags:
  *       - Seats
- *     summary: Lấy danh sách ghế theo phòng chiếu
+ *     summary: Lấy danh sách ghế theo phòng chiếu (sau khi chọn showtime thì có id của showtime -> có id của room)
  *     operationId: getAllSeat
  *     security:
  *       - bearer: []
  *     parameters:
  *       - in: query
- *         name: roomId
+ *         name: showtimeId
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của phòng chiếu (room) để lấy danh sách ghế
+ *         description: ID của suất chiếu (showtime) để lấy danh sách ghế
  *     responses:
  *       200:
  *         description: Lấy danh sách ghế thành công
