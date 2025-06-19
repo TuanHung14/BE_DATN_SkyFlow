@@ -17,6 +17,12 @@ const router = express.Router();
  *   get:
  *     summary: Lấy tất cả bài viết
  *     tags: [Posts]
+ *     parameters:
+ *       - name: sort
+ *         in: query
+ *         description: "Sắp xếp theo trường, ví dụ: -views, -createdAt"
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Danh sách bài viết
@@ -57,20 +63,12 @@ router.get("/", postController.getAllPosts);
  *             properties:
  *               title:
  *                 type: string
- *                 description: Tiêu đề bài viết
- *                 example: "Học Node.js cơ bản"
  *               description:
  *                 type: string
- *                 description: Mô tả ngắn bài viết
- *                 example: "Hướng dẫn chi tiết về Node.js từ cơ bản đến nâng cao"
  *               content:
  *                 type: string
- *                 description: Nội dung chi tiết bài viết
- *                 example: "Node.js là một runtime environment..."
  *               imgUrl:
  *                 type: string
- *                 description: URL ảnh đại diện
- *                 example: "https://example.com/nodejs-cover.jpg"
  *     responses:
  *       201:
  *         description: Tạo thành công
@@ -127,7 +125,6 @@ router.get("/favorites", auth, postController.getFavoritePosts);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID bài viết
  *         schema:
  *           type: string
  *     responses:
@@ -150,7 +147,6 @@ router.post("/:id/like", auth, postController.likePost);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID bài viết
  *         schema:
  *           type: string
  *     responses:
@@ -183,7 +179,6 @@ router.get("/:id", postController.getPostById);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID bài viết
  *         schema:
  *           type: string
  *     requestBody:
@@ -195,20 +190,12 @@ router.get("/:id", postController.getPostById);
  *             properties:
  *               title:
  *                 type: string
- *                 description: Tiêu đề mới
- *                 example: "Học Node.js nâng cao"
  *               description:
  *                 type: string
- *                 description: Mô tả mới
- *                 example: "Hướng dẫn Node.js cho người có kinh nghiệm"
  *               content:
  *                 type: string
- *                 description: Nội dung mới
- *                 example: "Trong phần này chúng ta sẽ học..."
  *               imgUrl:
  *                 type: string
- *                 description: URL ảnh đại diện mới
- *                 example: "https://example.com/new-cover.jpg"
  *     responses:
  *       200:
  *         description: Cập nhật thành công
@@ -239,7 +226,6 @@ router.patch("/:id", auth, postController.updatePost);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID bài viết
  *         schema:
  *           type: string
  *     responses:
@@ -260,10 +246,8 @@ router.delete("/:id", auth, postController.deletePost);
  *       - name: slug
  *         in: path
  *         required: true
- *         description: Slug bài viết
  *         schema:
  *           type: string
- *           example: "hoc-nodejs-co-ban"
  *     responses:
  *       200:
  *         description: Trả về bài viết theo slug
@@ -297,7 +281,6 @@ router.get("/slug/:slug", postController.getPostBySlug);
  *       - name: id
  *         in: path
  *         required: true
- *         description: ID bài viết
  *         schema:
  *           type: string
  *     responses:

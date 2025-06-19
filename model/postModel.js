@@ -1,7 +1,13 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const { create } = require("./likePostModel");
 
 const postSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ["preview", "review"],
+    default: "preview",
+  },
   title: { type: String, required: true },
   description: { type: String, required: true },
   views: { type: Number, default: 0 },
@@ -14,6 +20,10 @@ const postSchema = new mongoose.Schema({
     required: [true, "Ảnh đại diện bài viết là bắt buộc"],
   },
   slug: { type: String, unique: true },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // Tự động tạo slug từ title trước khi lưu
