@@ -206,18 +206,20 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getAllShowTime = Factory.getAll(showTimeModel, [
-    {path: 'movieId'},
-    {path: 'roomId', populate: {path: 'cinemaId', select: 'name'}},
-    {path: 'formatId'}
-], async (req) => {
-    const filter = {}
-    if (req.query.cinemaId) {
-        const rooms = await Room.find({ cinemaId: req.query.cinemaId }).select('_id');
-        filter.roomId = { $in: rooms.map(room => room._id) };
-    }
-    return filter;
-})
+// exports.getAllShowTime = Factory.getAll(showTimeModel, [
+//     {path: 'movieId'},
+//     {path: 'roomId'},
+//     {path: 'formatId'}
+// ], async (req) => {
+//     const filter = {}
+//     if (req.query.cinemaId) {
+//         const rooms = await Room.find({ cinemaId: req.query.cinemaId }).select('_id');
+//         filter.roomId = { $in: rooms.map(room => room._id) };
+//     }
+//     return filter;
+// })
+
+exports.getAllShowTime = Factory.getAll(showTimeModel, 'movieId roomId formatId');
 
 exports.getOneShowTimeById = Factory.getOne(showTimeModel, 'movieId roomId formatId');
 exports.deleteShowTime = Factory.softDeleteOne(showTimeModel);
