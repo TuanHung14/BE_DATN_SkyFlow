@@ -1,6 +1,6 @@
 const express = require("express");
 const cinemaController = require("../controller/cinemaController");
-const { auth } = require("../middleware/authMiddleware");
+const  auth  = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // router.use(auth);
@@ -27,7 +27,7 @@ const router = express.Router();
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/', cinemaController.getFilteredCinemas);
+router.get('/show-times', cinemaController.getFilteredCinemas);
 
 /**
  * @swagger

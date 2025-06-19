@@ -1,6 +1,6 @@
 const express = require('express');
 const showTimeController = require("../controller/showTimeController");
-const {auth} = require("../middleware/authMiddleware");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -314,7 +314,9 @@ const router = express.Router();
  *                   example: No showtime found with that ID
  */
 
- router.route('/').get(showTimeController.getAllShowTime).post(showTimeController.getOneShowTimeById);
+ router.route('/')
+     .get(showTimeController.getAllShowTime)
+     .post(showTimeController.createShowTime);
 
  router.route('/:id')
      .get(showTimeController.getOneShowTimeById)

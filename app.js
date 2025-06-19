@@ -17,6 +17,7 @@ const initializeSocket = require("./config/socket");
 const swaggerSetup = require("./swagger");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
+const chatAIRouter = require('./routes/chatAIRouter');
 const userRouter = require("./routes/userRouter");
 const fileRouter = require("./routes/fileRouter");
 const emailRouter = require("./routes/emailRouter");
@@ -32,20 +33,21 @@ const paymentRouter = require("./routes/paymentRouter");
 const showTimeRouter = require("./routes/showTimeRouter");
 const postRouter = require("./routes/postRouter");
 const voucherRouter = require("./routes/voucherRouter");
+const permissionRouter = require("./routes/permissionRouter");
+const roleRouter = require("./routes/roleRouter");
 const seatRouter = require("./routes/seatRouter");
 const foodRouter = require("./routes/foodRouter");
+const bookingRouter = require("./routes/bookingRouter");
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 
 //Implement cors
 const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
-whiteList.push("http://localhost:5173", "http://localhost:4200");
-app.use(
-  cors({
-    origin: whiteList,
-    credentials: true,
-  })
-);
+whiteList.push("http://localhost:5173", "http://localhost:4200", "http://localhost:63342");
+app.use(cors({
+  origin: whiteList,
+  credentials: true
+}));
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -69,7 +71,7 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 
 // Body parser, reading data from body into req.body
-app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ limit: "50kb" }));
 
 //Làm sạch dữ liệu chống lại việc tiêm truy vấn NO SQL
 app.use(mongoSanitize());
@@ -109,8 +111,12 @@ app.use("/api/v1/payments", paymentRouter);
 app.use("/api/v1/show-times", showTimeRouter);
 app.use("/api/v1/posts", postRouter);
 app.use("/api/v1/vouchers", voucherRouter);
+app.use("/api/v1/permissions", permissionRouter);
+app.use("/api/v1/roles", roleRouter);
 app.use("/api/v1/seats", seatRouter);
 app.use("/api/v1/food", foodRouter);
+app.use("/api/v1/chatAI", chatAIRouter);
+app.use("/api/v1/bookings", bookingRouter);
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
