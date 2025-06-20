@@ -17,7 +17,7 @@ const initializeSocket = require("./config/socket");
 const swaggerSetup = require("./swagger");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
-const chatAIRouter = require('./routes/chatAIRouter');
+const chatAIRouter = require("./routes/chatAIRouter");
 const userRouter = require("./routes/userRouter");
 const fileRouter = require("./routes/fileRouter");
 const emailRouter = require("./routes/emailRouter");
@@ -40,14 +40,21 @@ const foodRouter = require("./routes/foodRouter");
 const bookingRouter = require("./routes/bookingRouter");
 //Sử dụng engine Pug
 app.set("view engine", "pug");
+app.set("query parser", "extended");
 
 //Implement cors
 const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
-whiteList.push("http://localhost:5173", "http://localhost:4200", "http://localhost:63342");
-app.use(cors({
-  origin: whiteList,
-  credentials: true
-}));
+whiteList.push(
+  "http://localhost:5173",
+  "http://localhost:4200",
+  "http://localhost:63342"
+);
+app.use(
+  cors({
+    origin: whiteList,
+    credentials: true,
+  })
+);
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -82,7 +89,7 @@ app.use(xss());
 // Tránh sự trùng lặp khi truy vấn filter có thể ngoại trừ trong whitelist
 app.use(
   hpp({
-    whitelist: [],
+    whitelist: ["genresId", "castId", "directorId"],
   })
 );
 
