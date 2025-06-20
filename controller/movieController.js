@@ -5,6 +5,7 @@ const Factory = require("./handleFactory");
 const { filterObj } = require("../utils/helper");
 const { updateMovieStatusLogic } = require("../services/movieService");
 // CREATE MOVIE
+
 exports.createMovie = catchAsync(async (req, res, next) => {
   const { name } = req.body;
 
