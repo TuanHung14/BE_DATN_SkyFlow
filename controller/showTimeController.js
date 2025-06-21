@@ -7,12 +7,12 @@ const Room = require("../model/roomModel");
 const mongoose = require('mongoose');
 
 const validateStartTime = (startTime, next) => {
-    const startHour = startTime.getHours();
-    const startMinute = startTime.getMinutes();
+    const startHour = startTime.getUTCHours();
+    const startMinute = startTime.getUTCMinutes();
 
     const startTimeInMinutes = startHour * 60 + startMinute;
-    const earliestAllowed = 8 * 60 + 30;
-    const latestAllowed = 23 * 60;
+    const earliestAllowed = 60 + 30;
+    const latestAllowed = 16 * 60;
 
     if (startTimeInMinutes < earliestAllowed || startTimeInMinutes > latestAllowed) {
         return new AppError('Thời gian bắt đầu phải từ 8:30 đến 23:00', 400);
