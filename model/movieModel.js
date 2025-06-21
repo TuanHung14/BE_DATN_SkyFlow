@@ -57,9 +57,14 @@ const movieSchema = new mongoose.Schema(
             required: [true, "Phim phải có mô tả"],
             trim: true,
         },
+        // hình đứng
         posterUrl: {
             type: String,
             required: [true, "Phim phải có poster"],
+        },
+        // hình ngang
+        imageLandscape: {
+          type: String
         },
         publishStatus: {
             type: String,
