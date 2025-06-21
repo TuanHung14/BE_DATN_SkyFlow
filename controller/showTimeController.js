@@ -1,8 +1,8 @@
-const showTimeModel = require("../model/showtimeModel");
+const Showtime = require("../model/showtimeModel");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Factory = require("./handleFactory");
-const movieModel = require("../model/movieModel");
+const Movie = require("../model/movieModel");
 const Room = require("../model/roomModel");
 const mongoose = require('mongoose');
 
@@ -22,7 +22,7 @@ const validateStartTime = (startTime, next) => {
 };
 
 const calculateEndTime = async (movieId, startTime, next) => {
-    const movie = await movieModel.findById(movieId);
+    const movie = await Movie.findById(movieId);
     if (!movie) {
         return next(new AppError('Không tìm thấy thông tin phim', 404));
     }
@@ -87,7 +87,7 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
         }
 
         // Thực hiện truy vấn
-        const conflictingShowtime = await showTimeModel.findOne(conflictQuery);
+        const conflictingShowtime = await Showtime.findOne(conflictQuery);
 
         // Xử lý trường hợp có xung đột
         if (conflictingShowtime) {
@@ -140,7 +140,6 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
     }
 
     req.body.endTime = endTime;
-    console.log(req.body.roomId)
 
     try {
         const conflictShowTime = await checkConflictingShowtimes(
@@ -156,7 +155,7 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         return next(new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 409));
     }
 
-    const doc = await showTimeModel.create(req.body);
+    const doc = await Showtime.create(req.body);
     // console.log('Created showtime:', doc);
 
     res.status(201).json({
@@ -172,7 +171,7 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
         const startTime = new Date(req.body.startTime);
         validateStartTime(startTime, next);
 
-        const showtime = await showTimeModel.findById(req.params.id);
+        const showtime = await Showtime.findById(req.params.id);
         if (!showtime) {
             return next(new AppError('Không tìm thấy suất chiếu', 404));
         }
@@ -189,7 +188,7 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
         }
     }
 
-    const doc = await showTimeModel.findByIdAndUpdate(req.params.id, req.body, {
+    const doc = await Showtime.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
     });
@@ -206,20 +205,152 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
     });
 });
 
-// exports.getAllShowTime = Factory.getAll(showTimeModel, [
-//     {path: 'movieId'},
-//     {path: 'roomId'},
-//     {path: 'formatId'}
-// ], async (req) => {
-//     const filter = {}
-//     if (req.query.cinemaId) {
-//         const rooms = await Room.find({ cinemaId: req.query.cinemaId }).select('_id');
-//         filter.roomId = { $in: rooms.map(room => room._id) };
-//     }
-//     return filter;
-// })
+exports.getAllShowTime = catchAsync(async (req, res) => {
+    const filter = {};
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 7;
+    const skip = (page - 1) * limit;
 
-exports.getAllShowTime = Factory.getAll(showTimeModel, 'movieId roomId formatId');
+    // 1. Search by movie name
+    if (req.query['search[name]']) {
+        const movies = await Movie.find({
+            name: { $regex: req.query['search[name]'], $options: 'i' },
+            isDeleted: { $ne: true }
+        }).select('_id name');
 
-exports.getOneShowTimeById = Factory.getOne(showTimeModel, 'movieId roomId formatId');
-exports.deleteShowTime = Factory.softDeleteOne(showTimeModel);
+        if (movies.length > 0) {
+            filter.movieId = { $in: movies.map(movie => movie._id) };
+        } else {
+            return res.status(200).json({
+                status: 'success',
+                data: { data: [] },
+                page: page,
+                totalPages: 0,
+                total: 0,
+                message: 'Không tìm thấy phim nào'
+            });
+        }
+    }
+
+    // 2. Filter by cinema
+    if (req.query.cinemaId) {
+        if (!mongoose.Types.ObjectId.isValid(req.query.cinemaId)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ID rạp không hợp lệ'
+            });
+        }
+
+        const cinemaId = new mongoose.Types.ObjectId(req.query.cinemaId);
+        const rooms = await Room.find({
+            cinemaId: cinemaId,
+            isDeleted: { $ne: true }
+        }).select('_id roomName');
+        if (rooms.length === 0) {
+            return res.status(200).json({
+                status: 'success',
+                data: { data: [] },
+                page: page,
+                totalPages: 0,
+                total: 0,
+                message: 'Không tìm thấy phòng nào cho rạp này'
+            });
+        }
+
+        const roomIds = rooms.map(room => room._id);
+
+        if (req.query.roomId) {
+            const requestedRoomId = new mongoose.Types.ObjectId(req.query.roomId);
+            const isRoomInCinema = roomIds.some(id => id.equals(requestedRoomId));
+
+            if (isRoomInCinema) {
+                filter.roomId = requestedRoomId;
+            } else {
+                return res.status(200).json({
+                    status: 'success',
+                    data: { data: [] },
+                    page: page,
+                    totalPages: 0,
+                    total: 0,
+                    message: 'Phòng không thuộc rạp được chọn'
+                });
+            }
+        } else {
+            filter.roomId = { $in: roomIds };
+        }
+    } else if (req.query.roomId) {
+        if (!mongoose.Types.ObjectId.isValid(req.query.roomId)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ID phòng không hợp lệ'
+            });
+        }
+
+        filter.roomId = new mongoose.Types.ObjectId(req.query.roomId);
+    }
+
+    // 3. Filter by status
+    if (req.query.status) {
+        const validStatuses = ['Available', 'Occupied', 'Maintenance'];
+        if (!validStatuses.includes(req.query.status)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Trạng thái không hợp lệ'
+            });
+        }
+
+        filter.status = req.query.status;
+    }
+
+    // 4. Exclude deleted records
+    filter.isDeleted = { $ne: true };
+
+    // Execute query with populate
+    const showtimes = await Showtime.find(filter)
+        .populate({
+            path: 'movieId',
+            select: 'name posterUrl duration isDeleted',
+            match: { isDeleted: { $ne: true } }
+        })
+        .populate({
+            path: 'roomId',
+            select: 'roomName isDeleted',
+            match: { isDeleted: { $ne: true } },
+            populate: {
+                path: 'cinemaId',
+                select: 'name location isDeleted',
+                match: { isDeleted: { $ne: true } }
+            }
+        })
+        .populate({
+            path: 'formatId',
+            select: 'name price isDeleted',
+            match: { isDeleted: { $ne: true } }
+        })
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+    // Filter out showtimes where populated fields are null (due to match conditions)
+    const filteredShowtimes = showtimes.filter(showtime =>
+        showtime.movieId &&
+        showtime.roomId &&
+        showtime.roomId.cinemaId &&
+        showtime.formatId
+    );
+
+    const total = await Showtime.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+        status: 'success',
+        data: { data: filteredShowtimes },
+        page: page,
+        totalPages: totalPages,
+        total: total,
+        results: filteredShowtimes.length
+    });
+});
+
+exports.getOneShowTimeById = Factory.getOne(Showtime, 'movieId roomId formatId');
+exports.deleteShowTime = Factory.softDeleteOne(Showtime);
