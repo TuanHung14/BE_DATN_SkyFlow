@@ -81,11 +81,16 @@ const updateOne = async (userId, payload, isValidate = false) => {
     return user;
 }
 
+const getUserInfo = async (userId) => {
+    return await User.findById(userId);
+}
+
 module.exports = {
     signToken,
     createSendToken,
     verifyToken,
     findUser,
     findUserById,
-    updateOne
+    updateOne,
+    getUserInfo
 }
