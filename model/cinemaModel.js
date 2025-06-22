@@ -12,19 +12,25 @@ const cinemaSchema = new mongoose.Schema(
       trim: true,
     },
     province: {
-      type: String,
+      type: {
+        label: { type: String, required: true },
+        value: { type: String, required: true },
+      },
       required: true,
-      trim: true,
     },
     district: {
-      type: String,
+      type: {
+        label: { type: String, required: true },
+        value: { type: String, required: true },
+      },
       required: true,
-      trim: true,
     },
     ward: {
-      type: String,
+      type: {
+        label: { type: String, required: true },
+        value: { type: String, required: true },
+      },
       required: true,
-      trim: true,
     },
     address: {
       type: String,
