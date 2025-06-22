@@ -52,10 +52,10 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   let user = await userService.findUser(email, "+password");
 
-  if(user && !user.isVerified){
+  if (user && !user.isVerified) {
     user.password = password;
     await user.save();
-  }else{
+  } else {
     user = await User.create({
       name,
       email,
@@ -119,7 +119,14 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       new AppError("Không tìm thấy người dùng nào với email này!", 404)
     );
   }
-
+  if (user.googleId && user.password === null) {
+    return next(
+      new AppError(
+        "Tài khoản của bạn không có mật khẩu vì đăng nhập bằng Google",
+        400
+      )
+    );
+  }
   if (!user.isVerified) {
     return next(
       new AppError(
