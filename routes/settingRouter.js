@@ -216,6 +216,7 @@ router.patch("/:id", settingController.updateSetting);
  *         description: Không tìm thấy setting
  */
 router.delete("/:id", settingController.deleteSetting);
+
 /**
  * @swagger
  * /api/v1/settings/{id}/set-default:

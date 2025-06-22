@@ -3,7 +3,6 @@ const LikePost = require("../model/likePostModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
-const mongoose = require("mongoose");
 exports.getAllPosts = Factory.getAll(Post);
 exports.getPostById = Factory.getOne(Post);
 exports.createPost = Factory.createOne(Post);
@@ -53,6 +52,7 @@ exports.getFavoritePosts = catchAsync(async (req, res, next) => {
 });
 exports.getPostBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
+  const user = req.user;
 
   const post = await Post.findOneAndUpdate(
     { slug },
@@ -62,10 +62,19 @@ exports.getPostBySlug = catchAsync(async (req, res, next) => {
 
   if (!post) return next(new AppError("Post not found", 404));
 
+  const plainPost = post.toObject();
+  if(user){
+    const exists = await LikePost.exists({
+      userId: user._id,
+      postId: post._id,
+    });
+    plainPost.isLiked = !!exists;
+  }
+
   res.status(200).json({
     status: "success",
     data: {
-      post,
+      post: plainPost,
     },
   });
 });

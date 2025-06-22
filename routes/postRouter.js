@@ -1,6 +1,7 @@
 const express = require("express");
 const postController = require("../controller/postController");
 const auth  = require("../middleware/authMiddleware");
+const optionalAuth = require("../middleware/optionalAuthMiddleware");
 
 const router = express.Router();
 
@@ -10,36 +11,6 @@ const router = express.Router();
  *   name: Posts
  *   description: Quản lý bài viết
  */
-
-/**
- * @swagger
- * /api/v1/posts:
- *   get:
- *     summary: Lấy tất cả bài viết
- *     tags: [Posts]
- *     parameters:
- *       - name: sort
- *         in: query
- *         description: "Sắp xếp theo trường, ví dụ: -views, -createdAt"
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Danh sách bài viết
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Post'
- */
-router.get("/", postController.getAllPosts);
 
 /**
  * @swagger
@@ -238,10 +209,44 @@ router.delete("/:id", auth, postController.deletePost);
 
 /**
  * @swagger
+ * /api/v1/posts/{id}/liked:
+ *   get:
+ *     summary: Kiểm tra người dùng đã like bài viết hay chưa
+ *     tags: [Posts]
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Trạng thái like
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 liked:
+ *                   type: boolean
+ *                   example: true
+ */
+router.get("/:id/liked", auth, postController.checkLikedPost);
+
+router.use(optionalAuth);
+/**
+ * @swagger
  * /api/v1/posts/slug/{slug}:
  *   get:
  *     summary: Lấy bài viết theo slug (tăng lượt xem)
  *     tags: [Posts]
+ *     security:
+ *       - bearer: []
  *     parameters:
  *       - name: slug
  *         in: path
@@ -271,21 +276,19 @@ router.get("/slug/:slug", postController.getPostBySlug);
 
 /**
  * @swagger
- * /api/v1/posts/{id}/liked:
+ * /api/v1/posts:
  *   get:
- *     summary: Kiểm tra người dùng đã like bài viết hay chưa
+ *     summary: Lấy tất cả bài viết
  *     tags: [Posts]
- *     security:
- *       - bearer: []
  *     parameters:
- *       - name: id
- *         in: path
- *         required: true
+ *       - name: sort
+ *         in: query
+ *         description: "Sắp xếp theo trường, ví dụ: -views, -createdAt"
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Trạng thái like
+ *         description: Danh sách bài viết
  *         content:
  *           application/json:
  *             schema:
@@ -294,10 +297,11 @@ router.get("/slug/:slug", postController.getPostBySlug);
  *                 status:
  *                   type: string
  *                   example: success
- *                 liked:
- *                   type: boolean
- *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Post'
  */
-router.get("/:id/liked", auth, postController.checkLikedPost);
+router.get("/", postController.getAllPosts);
 
 module.exports = router;
