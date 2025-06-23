@@ -109,7 +109,6 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
 };
 
 exports.createShowTime = catchAsync(async (req, res, next) => {
-    console.log('Payload:', req.body);
     const startTime = new Date(req.body.startTime);
 
     if (isNaN(startTime.getTime())) {
