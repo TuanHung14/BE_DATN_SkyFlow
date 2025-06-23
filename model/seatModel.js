@@ -41,6 +41,20 @@ const seatSchema = new mongoose.Schema({
         type: String,
         enum: ['Available', 'Reserved', 'Occupied', 'Broken'],
         default: 'Available'
+    },
+    linkedSeatId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Seat',
+        default: null,
+        validate: {
+            validator: async function(v) {
+                if (this.seatType !== 'couple') return v === null;
+                if (v === null) return false;
+                const linkedSeat = await this.constructor.findById(v);
+                return linkedSeat && linkedSeat.seatType === 'couple' && linkedSeat.linkedSeatId.equals(this._id);
+            },
+            message: 'Ghế liên kết không hợp lệ hoặc không phải ghế đôi'
+        }
     }
 }, {
     timestamps: true
@@ -85,6 +99,21 @@ seatSchema.pre('findOneAndUpdate', async function(next) {
     const update = this.getUpdate();
     if (update.roomId) {
         return next(new Error('Không thể thay đổi phòng của ghế'));
+    }
+    next();
+});
+
+// Đảm bảo trạng thái của ghế đôi luôn đồng bộ
+seatSchema.pre('findOneAndUpdate', async function(next) {
+    const update = this.getUpdate();
+    if (update.status && this._conditions._id) {
+        const seat = await this.model.findById(this._conditions._id);
+        if (seat && seat.seatType === 'couple' && seat.linkedSeatId) {
+            await this.model.updateOne(
+                { _id: seat.linkedSeatId },
+                { status: update.status }
+            );
+        }
     }
     next();
 });

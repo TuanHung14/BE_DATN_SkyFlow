@@ -5,9 +5,6 @@ const catchAsync = require('../utils/catchAsync');
 const mongoose = require('mongoose');
 const Factory = require("./handleFactory");
 
-
-// exports.getAllSeat = Factory.getAll(Seat, "roomId");
-
 exports.getAllSeat = catchAsync(async (req, res, next) => {
     let seats = [];
 
@@ -19,18 +16,33 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
         }
 
         // Lấy tất cả ghế của phòng chiếu
-        seats = await Seat.find({ roomId: showtime.roomId });
+        seats = await Seat.find({ roomId: showtime.roomId }).populate('linkedSeatId');
     } else if (req.query.roomId) {
         // Giữ logic cũ cho roomId
-        seats = await Seat.find({ roomId: req.query.roomId });
+        seats = await Seat.find({ roomId: req.query.roomId }).populate('linkedSeatId');
     } else {
         // Lấy tất cả ghế nếu không có query
-        seats = await Seat.find();
+        seats = await Seat.find().populate('linkedSeatId');
     }
+
+    // Xử lý displayName cho ghế đôi
+    const responseSeats = seats.map(seat => {
+        if (seat.seatType === 'couple' && seat.linkedSeatId) {
+            const linkedSeat = seat.linkedSeatId;
+            const displayName = seat.seatNumber < linkedSeat.seatNumber
+                ? `${seat.seatRow}${seat.seatNumber}-${linkedSeat.seatRow}${linkedSeat.seatNumber}`
+                : `${linkedSeat.seatRow}${linkedSeat.seatNumber}-${seat.seatRow}${seat.seatNumber}`;
+            return {
+                ...seat.toObject(),
+                displayName
+            };
+        }
+        return seat;
+    });
 
     res.status(200).json({
         status: 'success',
-        data: seats
+        seats: responseSeats
     });
 });
 
@@ -87,10 +99,10 @@ exports.createSeat = catchAsync(async (req, res, next) => {
 });
 
 exports.updateSeat = catchAsync(async (req, res, next) => {
-    const { seats, seatType } = req.body;
+    const { seats, seatType, roomId } = req.body;
 
-    if (!seats || !seatType) {
-        return res.status(400).json({ message: 'Vui lòng cung cấp danh sách ghế và loại ghế' });
+    if (!seats || !seatType || !roomId) {
+        return res.status(400).json({ message: 'Vui lòng cung cấp danh sách ghế, loại ghế và ID phòng' });
     }
 
     const seatList = seats.split(',').map(seat => seat.trim());
@@ -106,7 +118,13 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
     const errors = [];
 
     if (seatType === 'couple') {
-        // Sắp xếp seatList để kiểm tra cặp liền kề
+        // Kiểm tra số lượng ghế phải chẵn
+        if (seatList.length % 2 !== 0) {
+            errors.push('Số lượng ghế phải là số chẵn để tạo couple');
+            return res.status(400).json({ message: errors.join(', ') });
+        }
+
+        // Sắp xếp ghế để kiểm tra cặp liền kề
         const sortedSeats = seatList.sort((a, b) => {
             const [rowA, numA] = [a[0], parseInt(a.slice(1))];
             const [rowB, numB] = [b[0], parseInt(b.slice(1))];
@@ -114,34 +132,52 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
             return numA - numB;
         });
 
-        for (let i = 0; i < sortedSeats.length - 1; i++) {
-            const [seatRow, seatNumber] = [sortedSeats[i][0], parseInt(sortedSeats[i].slice(1))];
+        for (let i = 0; i < sortedSeats.length; i += 2) {
+            const seatCode = sortedSeats[i];
             const nextSeatCode = sortedSeats[i + 1];
+
+            const [seatRow, seatNumber] = [seatCode[0], parseInt(seatCode.slice(1))];
             const [nextSeatRow, nextSeatNumber] = [nextSeatCode[0], parseInt(nextSeatCode.slice(1))];
 
+            // Kiểm tra ghế liền kề
             if (seatRow !== nextSeatRow || nextSeatNumber !== seatNumber + 1) {
-                errors.push(`Ghế ${sortedSeats[i]} và ${nextSeatCode} không liền kề để tạo couple`);
+                errors.push(`Ghế ${seatCode} và ${nextSeatCode} không liền kề để tạo couple`);
                 continue;
             }
 
-            const seat = await Seat.findOne({ seatRow, seatNumber, roomId: req.body.roomId });
-            const nextSeat = await Seat.findOne({ seatRow: nextSeatRow, seatNumber: nextSeatNumber, roomId: req.body.roomId });
+            // Tìm ghế trong DB
+            const seat = await Seat.findOne({ seatRow, seatNumber, roomId });
+            const nextSeat = await Seat.findOne({ seatRow: nextSeatRow, seatNumber: nextSeatNumber, roomId });
 
             if (!seat || !nextSeat) {
-                errors.push(`Ghế ${sortedSeats[i]} hoặc ${nextSeatCode} không tồn tại`);
+                errors.push(`Ghế ${seatCode} hoặc ${nextSeatCode} không tồn tại`);
                 continue;
             }
 
-            await Seat.updateMany(
-                { seatRow, seatNumber: { $in: [seatNumber, nextSeatNumber] } },
-                { seatType: 'couple', status: 'Available' }
+            // Kiểm tra ghế có thuộc cặp đôi khác không
+            if (seat.linkedSeatId || nextSeat.linkedSeatId) {
+                errors.push(`Ghế ${seatCode} hoặc ${nextSeatCode} đã thuộc một ghế đôi khác`);
+                continue;
+            }
+
+            // Kiểm tra trạng thái ghế
+            if (seat.status !== 'Available' || nextSeat.status !== 'Available') {
+                errors.push(`Ghế ${seatCode} hoặc ${nextSeatCode} không khả dụng`);
+                continue;
+            }
+
+            // Cập nhật ghế thành cặp đôi
+            await Seat.updateOne(
+                { _id: seat._id },
+                { seatType: 'couple', linkedSeatId: nextSeat._id, status: 'Available' }
+            );
+            await Seat.updateOne(
+                { _id: nextSeat._id },
+                { seatType: 'couple', linkedSeatId: seat._id, status: 'Available' }
             );
         }
-
-        if (sortedSeats.length % 2 !== 0) {
-            errors.push('Số lượng ghế phải là số chẵn để tạo couple');
-        }
     } else {
+        // Xử lý ghế normal và vip
         const updatePromises = seatList.map(async (seatCode) => {
             const [seatRow, seatNumber] = [seatCode[0], parseInt(seatCode.slice(1))];
 
@@ -150,15 +186,21 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
                 return;
             }
 
-            const seat = await Seat.findOne({ seatRow, seatNumber, roomId: req.body.roomId });
+            const seat = await Seat.findOne({ seatRow, seatNumber, roomId });
             if (!seat) {
                 errors.push(`Ghế ${seatCode} không tồn tại`);
                 return;
             }
 
+            // Ngăn chặn thay đổi nếu ghế thuộc cặp đôi
+            if (seat.linkedSeatId) {
+                errors.push(`Ghế ${seatCode} thuộc ghế đôi, không thể đổi loại`);
+                return;
+            }
+
             await Seat.updateOne(
-                { seatRow, seatNumber, roomId: req.body.roomId },
-                { seatType, status: 'Available' }
+                { seatRow, seatNumber, roomId },
+                { seatType, status: 'Available', linkedSeatId: null }
             );
         });
 
@@ -166,8 +208,24 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
     }
 
     if (errors.length > 0) {
-        return next(new Error(errors.join(', ')));
+        return res.status(400).json({ message: errors.join(', ') });
     }
 
-    res.status(200).json({ message: 'Cập nhật ghế thành công' });
+    // Trả về danh sách ghế đã cập nhật với displayName cho ghế đôi
+    const updatedSeats = await Seat.find({ roomId }).populate('linkedSeatId');
+    const responseSeats = updatedSeats.map(seat => {
+        if (seat.seatType === 'couple' && seat.linkedSeatId) {
+            const linkedSeat = seat.linkedSeatId;
+            const displayName = seat.seatNumber < linkedSeat.seatNumber
+                ? `${seat.seatRow}${seat.seatNumber}-${linkedSeat.seatRow}${linkedSeat.seatNumber}`
+                : `${linkedSeat.seatRow}${linkedSeat.seatNumber}-${seat.seatRow}${seat.seatNumber}`;
+            return {
+                ...seat.toObject(),
+                displayName
+            };
+        }
+        return seat;
+    });
+
+    res.status(200).json({ message: 'Cập nhật ghế thành công', seats: responseSeats });
 });
