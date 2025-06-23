@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../model/userModel");
 const {OAuth2Client} = require("google-auth-library");
+const axios = require("axios");
 
 const signToken = user => {
     const accessToken = jwt.sign({ id: user._id, name: user.name }, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN });
@@ -50,10 +51,21 @@ const verifyToken = async (token) => {
     return payload;
 }
 
+const verifyFacebookToken = async (accessToken) => {
+    const response = await axios.get(`https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email,picture`);
+    return response.data;
+}
+
 const findUser = async (email, select = "") => {
     if(select)
         return await User.findOne({ email }).select(select);
     return await User.findOne({ email })
+}
+
+const findUserByFBId = async (id, select = "") => {
+    if(select)
+        return await User.findOne({ facebookId: id }).select(select);
+    return await User.findOne({ facebookId: id })
 }
 
 const findUserById = async (userId) => {
@@ -92,5 +104,7 @@ module.exports = {
     findUser,
     findUserById,
     updateOne,
-    getUserInfo
+    getUserInfo,
+    verifyFacebookToken,
+    findUserByFBId
 }

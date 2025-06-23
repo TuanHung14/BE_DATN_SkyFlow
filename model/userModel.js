@@ -64,6 +64,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    facebookId: {
+      type: String,
+      select: false,
+    },
     refreshToken: {
       type: String,
       select: false,
