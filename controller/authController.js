@@ -250,3 +250,41 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
 
   await userService.createSendToken(account, 200, res);
 });
+
+exports.facebookLogin = catchAsync(async (req, res, next) => {
+    const { accessToken } = req.body;
+
+    if(!accessToken) {
+        return next(new AppError("Vui lòng cung cấp access token", 400));
+    }
+
+    const payload = await userService.verifyFacebookToken(accessToken);
+
+    let { email, name, id, picture } = payload;
+
+    if (!email) {
+      email = `${id}@facebook.com`;
+    }
+
+    let account = await userService.findUserByFBId(id, "+password");
+
+    if (!account) {
+      account = await userService.findUser(email, "+password");
+    }
+
+    if (!account) {
+        account = await User.create({
+        name,
+        email,
+        photo: picture?.data?.url || null,
+        facebookId: id,
+        isVerified: true,
+        });
+    } else if (!account.facebookId) {
+        account.facebookId = id;
+        account.isVerified = true;
+        await account.save();
+    }
+
+    await userService.createSendToken(account, 200, res);
+})

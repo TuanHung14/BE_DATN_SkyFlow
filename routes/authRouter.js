@@ -96,6 +96,36 @@ router.post("/loginGoogle", authController.googleLogin);
 
 /**
  * @swagger
+ * /api/v1/auth/loginFacebook:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Login Facebook
+ *     operationId: loginFacebook
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - accessToken
+ *             properties:
+ *               accessToken:
+ *                 type: string
+ *                 example: EAAGm0PX4ZCpsBAKZCq3ZBZBZAeZC...
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Missing or invalid access token
+ *       401:
+ *         description: Invalid or expired Facebook token
+ */
+router.post("/loginFacebook", authController.facebookLogin);
+
+/**
+ * @swagger
  * /api/v1/auth/forgotPassword:
  *   post:
  *     tags:
