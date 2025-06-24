@@ -3,7 +3,44 @@ const LikePost = require("../model/likePostModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
-exports.getAllPosts = Factory.getAll(Post);
+const APIFeatures = require("../utils/apiFeatures");
+
+exports.getAllPosts = catchAsync(async (req, res, next) => {
+  const user = req.user;
+  console.log("User:", user);
+
+  const features = new APIFeatures(Post.find(), req.query)
+    .filter()
+    .search()
+    .sort()
+    .limitFields()
+    .pagination();
+
+  let posts = await features.query;
+  posts = posts.map((post) => post.toObject());
+
+  if (user) {
+    const likedPostIds = await LikePost.find({ userId: user._id }).distinct(
+      "postId"
+    );
+
+    posts = posts.map((post) => ({
+      ...post,
+      isLiked: likedPostIds.includes(post._id.toString()),
+    }));
+  }
+
+  const totalDocs = await Post.countDocuments();
+
+  res.status(200).json({
+    status: "success",
+    totalDocs,
+    data: {
+      data: posts,
+    },
+  });
+});
+
 exports.getPostById = Factory.getOne(Post);
 exports.createPost = Factory.createOne(Post);
 exports.updatePost = Factory.updateOne(Post);
@@ -53,7 +90,7 @@ exports.getFavoritePosts = catchAsync(async (req, res, next) => {
 exports.getPostBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
   const user = req.user;
-
+  console.log("User:", user);
   const post = await Post.findOneAndUpdate(
     { slug },
     { $inc: { views: 1 } },
@@ -63,7 +100,7 @@ exports.getPostBySlug = catchAsync(async (req, res, next) => {
   if (!post) return next(new AppError("Post not found", 404));
 
   const plainPost = post.toObject();
-  if(user){
+  if (user) {
     const exists = await LikePost.exists({
       userId: user._id,
       postId: post._id,

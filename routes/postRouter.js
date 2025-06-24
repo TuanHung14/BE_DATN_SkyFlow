@@ -1,6 +1,6 @@
 const express = require("express");
 const postController = require("../controller/postController");
-const auth  = require("../middleware/authMiddleware");
+const auth = require("../middleware/authMiddleware");
 const optionalAuth = require("../middleware/optionalAuthMiddleware");
 
 const router = express.Router();
@@ -280,6 +280,8 @@ router.get("/slug/:slug", postController.getPostBySlug);
  *   get:
  *     summary: Lấy tất cả bài viết
  *     tags: [Posts]
+ *     security:
+ *      - bearer: []
  *     parameters:
  *       - name: sort
  *         in: query
