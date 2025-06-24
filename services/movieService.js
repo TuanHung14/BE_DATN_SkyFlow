@@ -18,4 +18,11 @@ async function updateMovieStatusLogic() {
   return result.modifiedCount;
 }
 
-module.exports = { updateMovieStatusLogic };
+async function getMovies(){
+    return await Movie.find({
+        isDeleted: false,
+        status: "NOW_SHOWING"
+    }).limit(3).sort({createdAt: -1});
+}
+
+module.exports = { updateMovieStatusLogic, getMovies };

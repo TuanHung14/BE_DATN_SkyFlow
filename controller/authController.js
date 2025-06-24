@@ -52,10 +52,10 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   let user = await userService.findUser(email, "+password");
 
-  if(user && !user.isVerified){
+  if (user && !user.isVerified) {
     user.password = password;
     await user.save();
-  }else{
+  } else {
     user = await User.create({
       name,
       email,
@@ -119,7 +119,14 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       new AppError("Không tìm thấy người dùng nào với email này!", 404)
     );
   }
-
+  if (user.googleId && user.password === null) {
+    return next(
+      new AppError(
+        "Tài khoản của bạn không có mật khẩu vì đăng nhập bằng Google",
+        400
+      )
+    );
+  }
   if (!user.isVerified) {
     return next(
       new AppError(
@@ -243,3 +250,41 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
 
   await userService.createSendToken(account, 200, res);
 });
+
+exports.facebookLogin = catchAsync(async (req, res, next) => {
+    const { accessToken } = req.body;
+
+    if(!accessToken) {
+        return next(new AppError("Vui lòng cung cấp access token", 400));
+    }
+
+    const payload = await userService.verifyFacebookToken(accessToken);
+
+    let { email, name, id, picture } = payload;
+
+    if (!email) {
+      email = `${id}@facebook.com`;
+    }
+
+    let account = await userService.findUserByFBId(id, "+password");
+
+    if (!account) {
+      account = await userService.findUser(email, "+password");
+    }
+
+    if (!account) {
+        account = await User.create({
+        name,
+        email,
+        photo: picture?.data?.url || null,
+        facebookId: id,
+        isVerified: true,
+        });
+    } else if (!account.facebookId) {
+        account.facebookId = id;
+        account.isVerified = true;
+        await account.save();
+    }
+
+    await userService.createSendToken(account, 200, res);
+})
