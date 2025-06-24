@@ -100,17 +100,12 @@ exports.verifyVNPayCallback = (callbackData) => {
 
         const sortedParams = sortObject(callbackData);
         const signData = querystring.stringify(sortedParams);
-        console.log('Callback signData:', signData); // Log chuỗi ký tự
-        console.log('Received vnp_SecureHash:', vnp_SecureHash);
 
         const hmac = crypto.createHmac('sha512', vnp_HashSecret);
         const calculatedHash = hmac.update(signData).digest('hex');
-        console.log('Calculated vnp_SecureHash:', calculatedHash);
 
         const isValidSignature = calculatedHash === vnp_SecureHash;
         const isSuccess = callbackData.vnp_ResponseCode === '00' && callbackData.vnp_TransactionStatus === '00';
-
-        console.log('Verification result:', { isValidSignature, isSuccess });
 
         return {
             isValidSignature,
