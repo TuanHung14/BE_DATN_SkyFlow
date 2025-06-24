@@ -90,7 +90,7 @@ exports.getFavoritePosts = catchAsync(async (req, res, next) => {
 exports.getPostBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
   const user = req.user;
-  console.log("User:", user);
+
   const post = await Post.findOneAndUpdate(
     { slug },
     { $inc: { views: 1 } },
