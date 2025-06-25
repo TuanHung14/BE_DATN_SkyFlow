@@ -278,34 +278,82 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
         } else {
             // Xử lý ghế normal và vip
             for (const seatCode of seatList) {
-                if (!/^[A-Z]\d+$/.test(seatCode)) {
-                    errors.push(`Ghế ${seatCode} có định dạng không hợp lệ`);
-                    continue;
+                // Kiểm tra nếu là ObjectId (ghế đôi)
+                if (mongoose.isValidObjectId(seatCode)) {
+                    const coupleSeat = await Seat.findOne({ _id: seatCode, roomId, seatType: 'couple', hidden: false }).session(session);
+                    if (!coupleSeat || !coupleSeat.coupleId) {
+                        errors.push(`Ghế ${seatCode} không tồn tại hoặc không phải ghế đôi`);
+                        continue;
+                    }
+
+                    // Tìm ghế thứ hai trong cặp ghế đôi
+                    const hiddenSeat = await Seat.findOne({
+                        roomId,
+                        coupleId: coupleSeat.coupleId,
+                        hidden: true
+                    }).session(session);
+
+                    if (!hiddenSeat) {
+                        errors.push(`Không tìm thấy ghế thứ hai trong cặp ghế đôi ${seatCode}`);
+                        continue;
+                    }
+
+                    // Chuyển ghế đôi chính thành ghế đơn
+                    await Seat.updateOne(
+                        { _id: coupleSeat._id },
+                        {
+                            seatType,
+                            status: 'Available',
+                            coupleId: null,
+                            coupleDisplayName: null,
+                            hidden: false
+                        },
+                        { session }
+                    );
+
+                    // Hiển thị lại ghế thứ hai và chuyển thành ghế đơn
+                    await Seat.updateOne(
+                        { _id: hiddenSeat._id },
+                        {
+                            seatType,
+                            status: 'Available',
+                            coupleId: null,
+                            coupleDisplayName: null,
+                            hidden: false
+                        },
+                        { session }
+                    );
+                } else {
+                    // Xử lý ghế đơn thông thường
+                    if (!/^[A-Z]\d+$/.test(seatCode)) {
+                        errors.push(`Ghế ${seatCode} có định dạng không hợp lệ`);
+                        continue;
+                    }
+
+                    const [seatRow, seatNumber] = [seatCode[0], parseInt(seatCode.slice(1))];
+
+                    if (!/^[A-Z]$/.test(seatRow) || isNaN(seatNumber) || seatNumber < 1 || seatNumber > 150) {
+                        errors.push(`Ghế ${seatCode} không hợp lệ`);
+                        continue;
+                    }
+
+                    const seat = await Seat.findOne({ seatRow, seatNumber, roomId, hidden: false }).session(session);
+                    if (!seat) {
+                        errors.push(`Ghế ${seatCode} không tồn tại hoặc đã ẩn`);
+                        continue;
+                    }
+
+                    if (seat.coupleId) {
+                        errors.push(`Ghế ${seatCode} thuộc ghế đôi, vui lòng sử dụng ID ghế đôi để thay đổi`);
+                        continue;
+                    }
+
+                    await Seat.updateOne(
+                        { _id: seat._id },
+                        { seatType, status: 'Available', coupleId: null, coupleDisplayName: null, hidden: false },
+                        { session }
+                    );
                 }
-
-                const [seatRow, seatNumber] = [seatCode[0], parseInt(seatCode.slice(1))];
-
-                if (!/^[A-Z]$/.test(seatRow) || isNaN(seatNumber) || seatNumber < 1 || seatNumber > 150) {
-                    errors.push(`Ghế ${seatCode} không hợp lệ`);
-                    continue;
-                }
-
-                const seat = await Seat.findOne({ seatRow, seatNumber, roomId, hidden: false }).session(session);
-                if (!seat) {
-                    errors.push(`Ghế ${seatCode} không tồn tại hoặc đã ẩn`);
-                    continue;
-                }
-
-                if (seat.coupleId) {
-                    errors.push(`Ghế ${seatCode} thuộc ghế đôi, không thể đổi loại`);
-                    continue;
-                }
-
-                await Seat.updateOne(
-                    { _id: seat._id },
-                    { seatType, status: 'Available', coupleId: null, coupleDisplayName: null, hidden: false },
-                    { session }
-                );
             }
         }
 
