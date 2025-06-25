@@ -13,7 +13,6 @@ const cors = require("cors");
 
 //Tự mình xuất ra
 const initCronJobs = require("./cron_jobs/cronjobs");
-const initializeSocket = require("./config/socket");
 const swaggerSetup = require("./swagger");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
@@ -38,6 +37,7 @@ const roleRouter = require("./routes/roleRouter");
 const seatRouter = require("./routes/seatRouter");
 const foodRouter = require("./routes/foodRouter");
 const bookingRouter = require("./routes/bookingRouter");
+
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 app.set("query parser", "extended");
@@ -96,8 +96,6 @@ app.use(
 //Chạy cron cron_jobs
 initCronJobs();
 
-//Kết nối socket
-initializeSocket();
 
 //Swagger
 swaggerSetup(app);
