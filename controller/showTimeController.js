@@ -35,10 +35,13 @@ const calculateEndTime = async (movieId, startTime, next) => {
     return {endTime, movie};
 }
 
-const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId = null) => {
+const checkConflictingShowtimes = async (roomId, startTime, endTime, movieId, showTimeId = null) => {
     try {
         if (!mongoose.isValidObjectId(roomId)) {
             throw new AppError('Room ID không hợp lệ', 400);
+        }
+        if (!mongoose.isValidObjectId(movieId)) {
+            throw new AppError('Movie ID không hợp lệ', 400);
         }
         if (!(startTime instanceof Date) || isNaN(startTime)) {
             throw new AppError('Thời gian bắt đầu không hợp lệ', 400);
@@ -57,8 +60,22 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
             startTime.getUTCDate()
         ));
 
-        // Xây dựng truy vấn kiểm tra xung đột
-        const conflictQuery = {
+        // Lấy thông tin phòng chiếu để có thể tìm rạp
+        const room = await Room.findById(roomId);
+        if (!room) {
+            throw new AppError('Không tìm thấy phòng chiếu', 404);
+        }
+
+        // Tìm tất cả phòng cùng rạp
+        const roomsInSameCinema = await Room.find({
+            cinemaId: room.cinemaId,
+            isDeleted: false
+        }).select('_id');
+
+        const roomIds = roomsInSameCinema.map(r => r._id);
+
+        // Kiểm tra xung đột 1: Cùng phòng chiếu có suất chiếu trùng thời gian
+        const roomConflictQuery = {
             roomId: new mongoose.Types.ObjectId(roomId),
             isDeleted: false,
             showDate: showDate,
@@ -83,19 +100,40 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
 
         // Loại trừ showtime hiện tại khi cập nhật
         if (showTimeId && mongoose.isValidObjectId(showTimeId)) {
-            conflictQuery._id = {$ne: new mongoose.Types.ObjectId(showTimeId)};
+            roomConflictQuery._id = {$ne: new mongoose.Types.ObjectId(showTimeId)};
         }
 
-        // Thực hiện truy vấn
-        const conflictingShowtime = await Showtime.findOne(conflictQuery);
+        // Kiểm tra xung đột phòng chiếu
+        const roomConflict = await Showtime.findOne(roomConflictQuery);
 
-        // Xử lý trường hợp có xung đột
-        if (conflictingShowtime) {
-            // Tính thời gian có thể tạo suất chiếu tiếp theo
-            const nextAvailableTime = new Date(conflictingShowtime.endTime);
-
+        if (roomConflict) {
+            const nextAvailableTime = new Date(roomConflict.endTime);
             throw new AppError(
-                `Xung đột thời gian! Suất chiếu từ ${startTime.toLocaleTimeString('vi-VN')} đến ${endTime.toLocaleTimeString('vi-VN')} xung đột với suất chiếu hiện có từ ${conflictingShowtime.startTime.toLocaleTimeString('vi-VN')} đến ${conflictingShowtime.endTime.toLocaleTimeString('vi-VN')}. Có thể tạo suất chiếu từ ${nextAvailableTime.toLocaleTimeString('vi-VN')} trở đi.`,
+                `Xung đột thời gian trong phòng chiếu! Suất chiếu từ ${startTime.toLocaleTimeString('vi-VN')} đến ${endTime.toLocaleTimeString('vi-VN')} xung đột với suất chiếu hiện có từ ${roomConflict.startTime.toLocaleTimeString('vi-VN')} đến ${roomConflict.endTime.toLocaleTimeString('vi-VN')}. Có thể tạo suất chiếu từ ${nextAvailableTime.toLocaleTimeString('vi-VN')} trở đi.`,
+                409
+            );
+        }
+
+        // Kiểm tra xung đột 2: Cùng bộ phim, cùng thời gian bắt đầu, cùng rạp nhưng khác phòng
+        const movieConflictQuery = {
+            movieId: new mongoose.Types.ObjectId(movieId),
+            roomId: { $in: roomIds },
+            startTime: startTime,
+            showDate: showDate,
+            isDeleted: false
+        };
+
+        // Loại trừ showtime hiện tại khi cập nhật
+        if (showTimeId && mongoose.isValidObjectId(showTimeId)) {
+            movieConflictQuery._id = {$ne: new mongoose.Types.ObjectId(showTimeId)};
+        }
+
+        // Kiểm tra xung đột bộ phim
+        const movieConflict = await Showtime.findOne(movieConflictQuery).populate('roomId', 'name');
+
+        if (movieConflict) {
+            throw new AppError(
+                `Xung đột suất chiếu phim! Bộ phim này đã có suất chiếu lúc ${startTime.toLocaleTimeString('vi-VN')} trong phòng "${movieConflict.roomId.name}" cùng ngày. Một bộ phim không thể có hai suất chiếu cùng thời gian trong cùng một rạp.`,
                 409
             );
         }
@@ -109,7 +147,6 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, showTimeId 
 };
 
 exports.createShowTime = catchAsync(async (req, res, next) => {
-    console.log('Payload:', req.body);
     const startTime = new Date(req.body.startTime);
 
     if (isNaN(startTime.getTime())) {
@@ -145,14 +182,15 @@ exports.createShowTime = catchAsync(async (req, res, next) => {
         const conflictShowTime = await checkConflictingShowtimes(
             req.body.roomId,
             startTime,
-            endTime
+            endTime,
+            req.body.movieId
         );
         if (conflictShowTime) {
             return next(new AppError('Đã có suất chiếu khác trong thời gian này', 409));
         }
     } catch (error) {
         console.error('Error in conflict check:', error);
-        return next(new AppError('Lỗi khi kiểm tra xung đột lịch chiếu', 409));
+        return next(error);
     }
 
     const doc = await Showtime.create(req.body);
