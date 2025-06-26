@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt ghế xem phim</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 20px; }
+        .seat {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            background-color: #ddd;
+            border-radius: 5px;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .held { background-color: orange;  }
+        .selected { background-color: #034EA2; }
+        .booking { background-color: #1A2C50; }
+        .screen { margin: 20px auto; width: 300px; background: #444; color: white; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>Chọn ghế xem phim</h1>
+<div class="screen">MÀN HÌNH</div>
+<div id="seat-container"></div>
+<button id="confirm-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">Đặt ghế</button>
+<button id="proceeded-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">Hủy ghế</button>
+<button id="hold-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 16px;">Tiếp tục</button>
+
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+    const showtimeId = "abc123"; // Ví dụ: bạn có thể thay bằng ID thật
+    const socket = io("https://be-datn-skyflow.onrender.com/"); // Thay bằng URL thật nếu deploy
+
+
+    const seatContainer = document.getElementById('seat-container');
+    const totalSeats = 40; // 5 hàng, 8 ghế mỗi hàng
+
+    const seats = {}; // Lưu trạng thái local
+
+
+
+    // Tạo ghế
+    for (let i = 1; i <= totalSeats; i++) {
+        const seat = document.createElement('div');
+        seat.classList.add('seat');
+        seat.dataset.id = `S${i}`;
+        seat.innerText = i;
+        seat.addEventListener('click', () => {
+            const seatId = seat.dataset.id;
+            if (seat.classList.contains('held')) return;
+            if (seat.classList.contains('selected')) {
+                // Huỷ giữ
+                socket.emit('release-seat', { showtimeId, seatId });
+                seat.classList.remove('selected');
+            } else {
+                // Giữ ghế
+                socket.emit('hold-seat', { showtimeId, seatId });
+                seat.classList.add('selected');
+            }
+        });
+        seats[`S${i}`] = seat;
+        seatContainer.appendChild(seat);
+    }
+
+    // Kết nối và tham gia phòng
+    socket.on('connect', () => {
+        socket.emit('join-room', { showtimeId });
+    });
+
+    // Khi mới join: nhận danh sách ghế đang giữ
+    socket.on('seats-hold', (data) => {
+        for (let seatId in data.holds) {
+            if (seats[seatId]) {
+                seats[seatId].classList.add('held');
+            }
+        }
+
+        for (let seatId in data.bookings) {
+            if (seats[seatId]) {
+                seats[seatId].classList.add('booking');
+            }
+        }
+    });
+
+
+    // Khi ghế được giữ bởi người khác
+    socket.on('seat-held', ({ seatId }) => {
+        if (seats[seatId]) {
+            seats[seatId].classList.add('held');
+            seats[seatId].classList.remove('selected');
+        }
+    });
+
+    // Khi ghế được giữ bởi chính mình
+    socket.on('seat-held-me', ({ seatId }) => {
+        if (seats[seatId]) {
+            seats[seatId].classList.add('selected');
+            seats[seatId].classList.remove('held');
+        }
+    });
+
+    // Khi ghế được đặt thành công
+    socket.on('seats-booked', (data) => {
+        for (let seatId in data) {
+            if (seats[seatId]) {
+                seats[seatId].classList.remove('selected');
+                seats[seatId].classList.add('booking');
+            }
+        }
+    });
+
+    // Khi ghế được thả
+    socket.on('seat-released', ({ seatId }) => {
+        if (seats[seatId]) {
+            seats[seatId].classList.remove('held');
+            seats[seatId].classList.remove('selected');
+            seats[seatId].classList.remove('booking');
+        }
+    });
+
+
+    // Nếu giữ ghế thất bại (ghế đã bị người khác giữ)
+    socket.on('error', ({ message }) => {
+        alert(message);
+    });
+
+    const confirmBtn = document.getElementById('confirm-btn');
+    const proceededBtn = document.getElementById('proceeded-btn');
+    const holdedBtn = document.getElementById('hold-btn');
+
+    confirmBtn.addEventListener('click', () => {
+        socket.emit('book-seat', { showtimeId });
+    })
+
+    proceededBtn.addEventListener('click', () => {
+        socket.emit('release-booking-seats', { showtimeId });
+    })
+
+    holdedBtn.addEventListener('click', () => {
+        socket.emit('confirm-hold', { showtimeId });
+    })
+</script>
+
+</body>
+</html>
