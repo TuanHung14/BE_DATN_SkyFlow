@@ -14,72 +14,67 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
   const filter = {};
   const pipeline = [];
 
-  // Filter theo type nếu có
+  // Lọc theo type nếu có
   if (type) {
     filter.type = type;
   }
 
+  pipeline.push({ $match: filter });
 
-  pipeline.push({
-    $match: filter,
-  });
-
-  if(search){
+  // Tìm kiếm theo tiêu đề nếu có
+  if (search) {
     pipeline.push({
       $match: {
-        $or: [
-          { title: searchDB(search)},
-        ],
-      }
+        $or: [{ title: searchDB(search) }],
+      },
     });
   }
 
   // Join với bảng LikePost
   pipeline.push({
     $lookup: {
-      from: "likeposts", // collection name trong MongoDB
+      from: "likeposts",
       localField: "_id",
       foreignField: "postId",
       as: "likes",
     },
   });
 
-  // Gắn isLiked nếu có user
-  if (user) {
-    pipeline.push({
-      $addFields: {
-        isLiked: {
-          $in: [user._id, "$likes.userId"],
-        },
-      },
-    });
-  }
+  // Thêm trường isLiked
+  pipeline.push({
+    $addFields: {
+      isLiked: user
+        ? {
+            $in: [
+              { $toObjectId: user._id },
 
-  // Sort nếu có
+              {
+                $map: {
+                  input: "$likes",
+                  as: "like",
+                  in: "$$like.userId",
+                },
+              },
+            ],
+          }
+        : false,
+    },
+  });
+
+  // Sort
   if (sort) {
     const sortOption = {};
     const [key, order] = sort.split(",");
     sortOption[key] = order === "desc" ? -1 : 1;
-    pipeline.push({
-      $sort: sortOption,
-    });
+    pipeline.push({ $sort: sortOption });
   } else {
-    pipeline.push({
-      $sort: { createdAt: -1 },
-    });
+    pipeline.push({ $sort: { createdAt: -1 } });
   }
 
-  // Lấy các trường cần thiết
-  pipeline.push({
-    $project: {
-      title: 1,
-      content: 1,
-      createdAt: 1,
-      type: 1,
-      isLiked: 1,
-    },
-  });
+  // Bỏ trường likes nếu không cần
+  pipeline.push({ $unset: ["likes"] });
 
+  // Dùng APIAggregate để thực thi & trả về
   const data = await APIAggregate(Post, { limit, page }, pipeline);
 
   res.status(200).json(data);
@@ -92,26 +87,31 @@ exports.deletePost = Factory.deleteOne(Post);
 exports.likePost = catchAsync(async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;
-
-  // Kiểm tra bài viết có tồn tại
+  console.log("User ID in likePost:", req.user);
+  // 1. Kiểm tra bài viết tồn tại
   const post = await Post.findById(postId);
-  if (!post) return next(new AppError("Không tìm thấy bài viết", 404));
+  if (!post) {
+    return next(new AppError("Không tìm thấy bài viết", 404));
+  }
 
-  // Kiểm tra đã like chưa
+  // 2. Kiểm tra đã like chưa
   const existingLike = await LikePost.findOne({ postId, userId });
 
   if (existingLike) {
     await existingLike.deleteOne();
     return res.status(200).json({
       status: "success",
+      liked: false,
       message: "Đã bỏ like bài viết",
     });
   }
 
-  await LikePost.create({ postId, userId });
+  // 3. Tạo like mới
+  await LikePost.create({ postId, userId }); // Trigger post middleware
 
-  return res.status(200).json({
+  return res.status(201).json({
     status: "success",
+    liked: true,
     message: "Đã like bài viết",
   });
 });

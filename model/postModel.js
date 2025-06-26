@@ -19,6 +19,10 @@ const postSchema = new mongoose.Schema({
     type: String,
     required: [true, "Ảnh đại diện bài viết là bắt buộc"],
   },
+  likesCount: {
+    type: Number,
+    default: 0,
+  },
   slug: { type: String, unique: true },
   createdAt: {
     type: Date,

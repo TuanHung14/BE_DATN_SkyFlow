@@ -267,19 +267,40 @@ router.get("/slug/:slug", postController.getPostBySlug);
  * @swagger
  * /api/v1/posts:
  *   get:
- *     summary: Lấy tất cả bài viết
+ *     summary: Lấy danh sách bài viết
  *     tags: [Posts]
  *     security:
- *      - bearer: []
+ *       - bearer: []
  *     parameters:
- *       - name: sort
- *         in: query
- *         description: "Sắp xếp theo trường, ví dụ: -views, -createdAt"
+ *       - in: query
+ *         name: sort
  *         schema:
  *           type: string
+ *         description: "Sắp xếp theo trường, ví dụ: views, -createdAt"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số bài viết mỗi trang (mặc định 10)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Trang hiện tại (mặc định 1)
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [preview, review]
+ *         description: Lọc theo loại bài viết
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tiêu đề
  *     responses:
  *       200:
- *         description: Danh sách bài viết
+ *         description: Danh sách bài viết được lấy thành công
  *         content:
  *           application/json:
  *             schema:
@@ -288,9 +309,25 @@ router.get("/slug/:slug", postController.getPostBySlug);
  *                 status:
  *                   type: string
  *                   example: success
+ *                 totalDocs:
+ *                   type: integer
+ *                   example: 100
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 10
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 limit:
+ *                   type: integer
+ *                   example: 10
  *                 data:
- *                   type: array
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
  */
+
 router.get("/", postController.getAllPosts);
 
 module.exports = router;
