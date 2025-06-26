@@ -7,30 +7,75 @@ const APIFeatures = require("../utils/apiFeatures");
 
 exports.getAllPosts = catchAsync(async (req, res, next) => {
   const user = req.user;
-  console.log("User:", user);
 
-  const features = new APIFeatures(Post.find(), req.query)
-    .filter()
-    .search()
-    .sort()
-    .limitFields()
-    .pagination();
+  const { limit = 10, page = 1, type, sort } = req.query;
 
-  let posts = await features.query;
-  posts = posts.map((post) => post.toObject());
+  const filter = {};
+  const pipeline = [];
 
-  if (user) {
-    const likedPostIds = await LikePost.find({ userId: user._id }).distinct(
-      "postId"
-    );
-
-    posts = posts.map((post) => ({
-      ...post,
-      isLiked: likedPostIds.includes(post._id.toString()),
-    }));
+  // Filter theo type nếu có
+  if (type) {
+    filter.type = type;
   }
 
-  const totalDocs = await Post.countDocuments();
+  pipeline.push({
+    $match: filter,
+  });
+
+  // Join với bảng LikePost
+  pipeline.push({
+    $lookup: {
+      from: "likeposts", // collection name trong MongoDB
+      localField: "_id",
+      foreignField: "postId",
+      as: "likes",
+    },
+  });
+
+  // Gắn isLiked nếu có user
+  if (user) {
+    pipeline.push({
+      $addFields: {
+        isLiked: {
+          $in: [user._id, "$likes.userId"],
+        },
+      },
+    });
+  }
+
+  // Sort nếu có
+  if (sort) {
+    const sortOption = {};
+    const [key, order] = sort.split(",");
+    sortOption[key] = order === "desc" ? -1 : 1;
+    pipeline.push({
+      $sort: sortOption,
+    });
+  } else {
+    pipeline.push({
+      $sort: { createdAt: -1 },
+    });
+  }
+
+  // Lấy các trường cần thiết
+  pipeline.push({
+    $project: {
+      title: 1,
+      content: 1,
+      createdAt: 1,
+      type: 1,
+      isLiked: 1,
+    },
+  });
+
+  // Pagination
+  const skip = (Number(page) - 1) * Number(limit);
+  pipeline.push({ $skip: skip });
+  pipeline.push({ $limit: Number(limit) });
+
+  const posts = await Post.aggregate(pipeline);
+
+  const totalDocs = await Post.countDocuments(filter);
 
   res.status(200).json({
     status: "success",
