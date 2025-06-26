@@ -3,11 +3,13 @@ const LikePost = require("../model/likePostModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
-const APIFeatures = require("../utils/apiFeatures");
+const APIAggregate = require("../utils/apiAggregate");
+const searchDB = require("../utils/searchDB");
 
 exports.getAllPosts = catchAsync(async (req, res, next) => {
   const user = req.user;
-  const { limit = 10, page = 1, type, sort } = req.query;
+
+  const { limit = 10, page = 1, type, sort, search } = req.query;
 
   const filter = {};
   const pipeline = [];
@@ -19,7 +21,16 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
 
   pipeline.push({ $match: filter });
 
-  // Join với bảng likeposts
+  // Tìm kiếm theo tiêu đề nếu có
+  if (search) {
+    pipeline.push({
+      $match: {
+        $or: [{ title: searchDB(search) }],
+      },
+    });
+  }
+
+  // Join với bảng LikePost
   pipeline.push({
     $lookup: {
       from: "likeposts",
@@ -32,11 +43,25 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
   // Thêm trường isLiked
   pipeline.push({
     $addFields: {
-      isLiked: user ? { $in: [user._id, "$likes.userId"] } : false,
+      isLiked: user
+        ? {
+            $in: [
+              { $toObjectId: user._id },
+
+              {
+                $map: {
+                  input: "$likes",
+                  as: "like",
+                  in: "$$like.userId",
+                },
+              },
+            ],
+          }
+        : false,
     },
   });
 
-  // Sắp xếp nếu có
+  // Sort
   if (sort) {
     const sortOption = {};
     const [key, order] = sort.split(",");
@@ -46,27 +71,13 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
     pipeline.push({ $sort: { createdAt: -1 } });
   }
 
-  // Xoá trường likes nếu không muốn trả về mảng likes
-  pipeline.push({
-    $unset: ["likes"],
-  });
+  // Bỏ trường likes nếu không cần
+  pipeline.push({ $unset: ["likes"] });
 
-  // Pagination
-  const skip = (Number(page) - 1) * Number(limit);
-  pipeline.push({ $skip: skip });
-  pipeline.push({ $limit: Number(limit) });
+  // Dùng APIAggregate để thực thi & trả về
+  const data = await APIAggregate(Post, { limit, page }, pipeline);
 
-  // Thực thi pipeline
-  const posts = await Post.aggregate(pipeline);
-  const totalDocs = await Post.countDocuments(filter);
-
-  res.status(200).json({
-    status: "success",
-    totalDocs,
-    data: {
-      data: posts,
-    },
-  });
+  res.status(200).json(data);
 });
 
 exports.getPostById = Factory.getOne(Post);
@@ -76,7 +87,7 @@ exports.deletePost = Factory.deleteOne(Post);
 exports.likePost = catchAsync(async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;
-
+  console.log("User ID in likePost:", req.user);
   // 1. Kiểm tra bài viết tồn tại
   const post = await Post.findById(postId);
   if (!post) {

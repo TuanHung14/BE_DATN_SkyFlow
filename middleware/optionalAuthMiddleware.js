@@ -4,6 +4,7 @@ const userService = require("../services/userService");
 
 const optionalAuth = async (req, res, next) => {
   let token;
+
   // req.user = null;
   if (
     req.headers.authorization &&
