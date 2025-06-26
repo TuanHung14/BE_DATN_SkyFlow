@@ -21,10 +21,12 @@ class APIFeatures {
 
   search() {
     if (this.queryString.search) {
+      const escapeRegex = (str) =>
+          str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       //Chuyển đổi obj thành array VD: search{name: "abc"} => ['name', 'abc']
       const orConditions = Object.entries(this.queryString.search).map(
         ([field, value]) => ({
-          [field]: { $regex: value.trim(), $options: "i" },
+          [field]: { $regex: new RegExp(escapeRegex(value.trim())), $options: "i" },
         })
       );
       if (orConditions.length > 0) {

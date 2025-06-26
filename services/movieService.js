@@ -21,8 +21,8 @@ async function updateMovieStatusLogic() {
 async function getMovies(){
     return await Movie.find({
         isDeleted: false,
-        status: "NOW_SHOWING"
-    }).limit(3).sort({createdAt: -1});
+        publishStatus: { $ne: 'DRAFT' }
+    }).populate("directorId genresId castId").sort('-createdAt');
 }
 
 module.exports = { updateMovieStatusLogic, getMovies };
