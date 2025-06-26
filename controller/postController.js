@@ -7,65 +7,48 @@ const APIFeatures = require("../utils/apiFeatures");
 
 exports.getAllPosts = catchAsync(async (req, res, next) => {
   const user = req.user;
-
   const { limit = 10, page = 1, type, sort } = req.query;
 
   const filter = {};
   const pipeline = [];
 
-  // Filter theo type nếu có
+  // Lọc theo type nếu có
   if (type) {
     filter.type = type;
   }
 
-  pipeline.push({
-    $match: filter,
-  });
+  pipeline.push({ $match: filter });
 
-  // Join với bảng LikePost
+  // Join với bảng likeposts
   pipeline.push({
     $lookup: {
-      from: "likeposts", // collection name trong MongoDB
+      from: "likeposts",
       localField: "_id",
       foreignField: "postId",
       as: "likes",
     },
   });
 
-  // Gắn isLiked nếu có user
-  if (user) {
-    pipeline.push({
-      $addFields: {
-        isLiked: {
-          $in: [user._id, "$likes.userId"],
-        },
-      },
-    });
-  }
+  // Thêm trường isLiked
+  pipeline.push({
+    $addFields: {
+      isLiked: user ? { $in: [user._id, "$likes.userId"] } : false,
+    },
+  });
 
-  // Sort nếu có
+  // Sắp xếp nếu có
   if (sort) {
     const sortOption = {};
     const [key, order] = sort.split(",");
     sortOption[key] = order === "desc" ? -1 : 1;
-    pipeline.push({
-      $sort: sortOption,
-    });
+    pipeline.push({ $sort: sortOption });
   } else {
-    pipeline.push({
-      $sort: { createdAt: -1 },
-    });
+    pipeline.push({ $sort: { createdAt: -1 } });
   }
 
-  // Lấy các trường cần thiết
+  // Xoá trường likes nếu không muốn trả về mảng likes
   pipeline.push({
-    $project: {
-      title: 1,
-      content: 1,
-      createdAt: 1,
-      type: 1,
-      isLiked: 1,
-    },
+    $unset: ["likes"],
   });
 
   // Pagination
@@ -73,8 +56,8 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
   pipeline.push({ $skip: skip });
   pipeline.push({ $limit: Number(limit) });
 
+  // Thực thi pipeline
   const posts = await Post.aggregate(pipeline);
-
   const totalDocs = await Post.countDocuments(filter);
 
   res.status(200).json({
@@ -94,25 +77,30 @@ exports.likePost = catchAsync(async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;
 
-  // Kiểm tra bài viết có tồn tại
+  // 1. Kiểm tra bài viết tồn tại
   const post = await Post.findById(postId);
-  if (!post) return next(new AppError("Không tìm thấy bài viết", 404));
+  if (!post) {
+    return next(new AppError("Không tìm thấy bài viết", 404));
+  }
 
-  // Kiểm tra đã like chưa
+  // 2. Kiểm tra đã like chưa
   const existingLike = await LikePost.findOne({ postId, userId });
 
   if (existingLike) {
     await existingLike.deleteOne();
     return res.status(200).json({
       status: "success",
+      liked: false,
       message: "Đã bỏ like bài viết",
     });
   }
 
-  await LikePost.create({ postId, userId });
+  // 3. Tạo like mới
+  await LikePost.create({ postId, userId }); // Trigger post middleware
 
-  return res.status(200).json({
+  return res.status(201).json({
     status: "success",
+    liked: true,
     message: "Đã like bài viết",
   });
 });
