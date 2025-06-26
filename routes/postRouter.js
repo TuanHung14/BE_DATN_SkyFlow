@@ -1,6 +1,6 @@
 const express = require("express");
 const postController = require("../controller/postController");
-const auth  = require("../middleware/authMiddleware");
+const auth = require("../middleware/authMiddleware");
 const optionalAuth = require("../middleware/optionalAuthMiddleware");
 
 const router = express.Router();
@@ -51,8 +51,6 @@ const router = express.Router();
  *                 status:
  *                   type: string
  *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/Post'
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
@@ -79,8 +77,6 @@ router.post("/", auth, postController.createPost);
  *                   example: success
  *                 data:
  *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Post'
  */
 router.get("/favorites", auth, postController.getFavoritePosts);
 
@@ -131,8 +127,6 @@ router.post("/:id/like", auth, postController.likePost);
  *                 status:
  *                   type: string
  *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/Post'
  *       404:
  *         description: Không tìm thấy bài viết
  */
@@ -178,8 +172,6 @@ router.get("/:id", postController.getPostById);
  *                 status:
  *                   type: string
  *                   example: success
- *                 data:
- *                   $ref: '#/components/schemas/Post'
  *       404:
  *         description: Không tìm thấy bài viết
  */
@@ -266,9 +258,6 @@ router.use(optionalAuth);
  *                   example: success
  *                 data:
  *                   type: object
- *                   properties:
- *                     post:
- *                       $ref: '#/components/schemas/Post'
  *       404:
  *         description: Không tìm thấy bài viết
  */
@@ -280,6 +269,8 @@ router.get("/slug/:slug", postController.getPostBySlug);
  *   get:
  *     summary: Lấy tất cả bài viết
  *     tags: [Posts]
+ *     security:
+ *      - bearer: []
  *     parameters:
  *       - name: sort
  *         in: query
@@ -299,8 +290,6 @@ router.get("/slug/:slug", postController.getPostBySlug);
  *                   example: success
  *                 data:
  *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Post'
  */
 router.get("/", postController.getAllPosts);
 

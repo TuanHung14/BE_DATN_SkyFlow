@@ -3,7 +3,89 @@ const LikePost = require("../model/likePostModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
-exports.getAllPosts = Factory.getAll(Post);
+const APIFeatures = require("../utils/apiFeatures");
+
+exports.getAllPosts = catchAsync(async (req, res, next) => {
+  const user = req.user;
+
+  const { limit = 10, page = 1, type, sort } = req.query;
+
+  const filter = {};
+  const pipeline = [];
+
+  // Filter theo type nếu có
+  if (type) {
+    filter.type = type;
+  }
+
+  pipeline.push({
+    $match: filter,
+  });
+
+  // Join với bảng LikePost
+  pipeline.push({
+    $lookup: {
+      from: "likeposts", // collection name trong MongoDB
+      localField: "_id",
+      foreignField: "postId",
+      as: "likes",
+    },
+  });
+
+  // Gắn isLiked nếu có user
+  if (user) {
+    pipeline.push({
+      $addFields: {
+        isLiked: {
+          $in: [user._id, "$likes.userId"],
+        },
+      },
+    });
+  }
+
+  // Sort nếu có
+  if (sort) {
+    const sortOption = {};
+    const [key, order] = sort.split(",");
+    sortOption[key] = order === "desc" ? -1 : 1;
+    pipeline.push({
+      $sort: sortOption,
+    });
+  } else {
+    pipeline.push({
+      $sort: { createdAt: -1 },
+    });
+  }
+
+  // Lấy các trường cần thiết
+  pipeline.push({
+    $project: {
+      title: 1,
+      content: 1,
+      createdAt: 1,
+      type: 1,
+      isLiked: 1,
+    },
+  });
+
+  // Pagination
+  const skip = (Number(page) - 1) * Number(limit);
+  pipeline.push({ $skip: skip });
+  pipeline.push({ $limit: Number(limit) });
+
+  const posts = await Post.aggregate(pipeline);
+
+  const totalDocs = await Post.countDocuments(filter);
+
+  res.status(200).json({
+    status: "success",
+    totalDocs,
+    data: {
+      data: posts,
+    },
+  });
+});
+
 exports.getPostById = Factory.getOne(Post);
 exports.createPost = Factory.createOne(Post);
 exports.updatePost = Factory.updateOne(Post);
@@ -63,7 +145,7 @@ exports.getPostBySlug = catchAsync(async (req, res, next) => {
   if (!post) return next(new AppError("Post not found", 404));
 
   const plainPost = post.toObject();
-  if(user){
+  if (user) {
     const exists = await LikePost.exists({
       userId: user._id,
       postId: post._id,
