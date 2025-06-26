@@ -1,4 +1,3 @@
-const Handlebars = require('handlebars');
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const chatAI = require("../utils/chatAI");
@@ -41,10 +40,7 @@ const callFunctionByPrompt = async (functionToCall, template, userId) => {
         context = data.toObject?.() || data;
     }
 
-    const compiled = Handlebars.compile(template || '');
-    const rendered = compiled(context);
-
-    return rendered;
+    return { template, context };
 }
 
 exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
@@ -60,12 +56,13 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
         return next(new AppError('Gợi ý không được tìm thấy vui lòng thử lại sau', 400));
     }
 
-    const rendered = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
+    const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
 
 
     const keyText = `
         systemInstruction: ${prompt.systemInstruction}
-        template: ${rendered}
+        template: ${template}
+        data: ${JSON.stringify(context)}
     `;
 
     const systemInstruction = training(keyText);
@@ -95,13 +92,14 @@ exports.chatAI = catchAsync(async (req, res, next) => {
     const rendered = [];
     for (let prompt of fullPrompt) {
         const obj = {};
-        const tempaltes = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
-        obj.template = tempaltes;
+        const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
+        obj.template = template;
         obj.systemInstruction = prompt.systemInstruction;
+        obj.context = context;
         rendered.push(obj);
     }
 
-    const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template}`).join('\n');
+    const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template} \n data: ${JSON.stringify(item.context)}`).join('\n');
     const systemInstruction = training(keyText);
 
     const result = await chatAI(prompt, systemInstruction);

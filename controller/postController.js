@@ -3,12 +3,13 @@ const LikePost = require("../model/likePostModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
-const APIFeatures = require("../utils/apiFeatures");
+const APIAggregate = require("../utils/apiAggregate");
+const searchDB = require("../utils/searchDB");
 
 exports.getAllPosts = catchAsync(async (req, res, next) => {
   const user = req.user;
 
-  const { limit = 10, page = 1, type, sort } = req.query;
+  const { limit = 10, page = 1, type, sort, search } = req.query;
 
   const filter = {};
   const pipeline = [];
@@ -18,9 +19,20 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
     filter.type = type;
   }
 
+
   pipeline.push({
     $match: filter,
   });
+
+  if(search){
+    pipeline.push({
+      $match: {
+        $or: [
+          { title: searchDB(search)},
+        ],
+      }
+    });
+  }
 
   // Join với bảng LikePost
   pipeline.push({
@@ -68,22 +80,9 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
     },
   });
 
-  // Pagination
-  const skip = (Number(page) - 1) * Number(limit);
-  pipeline.push({ $skip: skip });
-  pipeline.push({ $limit: Number(limit) });
+  const data = await APIAggregate(Post, { limit, page }, pipeline);
 
-  const posts = await Post.aggregate(pipeline);
-
-  const totalDocs = await Post.countDocuments(filter);
-
-  res.status(200).json({
-    status: "success",
-    totalDocs,
-    data: {
-      data: posts,
-    },
-  });
+  res.status(200).json(data);
 });
 
 exports.getPostById = Factory.getOne(Post);
