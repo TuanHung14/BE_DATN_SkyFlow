@@ -1,38 +1,6 @@
 const mongoose = require('mongoose');
 
 const ticketSchema = new mongoose.Schema({
-  seatsId: [{
-    seatId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Seat',
-      required: [true, 'ID ghế không được để trống'],
-    },
-    price: {
-      type: Number,
-      required: [true, 'Giá ghế không được để trống'],
-      min: [0, 'Giá ghế không thể âm'],
-      validate: {
-        validator: Number.isFinite,
-        message: '{VALUE} không phải là giá hợp lệ'
-      }
-    }
-  }],
-  foodsId: [{
-    foodId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Food',
-      required: [true, 'ID đồ ăn không được để trống'],
-    },
-    quantity: {
-      type: Number,
-      required: [true, 'Số lượng không được để trống'],
-      min: [1, 'Số lượng phải lớn hơn 0'],
-      validate: {
-        validator: Number.isInteger,
-        message: 'Số lượng phải là số nguyên'
-      }
-    }
-  }],
   bookingDate: {
     type: Date,
     default: Date.now
@@ -84,8 +52,5 @@ const ticketSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Thêm index cho seat_id
-ticketSchema.index({ 'seatsId.seatId': 1 });
-ticketSchema.index({ showtimeId: 1, 'seatsId.seatId': 1 }, { unique: true });
-
 const Ticket = mongoose.model('Ticket', ticketSchema);
+module.exports = Ticket;

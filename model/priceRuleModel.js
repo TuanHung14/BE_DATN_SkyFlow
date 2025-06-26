@@ -7,14 +7,14 @@ const priceRuleSchema = new mongoose.Schema({
       values: ['normal', 'vip', 'couple'],
       message: '{VALUE} is not a valid seat type'
     },
-    required: [true, 'Seat type is required'],
+    // required: [true, 'Seat type is required'],
     trim: true
   },
-  ageGroup: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'CustomerGroup',
-    required: [true, 'Age group is required'],
-    index: true,
+  format: {
+    type: String,
+    enum: {
+      values: ['2D', '3D', 'IMAX', '4DX']
+    }
   },
   price: {
     type: Number,
@@ -29,7 +29,7 @@ const priceRuleSchema = new mongoose.Schema({
   timestamps: true
 });
 
-priceRuleSchema.index({ seat_type: 1, age_group: 1 }, { unique: true });
+// priceRuleSchema.index({ seatType: 1 }, { unique: true });
 
 const PriceRule = mongoose.model('PriceRule', priceRuleSchema);
 
