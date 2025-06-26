@@ -10,7 +10,7 @@ const seatSchema = new mongoose.Schema({
     },
     seatRow: {
         type: String,
-        required: [true, "Hàng ghế là bắt buộc"],
+        // required: [true, "Hàng ghế là bắt buộc"],
         uppercase: true,
         validate: {
             validator: function(v) {
@@ -21,7 +21,7 @@ const seatSchema = new mongoose.Schema({
     },
     seatNumber: {
         type: Number,
-        required: [true, "Số ghế là bắt buộc"],
+        // required: [true, "Số ghế là bắt buộc"],
         min: [1, "Số ghế phải lớn hơn 0"],
         max: [150, "Số ghế không được vượt quá 150"],
         validate: {
@@ -39,22 +39,20 @@ const seatSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Available', 'Reserved', 'Occupied', 'Broken'],
+        enum: ['Available', 'Selected', 'Occupied', 'Maintenance'],
         default: 'Available'
     },
-    linkedSeatId: {
+    coupleId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Seat',
-        default: null,
-        validate: {
-            validator: async function(v) {
-                if (this.seatType !== 'couple') return v === null;
-                if (v === null) return false;
-                const linkedSeat = await this.constructor.findById(v);
-                return linkedSeat && linkedSeat.seatType === 'couple' && linkedSeat.linkedSeatId.equals(this._id);
-            },
-            message: 'Ghế liên kết không hợp lệ hoặc không phải ghế đôi'
-        }
+        default: null
+    },
+    coupleDisplayName: {
+        type: String,
+        default: null
+    },
+    hidden: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
@@ -67,7 +65,7 @@ seatSchema.pre('save', async function(next) {
     if (this.isNew) {
         const room = await Room.findById(this.roomId);
         const currentSeats = await this.constructor.countDocuments({ roomId: this.roomId });
-        
+
         if (currentSeats >= room.capacity) {
             next(new Error('Số lượng ghế đã đạt giới hạn của phòng'));
         }
@@ -103,14 +101,14 @@ seatSchema.pre('findOneAndUpdate', async function(next) {
     next();
 });
 
-// Đảm bảo trạng thái của ghế đôi luôn đồng bộ
+// Đồng bộ trạng thái ghế đôi
 seatSchema.pre('findOneAndUpdate', async function(next) {
     const update = this.getUpdate();
     if (update.status && this._conditions._id) {
         const seat = await this.model.findById(this._conditions._id);
-        if (seat && seat.seatType === 'couple' && seat.linkedSeatId) {
-            await this.model.updateOne(
-                { _id: seat.linkedSeatId },
+        if (seat && seat.coupleId) {
+            await this.model.updateMany(
+                { coupleId: seat.coupleId },
                 { status: update.status }
             );
         }
