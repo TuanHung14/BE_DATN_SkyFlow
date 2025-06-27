@@ -1,10 +1,10 @@
-const epress = require('express');
-const paymentController = require('../controller/paymentController');
+const epress = require("express");
+const paymentController = require("../controller/paymentController");
 
 const router = epress.Router();
 /**
  * @swagger
- * /api/v1/payment:
+ * /api/v1/payments:
  *   post:
  *     tags:
  *       - Payment
@@ -38,7 +38,7 @@ const router = epress.Router();
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post('/', paymentController.createPayment);
+router.post("/", paymentController.createPayment);
 
 /**
  * @swagger
@@ -68,12 +68,13 @@ router.post('/', paymentController.createPayment);
  *       404:
  *         description: Không tìm thấy giao dịch
  */
-router.post('/query/momo', paymentController.queryMomoPayment);
+router.post("/query/momo", paymentController.queryMomoPayment);
 
-router.post('/callback/momo', paymentController.momoCallback);
+router.post("/callback/momo", paymentController.momoCallback);
 
-router.post('/query/vnpay', paymentController.queryVNPayPayment);
+router.post("/query/vnpay", paymentController.queryVNPayPayment);
 
-router.get('/callback/vnpay', paymentController.vnpayCallback);
+// router.get("/callback/vnpay", paymentController.vnpayCallback);
+// router.post("/callback/zalopay", paymentController.zaloCallback);
 
 module.exports = router;

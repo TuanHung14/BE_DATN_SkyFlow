@@ -97,7 +97,6 @@ app.use(
 //Chạy cron cron_jobs
 initCronJobs();
 
-
 //Swagger
 swaggerSetup(app);
 
