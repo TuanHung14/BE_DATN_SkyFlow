@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 const Ticket = require('../model/ticketModel');
 const Seat = require('../model/seatModel');
 const Food = require('../model/foodModel');
@@ -12,13 +13,10 @@ const TicketSeat = require('../model/ticketSeatModel');
 exports.createTicket = catchAsync(async (req, res, next) => {
     const { showtimeId, seatsId, foodsId, paymentMethodId, voucherId } = req.body;
 
-    if (!req.user || !req.user.id) {
-        return next(new Error('User not authenticated'));
-    }
     const userId = req.user.id;
 
     if (!showtimeId || !seatsId?.length || !paymentMethodId) {
-        return next(new Error('Vui lòng cung cấp suất chiếu, ghế và phương thức thanh toán'));
+        throw new AppError(`Vui lòng cung cấp suất chiếu, ghế và phương thức thanh toán`, 400);
     }
 
     const session = await mongoose.startSession();
@@ -27,30 +25,32 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 
     try {
         // Kiểm tra suất chiếu
-        const showtime = await Showtime.findById(showtimeId)
-            .populate('formatId')
+        const showtime = await Showtime.findOne({ _id: showtimeId, status: 'Available', isDeleted: false })
+            .populate('formatId roomId')
             .session(session);
+
         if (!showtime || showtime.status !== 'Available') {
-            throw new Error('Suất chiếu không tồn tại hoặc không khả dụng');
+            throw new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400);
         }
 
         // Kiểm tra ghế trong database
         const seatIds = seatsId.map(s => s.seatId);
-        const seats = await Seat.find({ _id: { $in: seatIds } }).session(session);
+        const seats = await Seat.find({
+            _id: { $in: seatIds },
+            roomId: showtime.roomId,
+            status: 'Available',
+            hidden: false
+        }).session(session);
+
         if (seats.length !== seatIds.length) {
-            throw new Error('Một số ghế không tồn tại');
-        }
-        const invalidSeats = seats.filter(seat => seat.status !== 'Available');
-        if (invalidSeats.length > 0) {
-            throw new Error('Một số ghế đã được đặt hoặc không khả dụng');
+            throw new AppError('Một số ghế không tồn tại', 400);
         }
 
         // Kiểm tra đồ ăn
         const foodPrices = foodsId?.length ? await Promise.all(foodsId.map(async ({ foodId, quantity }) => {
-            const food = await Food.findById(foodId).session(session);
-            console.log(food);
-            if (!food || !food.status || food.inventory_count < quantity) {
-                throw new Error(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`);
+            const food = await Food.findOne({_id: foodId, status: 'active'}).session(session);
+            if (food.inventoryCount < quantity) {
+                throw new AppError(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`, 400);
             }
             return { foodId, quantity, price: food.price * quantity, priceAtPurchase: food.price };
         })) : [];
@@ -63,7 +63,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
                 format: showtime.formatId.name
             }).session(session);
             if (!priceRule) {
-                throw new Error(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`);
+                throw new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400);
             }
             return { seatId, price: priceRule.price };
         }));
@@ -76,22 +76,17 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         let discount = 0;
         if (voucherId) {
             const voucher = await Voucher.findById(voucherId).session(session);
-            if (voucher && voucher.is_active) {
-                discount = voucher.discount_value;
+            if (voucher && voucher.isActive) {
+                discount = voucher.discountValue;
                 totalAmount = Math.max(0, totalAmount - discount);
             }
-        }
-
-        // Kiểm tra model Ticket
-        if (!Ticket || typeof Ticket.create !== 'function') {
-            throw new Error('Ticket model is not properly defined');
         }
 
         // Tạo vé
         const ticket = await Ticket.create([{
             bookingDate: new Date(),
             totalAmount,
-            paymentStatus: 'Paid',
+            paymentStatus: 'Pending',
             bookingStatus: 'Confirmed',
             showtimeId,
             paymentMethodId,
@@ -139,14 +134,6 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 
         await session.commitTransaction();
         isTransactionCommitted = true;
-
-        // chổ này chưa xử lý được
-        const io = req.app.get('io');
-        if (io) {
-            io.to(showtimeId).emit('seats-booked', seatIds.map(seatId => ({ seatId, status: 'Occupied' })));
-        } else {
-            console.warn('WebSocket io not initialized, skipping seats-booked event');
-        }
 
         res.status(201).json({
             status: 'success',

@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 
 const ticketFoodSchema = new mongoose.Schema({
     ticketId: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Ticket',
         required: [true, 'Ticket ID is required']
     },
     foodId: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Food',
         required: [true, 'Food ID is required']
     },

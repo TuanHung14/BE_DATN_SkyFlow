@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 
 const ticketSeatSchema = new mongoose.Schema({
     ticketId: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Ticket',
         required: [true, 'Ticket ID is required']
     },
     seatId: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Seat',
         required: [true, 'Seat ID is required']
     },
