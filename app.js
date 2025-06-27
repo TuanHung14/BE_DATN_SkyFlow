@@ -96,7 +96,6 @@ app.use(
 //Chạy cron cron_jobs
 initCronJobs();
 
-
 //Swagger
 swaggerSetup(app);
 
@@ -122,6 +121,7 @@ app.use("/api/v1/seats", seatRouter);
 app.use("/api/v1/food", foodRouter);
 app.use("/api/v1/chatAI", chatAIRouter);
 app.use("/api/v1/bookings", bookingRouter);
+
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
