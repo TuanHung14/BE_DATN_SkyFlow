@@ -30,6 +30,11 @@ const settingSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    priceDefault: {
+      type: Number,
+      required: true,
+      default: 100000,
+    },
   },
   { timestamps: true }
 );

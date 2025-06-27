@@ -37,6 +37,7 @@ const roleRouter = require("./routes/roleRouter");
 const seatRouter = require("./routes/seatRouter");
 const foodRouter = require("./routes/foodRouter");
 const bookingRouter = require("./routes/bookingRouter");
+const ticketRouter = require("./routes/ticketRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
@@ -121,7 +122,7 @@ app.use("/api/v1/seats", seatRouter);
 app.use("/api/v1/food", foodRouter);
 app.use("/api/v1/chatAI", chatAIRouter);
 app.use("/api/v1/bookings", bookingRouter);
-
+app.use("/api/v1/tickets", ticketRouter);
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
