@@ -12,12 +12,16 @@ const TicketSeat = require('../model/ticketSeatModel');
 exports.createTicket = catchAsync(async (req, res, next) => {
     const { showtimeId, seatsId, foodsId, paymentMethodId, voucherId } = req.body;
 
+    // Không cần thiết phải kiểm tra req.user.id nếu đã có middleware authMiddleware.js
     if (!req.user || !req.user.id) {
         return next(new Error('User not authenticated'));
     }
     const userId = req.user.id;
+    //
+
 
     if (!showtimeId || !seatsId?.length || !paymentMethodId) {
+        // AppError đâu kh sài
         return next(new Error('Vui lòng cung cấp suất chiếu, ghế và phương thức thanh toán'));
     }
 
@@ -27,6 +31,23 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 
     try {
         // Kiểm tra suất chiếu
+        // Sao cái này không dùng populate được nhỉ?
+        // Lấy lun thằng seat trong showtime
+        //  const showtime = await Showtime.findOne({ _id: showtimeId, status: 'Available' })
+        //             .populate(
+        //             {
+        //                  path: 'formatId',
+        //              },
+        //             {
+        //                 path: 'roomId',
+        //                  select: 'seatsId',
+        //                  populate: {
+        //                      path: 'seatsId',
+        //                      model: 'Seat',
+        //                      select: 'seatRow seatNumber seatType status',
+        //                  }
+        //             })
+        //             .session(session);
         const showtime = await Showtime.findById(showtimeId)
             .populate('formatId')
             .session(session);
@@ -47,9 +68,12 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 
         // Kiểm tra đồ ăn
         const foodPrices = foodsId?.length ? await Promise.all(foodsId.map(async ({ foodId, quantity }) => {
+            // Này sao dùng findOne rồi check status, inventory_count lun
             const food = await Food.findById(foodId).session(session);
             console.log(food);
+            // Nếu vậy thì ở đây ch cần check if(!food)
             if (!food || !food.status || food.inventory_count < quantity) {
+                // AppError đâu kh sài
                 throw new Error(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`);
             }
             return { foodId, quantity, price: food.price * quantity, priceAtPurchase: food.price };
@@ -141,6 +165,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         isTransactionCommitted = true;
 
         // chổ này chưa xử lý được
+        // Không cần thiết đâu cứ xóa đi
         const io = req.app.get('io');
         if (io) {
             io.to(showtimeId).emit('seats-booked', seatIds.map(seatId => ({ seatId, status: 'Occupied' })));
