@@ -1,6 +1,6 @@
 const express = require("express");
 const cinemaController = require("../controller/cinemaController");
-const  auth  = require("../middleware/authMiddleware");
+const auth = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // router.use(auth);
@@ -27,7 +27,7 @@ const router = express.Router();
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/show-times', cinemaController.getFilteredCinemas);
+router.get("/show-times", cinemaController.getFilteredCinemas);
 
 /**
  * @swagger
@@ -122,6 +122,47 @@ router.get("/admin", cinemaController.getAllCinemas);
  *         description: Lỗi máy chủ
  */
 router.post("/", cinemaController.createCinema);
+/**
+ * @swagger
+ * /api/v1/cinemas/:
+ *   get:
+ *     tags:
+ *       - Cinemas
+ *     summary: Lấy danh sách rạp chiếu phim
+ *     operationId: getAllCinemas
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: fields
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search[name]
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tên rạp
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách rạp chiếu phim thành công
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+router.get("/", cinemaController.getAllCinemas);
 
 /**
  * @swagger

@@ -31,9 +31,21 @@ const settingSchema = new mongoose.Schema(
       default: true,
     },
     priceDefault: {
-      type: Number,
-      required: true,
-      default: 100000,
+      vip: {
+        "2d": { type: Number, default: 150000 },
+        "3d": { type: Number, default: 180000 },
+        imax: { type: Number, default: 200000 },
+      },
+      premium: {
+        "2d": { type: Number, default: 170000 },
+        "3d": { type: Number, default: 190000 },
+        imax: { type: Number, default: 200000 },
+      },
+      standard: {
+        "2d": { type: Number, default: 100000 },
+        "3d": { type: Number, default: 120000 },
+        imax: { type: Number, default: 150000 },
+      },
     },
   },
   { timestamps: true }
