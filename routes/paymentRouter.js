@@ -75,6 +75,8 @@ router.post("/callback/momo", paymentController.momoCallback);
 router.post("/query/vnpay", paymentController.queryVNPayPayment);
 
 // router.get("/callback/vnpay", paymentController.vnpayCallback);
-// router.post("/callback/zalopay", paymentController.zaloCallback);
+router.post("/callback/zalopay", paymentController.zalopayCallback);
+
+router.post("/query/zalopay", paymentController.queryZaloPayPayment);
 
 module.exports = router;

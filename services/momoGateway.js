@@ -11,7 +11,7 @@ exports.createMomoPayment = async (paymentData) => {
     }
 
     const requestId = orderId;
-    const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.MOMO_REDIRECT_URL}&requestId=${requestId}&requestType=captureWallet`;
+    const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.REDIRECT_URL}&requestId=${requestId}&requestType=captureWallet`;
 
     const signature = crypto.createHmac('sha256', process.env.MOMO_SECRET_KEY)
         .update(rawSignature)
@@ -25,7 +25,7 @@ exports.createMomoPayment = async (paymentData) => {
         amount,
         orderId,
         orderInfo,
-        redirectUrl: process.env.MOMO_REDIRECT_URL,
+        redirectUrl: process.env.REDIRECT_URL,
         ipnUrl: ipnUrl,
         lang: 'vi',
         extraData,
@@ -42,7 +42,6 @@ exports.createMomoPayment = async (paymentData) => {
         },
         data: requestBody
     }
-
 
     const response = await axios(options);
     return response.data;

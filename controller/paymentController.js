@@ -6,6 +6,8 @@ const {
 const { v4: uuidv4 } = require("uuid");
 const AppError = require("../utils/appError");
 const crypto = require("crypto");
+const CryptoJS = require('crypto-js');
+const qs = require('qs');
 const axios = require("axios");
 
 const validatePaymentData = (data, next) => {
@@ -32,7 +34,7 @@ exports.createPayment = catchAsync(async (req, res, next) => {
     req.body;
 
   //Code hoặc ID của đơn hàng đó
-  const paymentId = uuidv4();
+  // const paymentId = uuidv4();
   //
 
   //Lưu vào trong database
@@ -40,7 +42,7 @@ exports.createPayment = catchAsync(async (req, res, next) => {
   //
 
   const gatewayResponse = await createPaymentByGateway(gateway, {
-    orderId: paymentId,
+    orderId,
     amount,
     orderInfo,
     ...additionalData,
@@ -81,6 +83,25 @@ exports.vnpayCallback = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.zalopayCallback = catchAsync(async (req, res, next) => {
+    const isValid = verifyCallbackByGateway("zalopay", req.body);
+
+    if (!isValid.return_code || isValid.return_code !== 1) {
+      return next(new AppError("Chữ ký không hợp lệ", 400));
+    }
+
+    // Xử lý callback từ ZaloPay
+    // Cập nhật trạng thái thanh toán trong database
+    // ...
+
+    console.log("Callback từ ZaloPay");
+
+    res.status(200).json({
+        status: "success",
+        message: "Bạn đã thanh toán thành công",
+    });
+});
+
 exports.queryMomoPayment = catchAsync(async (req, res, next) => {
   const { orderId } = req.body;
   const requestId = orderId;
@@ -106,20 +127,24 @@ exports.queryMomoPayment = catchAsync(async (req, res, next) => {
     },
     data: requestBody,
   };
+  try {
+    const response = await axios(options);
 
-  const response = await axios(options);
+    if (response.data.resultCode === 0) {
+      //Cập nhập Database
+    }
 
-  if (response.data.resultCode === 0) {
-    //Cập nhập Database
+    res.status(200).json({
+      status: "success",
+      data: {
+        resultCode: response.data.resultCode,
+        message: response.data.message,
+      },
+    });
+  }catch (error) {
+    return next(new AppError(`Lỗi khi truy vấn MoMo: ${error.message}`, 500));
   }
 
-  res.status(200).json({
-    status: "success",
-    data: {
-      resultCode: response.data.resultCode,
-      message: response.data.message,
-    },
-  });
 });
 
 exports.queryVNPayPayment = catchAsync(async (req, res, next) => {
@@ -184,23 +209,43 @@ exports.queryVNPayPayment = catchAsync(async (req, res, next) => {
     },
   });
 });
-exports.createZaloPay = catchAsync(async (req, res, next) => {
-  const { orderId, amount } = req.body;
 
-  const zaloPayData = await createZaloPayPayment({ orderId, amount });
+exports.queryZaloPayPayment = catchAsync(async (req, res, next) => {
+  const { appTransId } = req.body;
 
-  res.status(200).json({
-    status: "success",
-    message: "Tạo đơn hàng ZaloPay thành công",
-    data: zaloPayData,
-  });
+  let postData = {
+    app_id: process.env.ZALOPAY_APP_ID,
+    app_trans_id: appTransId, // Input your app_trans_id
+  }
+
+  let data = postData.app_id + "|" + postData.app_trans_id + "|" + process.env.ZALOPAY_APP_SECRET_KEY_1; // appid|app_trans_id|key1
+  postData.mac = CryptoJS.HmacSHA256(data, process.env.ZALOPAY_APP_SECRET_KEY_1).toString();
+
+  let postConfig = {
+    method: 'post',
+    url: process.env.ZALOPAY_RETURN_URL_QUERY,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    data: qs.stringify(postData)
+  };
+
+  try{
+    const result = await axios(postConfig);
+
+    if(result.data.return_code === 1) {
+    //   Câp nhật trạng thái giao dịch trong database
+    }
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            transactionStatus: result.data.return_code,
+            message: result.data.return_message
+        }
+    })
+  }
+  catch (error) {
+      return next(new AppError(`Lỗi khi truy vấn ZaloPay: ${error.message}`, 500));
+  }
 });
-// exports.zaloCallback = catchAsync(async (req, res, next) => {
-//   const isValid = verifyCallbackByGateway("zalopay", req.body);
-//   if (!isValid) return next(new AppError("Chữ ký không hợp lệ", 400));
-
-//   // TODO: cập nhật DB
-//   res
-//     .status(200)
-//     .json({ status: "success", message: "ZaloPay callback thành công" });
-// });
