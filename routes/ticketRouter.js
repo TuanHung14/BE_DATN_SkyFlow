@@ -53,7 +53,7 @@ router.use(auth);
  *                 type: string
  *                 description: ID phương thức thanh toán
  *                 example: "6864eb38b2de948dddb436f0"
- *               voucherId:
+ *               voucherUseId:
  *                 type: string
  *                 description: ID mã giảm giá (không bắt buộc)
  *                 example: "6864eb38b2de948dddb436f0"
