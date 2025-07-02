@@ -1,28 +1,25 @@
 const { createMomoPayment, verifyMomoCallback } = require("./momoGateway");
 const { createVNPayPayment, verifyVNPayCallback } = require("./vnpayGateway");
-const { createStripePayment } = require("./stripeGateway");
 const { createZaloPayPayment, verifyZaloPayCallback} = require("./zalopayGateway");
 const createPaymentByGateway = async (gateway, paymentData) => {
   switch (gateway) {
-    case "momo":
+    case "Momo":
       return await createMomoPayment(paymentData);
-    case "vnpay":
+    case "Vnpay":
       return await createVNPayPayment(paymentData);
-    case "stripe":
-      // return await createStripePayment(paymentData);
-    case "zalopay":
+    case "Zalopay":
         return await createZaloPayPayment(paymentData);
   }
 };
 
-const verifyCallbackByGateway = (gateway, callbackData) => {
+const verifyCallbackByGateway = async (gateway, callbackData) => {
   switch (gateway) {
     case "momo":
-      return verifyMomoCallback(callbackData);
+      return await verifyMomoCallback(callbackData);
     case "vnpay":
-      return verifyVNPayCallback(callbackData);
+      return await verifyVNPayCallback(callbackData);
     case "zalopay":
-      return verifyZaloPayCallback(callbackData);
+      return await verifyZaloPayCallback(callbackData);
   }
 };
 

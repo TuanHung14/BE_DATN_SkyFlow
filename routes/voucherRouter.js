@@ -1,5 +1,7 @@
 const voucherController = require("../controller/voucherController");
+const voucherUseController = require("../controller/voucherUseController");
 const express = require("express");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 /**
@@ -56,6 +58,61 @@ const router = express.Router();
 router.route("/")
     .get(voucherController.getAllVouchers)
     .post(voucherController.createVoucher);
+
+/**
+ * @swagger
+ * /api/v1/vouchers/owned:
+ *   get:
+ *     tags:
+ *       - Voucher
+ *     summary: Lấy danh sách voucher đã mua của người dùng
+ *     description: Chỉ trả về các voucher người dùng đã mua và còn trong giới hạn sử dụng.
+ *     security:
+ *       - bearer: []
+ *     operationId: getOwnedVouchers
+ *     responses:
+ *       200:
+ *         description: Danh sách voucher đã mua
+ */
+router.get("/owned", auth,voucherUseController.getVoucherUsage);
+
+/**
+ * @swagger
+ * /api/v1/vouchers/buy:
+ *   post:
+ *     tags:
+ *       - Voucher
+ *     summary: Người dùng mua voucher bằng điểm
+ *     description: API cho phép người dùng đổi điểm tích lũy để mua voucher.
+ *     security:
+ *       - bearer: []
+ *     operationId: buyVoucher
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - voucherId
+ *             properties:
+ *               voucherId:
+ *                 type: string
+ *                 description: ID của voucher muốn mua
+ *                 example: "60d21b4667d0d8992e610c85"
+ *               quantity:
+ *                 type: number
+ *                 description: Số lần có thể sử dụng (nếu cho phép chọn)
+ *                 example: 3
+ *     responses:
+ *       201:
+ *         description: Mua voucher thành công
+ *       400:
+ *         description: Lỗi khi mua voucher (hết điểm hoặc đã mua)
+ *       401:
+ *         description: Chưa đăng nhập
+ */
+router.post("/buy", auth, voucherUseController.buyVoucher);
 
 /**
  * @swagger
@@ -144,5 +201,6 @@ router.route("/:id")
     .get(voucherController.getVoucher)
     .patch(voucherController.updateVoucher)
     .delete(voucherController.deleteVoucher);
+
 
 module.exports = router;

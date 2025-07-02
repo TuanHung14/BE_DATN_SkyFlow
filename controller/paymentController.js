@@ -10,8 +10,15 @@ const CryptoJS = require('crypto-js');
 const qs = require('qs');
 const axios = require("axios");
 
+const Ticket = require("../model/ticketModel");
+const TicketSeat = require("../model/ticketSeatModel");
+const Seat = require("../model/seatModel");
+const User = require("../model/userModel");
+const PaymentMethod = require("../model/paymentMethodModel");
+const Factory = require("./handleFactory");
+
 const validatePaymentData = (data, next) => {
-  const required = ["userId", "orderId", "amount", "gateway"];
+  const required = ["orderId", "amount", "gateway"];
   for (const field of required) {
     if (!data[field]) {
       next(new AppError(`Thiếu field ${field}`, 400));
@@ -22,24 +29,58 @@ const validatePaymentData = (data, next) => {
     next(new AppError("Số tiền phải lớn hơn 0", 400));
   }
 
-  if (!["momo", "vnpay", "zalopay"].includes(data.gateway)) {
+  if (!["Momo", "VnPay", "Zalopay"].includes(data.gateway)) {
     next(new AppError("Không có phương thức này", 400));
   }
 };
 
+const updateTicketStatus = async (orderId, status) => {
+    const ticket = await Ticket.findByIdAndUpdate({
+      _id: orderId,
+    }, {
+      paymentStatus: status,
+      bookingStatus: "Confirmed",
+    }, {
+      new: true,
+      runValidators: true,
+    })
+
+    const tiketSeats = await TicketSeat.find({
+      ticketId: orderId,
+    })
+    const seatIds = tiketSeats.map((item) => item.seatId);
+
+    if( status === "Paid" ) {
+      await Seat.updateMany(
+          {_id: {$in: seatIds}},
+          {status: "Selected"}
+      );
+      // Tăng memberShipPoints
+      await User.updateOne({
+        _id: ticket.userId,
+      }, {
+            $inc: { memberShipPoints: ticket.totalAmount },
+        }
+      )
+    }
+    else {
+      await Seat.updateMany(
+          {_id: {$in: seatIds}},
+          {status: "Available"}
+      );
+    }
+
+}
+
+
+exports.getPaymentGateways = Factory.getAll(PaymentMethod);
+
 exports.createPayment = catchAsync(async (req, res, next) => {
-  // validatePaymentData(req.body, next);
 
-  const { userId, orderId, amount, gateway, orderInfo, ...additionalData } =
+  validatePaymentData(req.body, next);
+
+  const { orderId, amount, gateway, orderInfo, ...additionalData } =
     req.body;
-
-  //Code hoặc ID của đơn hàng đó
-  // const paymentId = uuidv4();
-  //
-
-  //Lưu vào trong database
-
-  //
 
   const gatewayResponse = await createPaymentByGateway(gateway, {
     orderId,
@@ -57,14 +98,20 @@ exports.createPayment = catchAsync(async (req, res, next) => {
 });
 
 exports.momoCallback = catchAsync(async (req, res, next) => {
-  const isValid = verifyCallbackByGateway("momo", req.body);
-  if (!isValid) {
+  const valid = await verifyCallbackByGateway("momo", req.body);
+
+  if (!valid.isValid) {
     return next(new AppError("Chữ ký không hợp lệ", 400));
   }
-  // Xử lý callback từ MoMo
-  // Cập nhật trạng thái thanh toán trong database
-  // ...
-  console.log("Callback từ MoMo");
+  const { orderId,  resultCode} = valid.data;
+
+  if (resultCode !== 0) {
+    // Cập nhật trạng thái thanh toán không thành công
+    await updateTicketStatus(orderId, "Failed");
+    return next(new AppError("Thanh toán không thành công", 400));
+  }
+    // Cập nhật trạng thái thanh toán thành công
+  await updateTicketStatus(orderId, "Paid");
 
   res.status(200).json({
     status: "success",
@@ -72,9 +119,17 @@ exports.momoCallback = catchAsync(async (req, res, next) => {
 });
 
 exports.vnpayCallback = catchAsync(async (req, res, next) => {
-  const isValid = verifyCallbackByGateway("vnpay", req.query);
-  if (!isValid) {
+  const valid = await verifyCallbackByGateway("vnpay", req.query);
+  if (!valid.isValid) {
     return next(new AppError("Chữ ký không hợp lệ", 400));
+  }
+  const data = valid.data;
+  const orderId = data.vnp_TxnRef;
+  if( data.vnp_ResponseCode === "00" ) {
+    await updateTicketStatus(orderId, "Paid");
+  }else {
+    await updateTicketStatus(orderId, "Failed");
+    return next(new AppError("Thanh toán không thành công", 400));
   }
 
   res.status(200).json({
@@ -84,17 +139,17 @@ exports.vnpayCallback = catchAsync(async (req, res, next) => {
 });
 
 exports.zalopayCallback = catchAsync(async (req, res, next) => {
-    const isValid = verifyCallbackByGateway("zalopay", req.body);
-
-    if (!isValid.return_code || isValid.return_code !== 1) {
+    const valid = await verifyCallbackByGateway("zalopay", req.body);
+    if (valid.return_code !== 1) {
       return next(new AppError("Chữ ký không hợp lệ", 400));
     }
+    const { data } = valid;
 
-    // Xử lý callback từ ZaloPay
-    // Cập nhật trạng thái thanh toán trong database
-    // ...
+    // Cập nhật trạng thái thanh toán thành công
+    const embedData = JSON.parse(data.embed_data);
+    const orderId = embedData.order_id;
 
-    console.log("Callback từ ZaloPay");
+    await updateTicketStatus(orderId, "Paid");
 
     res.status(200).json({
         status: "success",
@@ -102,8 +157,7 @@ exports.zalopayCallback = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.queryMomoPayment = catchAsync(async (req, res, next) => {
-  const { orderId } = req.body;
+exports.queryMomoPayment = async (orderId) => {
   const requestId = orderId;
   const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&orderId=${orderId}&partnerCode=${process.env.MOMO_PARTNER_CODE}&requestId=${requestId}`;
   const signature = crypto
@@ -131,7 +185,12 @@ exports.queryMomoPayment = catchAsync(async (req, res, next) => {
     const response = await axios(options);
 
     if (response.data.resultCode === 0) {
-      //Cập nhập Database
+      const { orderId } = response.data;
+      await updateTicketStatus(orderId, "Paid");
+    }else{
+        // Cập nhật trạng thái thanh toán không thành công
+        await updateTicketStatus(orderId, "Failed");
+        return next(new AppError("Thanh toán không thành công", 400));
     }
 
     res.status(200).json({
@@ -145,74 +204,9 @@ exports.queryMomoPayment = catchAsync(async (req, res, next) => {
     return next(new AppError(`Lỗi khi truy vấn MoMo: ${error.message}`, 500));
   }
 
-});
+};
 
-exports.queryVNPayPayment = catchAsync(async (req, res, next) => {
-  const { orderId } = req.body;
-  const vnp_TmnCode = process.env.VNPAY_TMN_CODE;
-  const vnp_HashSecret = process.env.VNPAY_SECRET_KEY;
-  const vnp_Url =
-    process.env.VNPAY_API_ENDPOINT ||
-    "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
-
-  const date = new Date();
-  const vnp_CreateDate = date
-    .toISOString()
-    .replace(/[-:T.]/g, "")
-    .slice(0, 14);
-  const vnp_RequestId = uuidv4();
-  const vnp_IpAddr = "127.0.0.1";
-
-  const vnp_Params = {
-    vnp_Command: "querydr",
-    vnp_TmnCode,
-    vnp_TxnRef: orderId,
-    vnp_OrderInfo: `Truy van giao dich ${orderId}`,
-    vnp_CreateDate,
-    vnp_RequestId,
-    vnp_IpAddr,
-    vnp_Version: "2.1.0",
-  };
-
-  const sortedParams = Object.keys(vnp_Params)
-    .sort()
-    .reduce((obj, key) => {
-      obj[key] = vnp_Params[key];
-      return obj;
-    }, {});
-
-  const signData = querystring.stringify(sortedParams);
-  const hmac = crypto.createHmac("sha512", vnp_HashSecret);
-  const vnp_SecureHash = hmac.update(signData).digest("hex");
-  vnp_Params["vnp_SecureHash"] = vnp_SecureHash;
-
-  const options = {
-    method: "POST",
-    url: vnp_Url,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    data: vnp_Params,
-  };
-
-  const response = await axios(options);
-
-  if (response.data.vnp_TransactionStatus === "00") {
-    // TODO: Cập nhật database (giao dịch thành công)
-  }
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      transactionStatus: response.data.vnp_TransactionStatus,
-      message: response.data.vnp_Message,
-    },
-  });
-});
-
-exports.queryZaloPayPayment = catchAsync(async (req, res, next) => {
-  const { appTransId } = req.body;
-
+exports.queryZaloPayPayment = async (appTransId) => {
   let postData = {
     app_id: process.env.ZALOPAY_APP_ID,
     app_trans_id: appTransId, // Input your app_trans_id
@@ -233,8 +227,14 @@ exports.queryZaloPayPayment = catchAsync(async (req, res, next) => {
   try{
     const result = await axios(postConfig);
 
-    if(result.data.return_code === 1) {
-    //   Câp nhật trạng thái giao dịch trong database
+    if (result.data.return_code === 1) {
+      const embedData = JSON.parse(result.data.embed_data);
+      const orderId = embedData.order_id;
+
+      await updateTicketStatus(orderId, "Paid");
+    } else if (result.data.return_code === 2) {
+      await updateTicketStatus(orderId, "Failed");
+      return next(new AppError("Giao dịch thất bại", 400));
     }
 
     res.status(200).json({
@@ -248,4 +248,4 @@ exports.queryZaloPayPayment = catchAsync(async (req, res, next) => {
   catch (error) {
       return next(new AppError(`Lỗi khi truy vấn ZaloPay: ${error.message}`, 500));
   }
-});
+};

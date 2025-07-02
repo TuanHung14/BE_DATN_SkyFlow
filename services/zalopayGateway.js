@@ -1,17 +1,32 @@
 const axios = require('axios').default;
 const CryptoJS = require('crypto-js');
 const moment = require('moment');
+const Ticket = require('../model/ticketModel');
 
 exports.createZaloPayPayment = async (paymentData) => {
     const { orderId, amount = 10000, orderInfo = 'Thanh Toán Với ZaloPay'} = paymentData;
 
     const embed_data = {
         redirecturl: process.env.REDIRECT_URL,
+        order_id: orderId
     };
-    const transID = Math.floor(Math.random() * 1000000);
 
     // Lấy thông tin đơn hàng từ orderId
     // orderId
+    const ticketDetails = await Ticket.findById(orderId)
+        .populate({
+            path: 'showtimeId',
+            populate: [
+                {
+                    path: 'movieId',
+                    select: 'name posterUrl'
+                }
+            ]
+        });
+    const movieName = ticketDetails?.showtimeId?.movieId?.name || 'Tên phim';
+
+    const description = `Phim: ${movieName}`;
+
     const items = [{}];
 
     let ipnUrl = process.env.ZALOPAY_IPN_URL;
@@ -19,7 +34,7 @@ exports.createZaloPayPayment = async (paymentData) => {
         ipnUrl = `${process.env.CLIENT_HOST}/api/v1/payments/callback/zalopay`;
     }
 
-    const appTransId = `${moment().format('YYMMDD')}_${transID}`;
+    const appTransId = `${moment().format('YYMMDD')}_${orderId}`;
 
     const order = {
         app_id: process.env.ZALOPAY_APP_ID,
@@ -29,7 +44,7 @@ exports.createZaloPayPayment = async (paymentData) => {
         item: JSON.stringify(items),
         embed_data: JSON.stringify(embed_data),
         amount: amount,
-        description: orderInfo,
+        description: description,
         bank_code: "zalopayapp",
         callback_url: ipnUrl
     };
@@ -39,6 +54,10 @@ exports.createZaloPayPayment = async (paymentData) => {
 
     try{
         const result = await axios.post(process.env.ZALOPAY_API_ENDPOINT, null, { params: order });
+        if (ticketDetails) {
+            ticketDetails.appTransId = appTransId;
+            await ticketDetails.save();
+        }
         return {
             ... result.data,
             appTransId: appTransId
@@ -49,7 +68,7 @@ exports.createZaloPayPayment = async (paymentData) => {
 
 }
 
-exports.verifyZaloPayCallback = async (callbackData, res) => {
+exports.verifyZaloPayCallback = async (callbackData) => {
     let result = {};
     const { data, mac } = callbackData;
 
@@ -69,8 +88,7 @@ exports.verifyZaloPayCallback = async (callbackData, res) => {
             // thanh toán thành công
             // merchant cập nhật trạng thái cho đơn hàng
             let dataJson = JSON.parse(dataStr, process.env.ZALOPAY_APP_SECRET_KEY_2);
-            console.log("update order's status = success where app_trans_id =", dataJson["app_trans_id"]);
-
+            result.data = JSON.parse(data);
             result.return_code = 1;
             result.return_message = "success";
         }
@@ -78,7 +96,7 @@ exports.verifyZaloPayCallback = async (callbackData, res) => {
         result.return_code = 0; // ZaloPay server sẽ callback lại (tối đa 3 lần)
         result.return_message = ex.message;
     }
-    console.log(result);
+
     // thông báo kết quả cho ZaloPay server
     return result;
 }

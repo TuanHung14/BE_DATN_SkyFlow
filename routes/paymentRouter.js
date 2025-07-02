@@ -2,12 +2,13 @@ const epress = require("express");
 const paymentController = require("../controller/paymentController");
 
 const router = epress.Router();
+
 /**
  * @swagger
  * /api/v1/payments:
  *   post:
  *     tags:
- *       - Payment
+ *       - Payments
  *     summary: Tạo thanh toán mới
  *     security:
  *       - bearer: []
@@ -31,7 +32,7 @@ const router = epress.Router();
  *                 example: "ORDER123456"
  *               gateway:
  *                 type: string
- *                 example: "momo"
+ *                 example: "Momo | VnPay | Zalopay"
  *     responses:
  *       200:
  *         description: Thanh toán được tạo thành công
@@ -42,41 +43,31 @@ router.post("/", paymentController.createPayment);
 
 /**
  * @swagger
- * /api/v1/payment/query/momo:
- *   post:
+ * /api/v1/payments:
+ *   get:
  *     tags:
- *       - Payment
- *     summary: Truy vấn trạng thái thanh toán Momo
+ *       - Payments
+ *     summary: Lấy danh sách phương thức
+ *     operationId: getPaymentGateways
  *     security:
  *       - bearer: []
- *     operationId: queryMomoPayment
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - orderId
- *             properties:
- *               orderId:
- *                 type: string
- *                 example: "ORDER123456"
  *     responses:
  *       200:
- *         description: Trả về thông tin thanh toán
- *       404:
- *         description: Không tìm thấy giao dịch
+ *         description: Lấy danh sách phương thức thành công
+ *       500:
+ *         description: Lỗi máy chủ
  */
+router.get("/", paymentController.getPaymentGateways);
+
 router.post("/query/momo", paymentController.queryMomoPayment);
+
+router.post("/query/zalopay", paymentController.queryZaloPayPayment);
 
 router.post("/callback/momo", paymentController.momoCallback);
 
-router.post("/query/vnpay", paymentController.queryVNPayPayment);
+router.get("/callback/vnpay", paymentController.vnpayCallback);
 
-// router.get("/callback/vnpay", paymentController.vnpayCallback);
 router.post("/callback/zalopay", paymentController.zalopayCallback);
 
-router.post("/query/zalopay", paymentController.queryZaloPayPayment);
 
 module.exports = router;
