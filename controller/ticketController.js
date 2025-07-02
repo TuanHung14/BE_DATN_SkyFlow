@@ -6,12 +6,12 @@ const Seat = require('../model/seatModel');
 const Food = require('../model/foodModel');
 const Showtime = require('../model/showtimeModel');
 const PriceRule = require('../model/priceRuleModel');
-const Voucher = require('../model/voucherModel');
+const VoucherUse = require('../model/voucherUseModel');
 const TicketFood = require('../model/ticketFoodModel');
 const TicketSeat = require('../model/ticketSeatModel');
 
 exports.createTicket = catchAsync(async (req, res, next) => {
-    const { showtimeId, seatsId, foodsId, paymentMethodId, voucherId } = req.body;
+    const { showtimeId, seatsId, foodsId, paymentMethodId, voucherUseId } = req.body;
 
     const userId = req.user.id;
 
@@ -34,15 +34,14 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         }
 
         // Kiểm tra ghế trong database
-        const seatIds = seatsId.map(s => s.seatId);
         const seats = await Seat.find({
-            _id: { $in: seatIds },
-            roomId: showtime.roomId,
+            _id: { $in: seatsId },
+            roomId: showtime.roomId._id,
             status: 'Available',
             hidden: false
         }).session(session);
 
-        if (seats.length !== seatIds.length) {
+        if (seats.length !== seatsId.length) {
             throw new AppError('Một số ghế không tồn tại', 400);
         }
 
@@ -50,13 +49,13 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         const foodPrices = foodsId?.length ? await Promise.all(foodsId.map(async ({ foodId, quantity }) => {
             const food = await Food.findOne({_id: foodId, status: 'active'}).session(session);
             if (food.inventoryCount < quantity) {
-                throw new AppError(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`, 400);
+                next(new AppError(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`, 400));
             }
             return { foodId, quantity, price: food.price * quantity, priceAtPurchase: food.price };
         })) : [];
 
         // Tính giá ghế
-        const seatPrices = await Promise.all(seatsId.map(async ({ seatId }) => {
+        const seatPrices = await Promise.all(seatsId.map(async (seatId) => {
             const seat = seats.find(s => s._id.equals(seatId));
             const priceRule = await PriceRule.findOne({
                 seatType: seat.seatType,
@@ -74,12 +73,28 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 
         // Áp dụng voucher
         let discount = 0;
-        if (voucherId) {
-            const voucher = await Voucher.findById(voucherId).session(session);
-            if (voucher && voucher.isActive) {
-                discount = voucher.discountValue;
-                totalAmount = Math.max(0, totalAmount - discount);
+        if (voucherUseId) {
+            const voucher = await VoucherUse.findOne({
+                _id: voucherUseId,
+                userId
+            }).populate('voucherId', 'discountValue isActive').session(session);
+            // Kiểm tra voucher có tồn tại và thuộc về người dùng
+            if (!voucher) {
+                next(new AppError('Voucher không hợp lệ hoặc không thuộc về bạn', 400));
             }
+            // Kiểm tra voucher có còn hiệu lực không
+            if (!voucher.voucherId || !voucher.voucherId.isActive) {
+                next(new AppError('Voucher không còn hiệu lực', 400));
+            }
+            // Kiểm tra số lần sử dụng của voucher
+            if (voucher.usageCount >= voucher.usageLimit) {
+                next(new AppError('Voucher đã hết lượt sử dụng', 400));
+            }
+            // Cập nhật số lần sử dụng của voucher
+            await VoucherUse.findByIdAndUpdate(voucher._id, { $inc: { usageCount: 1 } }, { session });
+            // Tính toán giảm giá
+            discount = voucher.voucherId.discountValue;
+            totalAmount = Math.max(0, totalAmount - discount);
         }
 
         // Tạo vé
@@ -118,7 +133,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 
         // Cập nhật trạng thái ghế trong database
         await Seat.updateMany(
-            { _id: { $in: seatIds } },
+            { _id: { $in: seatsId } },
             { status: 'Occupied' },
             { session }
         );

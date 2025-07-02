@@ -11,7 +11,8 @@ exports.createMomoPayment = async (paymentData) => {
     }
 
     const requestId = orderId;
-    const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.REDIRECT_URL}&requestId=${requestId}&requestType=captureWallet`;
+    const requestType = 'payWithATM';
+    const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.REDIRECT_URL}&requestId=${requestId}&requestType=${requestType}`;
 
     const signature = crypto.createHmac('sha256', process.env.MOMO_SECRET_KEY)
         .update(rawSignature)
@@ -29,7 +30,7 @@ exports.createMomoPayment = async (paymentData) => {
         ipnUrl: ipnUrl,
         lang: 'vi',
         extraData,
-        requestType: 'captureWallet',
+        requestType: requestType,
         signature
     });
 
@@ -61,6 +62,9 @@ exports.verifyMomoCallback = (callbackData) => {
         .update(rawSignature)
         .digest('hex');
 
-    return signature === expectedSignature;
+    return {
+        isValid: expectedSignature === signature,
+        data
+    };
 };
 

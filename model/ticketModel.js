@@ -5,6 +5,10 @@ const ticketSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  appTransId: {
+    type: String,
+    default: null
+  },
   totalAmount: {
     type: Number,
     required: [true, 'Tổng tiền không được để trống'],
