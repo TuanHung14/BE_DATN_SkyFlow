@@ -5,6 +5,7 @@ const Ticket = require("../model/ticketModel");
 const { queryMomoPayment, queryZaloPayPayment } = require("../controller/paymentController");
 
 module.exports = () => {
+    // Cron job chạy hàng ngày lúc 00:00
     cron.schedule("0 0 * * *", async () => {
         try {
             const count = await updateMovieStatusLogic();
@@ -30,6 +31,7 @@ module.exports = () => {
         }
     });
 
+    // Cron job kiểm tra payment status mỗi 5 phút
     cron.schedule("*/5 * * * *", async () => {
         const now = Date.now();
         const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
@@ -51,5 +53,55 @@ module.exports = () => {
                }
             }
         }
+    });
+
+    // Cron job: Cập nhật trạng thái showtime khi sắp đến giờ chiếu (5 phút trước)
+    cron.schedule("* * * * *", async () => {
+        try{
+            const now = new Date();
+            const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+
+            const upcomingShowtimes = await Showtime.find({
+                startTime: { $gte: now, $lte: fiveMinutesFromNow },
+                isDeleted: { $ne: true },
+                status: "scheduled"
+            });
+
+            if (upcomingShowtimes.length > 0) {
+                await Showtime.updateMany(
+                    {
+                        _id: { $in: upcomingShowtimes.map(show => show._id) }
+                    },
+                    {
+                        $set: { status: "ongoing" }
+                    }
+                );
+
+                console.log(`✅ Updated ${upcomingShowtimes.length} showtimes to 'ongoing' status`);
+            }
+        }catch (error) {
+            console.error("Showtime status update cronjob ongoing error: ", error);
+        }
     })
+
+    // Cron job để đánh dấu showtime đã kết thúc sau 10p
+    cron.schedule("*/10 * * * *", async () => {
+        try{
+            const now = new Date();
+
+            await Showtime.updateMany(
+                {
+                    endTime: { $lt: now },
+                    isDeleted: false,
+                    status: { $ne: "finished" }
+                },
+                {
+                    $set: { status: "finished" }
+                }
+            );
+            console.log(`Updated ${now} showtimes to 'ongoing' status`);
+        }catch (error) {
+            console.error("❌ Showtime status update cronjob finished error:", error);
+        }
+    });
 };

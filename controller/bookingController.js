@@ -167,7 +167,7 @@ exports.getTicketBooking = catchAsync(async (req, res, next) => {
         const showtime = await Showtime.findOne({
             _id: showtimeId,
             isDeleted: false,
-            status: 'Available'
+            status: 'scheduled'
         })
             .populate('movieId', 'name')
             .populate({

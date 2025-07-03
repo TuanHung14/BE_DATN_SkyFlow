@@ -122,6 +122,7 @@ router.get("/admin", cinemaController.getAllCinemas);
  *         description: Lỗi máy chủ
  */
 router.post("/", cinemaController.createCinema);
+
 /**
  * @swagger
  * /api/v1/cinemas/:

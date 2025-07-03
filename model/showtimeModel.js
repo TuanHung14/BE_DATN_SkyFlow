@@ -40,10 +40,10 @@ const showtimeSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: {
-            values: ['Available', 'Occupied', 'Maintenance'],
+            values: ['scheduled', 'ongoing', 'finished'],
             message: '{VALUE} không phải là trạng thái hợp lệ'
         },
-        default: 'Available'
+        default: 'scheduled'
     },
     isDeleted: {
         type: Boolean,
