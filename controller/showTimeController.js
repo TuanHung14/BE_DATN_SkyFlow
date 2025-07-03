@@ -329,7 +329,7 @@ exports.getAllShowTime = catchAsync(async (req, res) => {
 
     // 3. Filter by status
     if (req.query.status) {
-        const validStatuses = ['Available', 'Occupied', 'Maintenance'];
+        const validStatuses = ['scheduled', 'ongoing', 'finished'];
         if (!validStatuses.includes(req.query.status)) {
             return res.status(400).json({
                 status: 'error',
