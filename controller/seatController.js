@@ -11,7 +11,7 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
 
     const showtime = await Showtime.findOne({
         _id: showtimeId,
-        status: "Available",
+        status: "scheduled",
         isDeleted: false,
     });
 
