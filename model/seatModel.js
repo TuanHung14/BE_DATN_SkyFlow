@@ -48,6 +48,11 @@ const seatSchema = new mongoose.Schema({
     hidden: {
         type: Boolean,
         default: false
+    },
+    status: {
+        type: String,
+        enum: { values: ['active', 'inactive']},
+        default: 'active'
     }
 }, {
     timestamps: true

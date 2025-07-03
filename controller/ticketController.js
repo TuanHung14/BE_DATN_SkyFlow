@@ -185,12 +185,187 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 });
 
 exports.getMyTickets = catchAsync(async (req, res, next) => {
-    const tickets = await Ticket.find({ userId: req.user.id })
-        .populate('showtimeId paymentMethodId seatsId.seatId foodsId.foodId')
-        .sort({ bookingDate: -1 });
+    const tickets = await Ticket.aggregate([
+        {
+            $match: { userId: new mongoose.Types.ObjectId(req.user.id) }
+        },
+        {
+            $lookup: {
+                from: 'ticketseats',
+                localField: '_id',
+                foreignField: 'ticketId',
+                as: 'ticketSeats'
+            }
+        },
+        {
+            $lookup: {
+                from: 'ticketfoods',
+                localField: '_id',
+                foreignField: 'ticketId',
+                as: 'ticketFoods'
+            }
+        },
+        {
+            $lookup: {
+                from: 'showtimes',
+                localField: 'showtimeId',
+                foreignField: '_id',
+                as: 'showtimeId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'formats',
+                localField: 'showtimeId.formatId',
+                foreignField: '_id',
+                as: 'showtimeId.formatId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId.formatId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'seats',
+                localField: 'ticketSeats.seatId',
+                foreignField: '_id',
+                as: 'ticketSeats.seat'
+            }
+        },
+        {
+            $lookup: {
+                from: 'foods',
+                localField: 'ticketFoods.foodId',
+                foreignField: '_id',
+                as: 'ticketFoods.food'
+            }
+        },
+        {
+            $sort: { bookingDate: -1 }
+        }
+    ]);
 
     res.status(200).json({
         status: 'success',
         data: tickets
+    });
+});
+
+exports.getTicketById = catchAsync(async (req, res, next) => {
+    const ticketId = req.params.id;
+
+    const tickets = await Ticket.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(ticketId),
+                userId: new mongoose.Types.ObjectId(req.user.id)
+            }
+        },
+        {
+            $lookup: {
+                from: 'ticketseats',
+                localField: '_id',
+                foreignField: 'ticketId',
+                as: 'ticketSeats'
+            }
+        },
+        {
+            $lookup: {
+                from: 'ticketfoods',
+                localField: '_id',
+                foreignField: 'ticketId',
+                as: 'ticketFoods'
+            }
+        },
+        {
+            $lookup: {
+                from: 'showtimes',
+                localField: 'showtimeId',
+                foreignField: '_id',
+                as: 'showtimeId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'formats',
+                localField: 'showtimeId.formatId',
+                foreignField: '_id',
+                as: 'showtimeId.formatId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId.formatId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'rooms',
+                localField: 'showtimeId.roomId',
+                foreignField: '_id',
+                as: 'showtimeId.roomId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId.roomId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'cinemas',
+                localField: 'showtimeId.roomId.cinemaId',
+                foreignField: '_id',
+                as: 'showtimeId.roomId.cinema'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId.roomId.cinema',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'seats',
+                localField: 'ticketSeats.seatId',
+                foreignField: '_id',
+                as: 'ticketSeats.seat'
+            }
+        },
+        {
+            $lookup: {
+                from: 'foods',
+                localField: 'ticketFoods.foodId',
+                foreignField: '_id',
+                as: 'ticketFoods.food'
+            }
+        }
+    ]);
+
+    if (!tickets || tickets.length === 0) {
+        return next(new AppError('Vé không tồn tại hoặc bạn không có quyền truy cập', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: tickets[0]
     });
 });

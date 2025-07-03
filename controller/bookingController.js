@@ -40,7 +40,7 @@ exports.getTicketBooking = catchAsync(async (req, res, next) => {
             movieId,
             showDate: { $gte: new Date().setHours(0, 0, 0, 0) },
             isDeleted: false,
-            status: 'Available'
+            status: 'scheduled'
         })
             .select('showDate')
             .distinct('showDate')
@@ -68,7 +68,7 @@ exports.getTicketBooking = catchAsync(async (req, res, next) => {
             movieId,
             showDate: { $gte: startOfDay, $lte: endOfDay },
             isDeleted: false,
-            status: 'Available'
+            status: 'scheduled'
         })
             .populate({
                 path: 'roomId',
@@ -117,7 +117,7 @@ exports.getTicketBooking = catchAsync(async (req, res, next) => {
             movieId,
             showDate: { $gte: startOfDay, $lte: endOfDay },
             isDeleted: false,
-            status: 'Available'
+            status: 'scheduled'
         })
             .populate({
                 path: 'roomId',
