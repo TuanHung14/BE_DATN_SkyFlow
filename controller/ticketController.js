@@ -26,11 +26,11 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 
     try {
         // Kiểm tra suất chiếu
-        const showtime = await Showtime.findOne({ _id: showtimeId, status: 'Available', isDeleted: false })
+        const showtime = await Showtime.findOne({ _id: showtimeId, status: 'scheduled', isDeleted: false })
             .populate('formatId roomId')
             .session(session);
 
-        if (!showtime || showtime.status !== 'Available') {
+        if (!showtime) {
             next(new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400));
         }
 
@@ -38,7 +38,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         const seats = await Seat.find({
             _id: { $in: seatsId },
             roomId: showtime.roomId._id,
-            status: 'Available',
+            status: 'active',
             hidden: false
         }).session(session);
 
