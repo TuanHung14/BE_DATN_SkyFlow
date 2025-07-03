@@ -67,4 +67,53 @@ router.use(auth);
  */
 router.post('/', ticketController.createTicket);
 
+/**
+ * @swagger
+ * /api/v1/tickets/me:
+ *   get:
+ *     tags:
+ *       - Tickets
+ *     summary: Lấy danh sách vé của người dùng
+ *     operationId: getMyTickets
+ *     security:
+ *       - bearer: []
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách vé thành công
+ *       401:
+ *         description: Chưa xác thực
+ */
+
+router.get('/me', auth, ticketController.getMyTickets);
+
+/**
+ * @swagger
+ * /api/v1/tickets/me/{id}:
+ *   get:
+ *     tags:
+ *       - Tickets
+ *     summary: Lấy thông tin vé theo ID
+ *     operationId: getTicketById
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID của vé
+ *         schema:
+ *           type: string
+ *           example: "68663039b703fa2c4d274937"
+ *     responses:
+ *       200:
+ *         description: Lấy thông tin vé thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       404:
+ *         description: Không tìm thấy vé
+ */
+
+
+router.get('/me/:id', auth, ticketController.getTicketById);
+
 module.exports = router;
