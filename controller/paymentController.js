@@ -12,7 +12,7 @@ const axios = require("axios");
 
 const Ticket = require("../model/ticketModel");
 const TicketSeat = require("../model/ticketSeatModel");
-const Seat = require("../model/seatModel");
+const Booking = require("../model/bookingModel");
 const User = require("../model/userModel");
 const PaymentMethod = require("../model/paymentMethodModel");
 const Factory = require("./handleFactory");
@@ -45,15 +45,23 @@ const updateTicketStatus = async (orderId, status) => {
       runValidators: true,
     })
 
+    if(!ticket) {
+      throw new Error("Không tìm thấy vé với orderId: " + orderId)
+    }
+
     const tiketSeats = await TicketSeat.find({
       ticketId: orderId,
     })
     const seatIds = tiketSeats.map((item) => item.seatId);
 
     if( status === "Paid" ) {
-      await Seat.updateMany(
-          {_id: {$in: seatIds}},
-          {status: "Selected"}
+      await Booking.updateMany(
+          {
+            seatId: {$in: seatIds},
+            userId: ticket.userId,
+            showtimeId: ticket.showtimeId
+          },
+          {status: "success"}
       );
       // Tăng memberShipPoints
       await User.updateOne({
@@ -64,10 +72,11 @@ const updateTicketStatus = async (orderId, status) => {
       )
     }
     else {
-      await Seat.updateMany(
-          {_id: {$in: seatIds}},
-          {status: "Available"}
-      );
+      await Booking.deleteMany({
+        seatId: { $in: seatIds },
+        userId: ticket.userId,
+        showtimeId: ticket.showtimeId,
+      });
     }
 
 }

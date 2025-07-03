@@ -37,11 +37,6 @@ const seatSchema = new mongoose.Schema({
         },
         default: 'normal'
     },
-    status: {
-        type: String,
-        enum: ['Available', 'Selected', 'Occupied', 'Maintenance'],
-        default: 'Available'
-    },
     coupleId: {
         type: mongoose.Schema.Types.ObjectId,
         default: null

@@ -1,46 +1,49 @@
 const Seat = require('../model/seatModel');
 const Room = require('../model/roomModel');
 const Showtime = require("../model/showtimeModel");
+const Booking = require("../model/bookingModel");
 const catchAsync = require('../utils/catchAsync');
 const mongoose = require('mongoose');
+const AppError = require("../utils/appError");
 
 exports.getAllSeat = catchAsync(async (req, res, next) => {
-    let seats = [];
+    const { showtimeId } = req.params;
 
-    // Xây dựng query dựa trên tham số
-    const query = { hidden: false };
-    if (req.query.showtimeId) {
-        const showtime = await Showtime.findById(req.query.showtimeId);
-        if (!showtime) {
-            return res.status(404).json({
-                status: 'fail',
-                message: 'Không tìm thấy suất chiếu'
-            });
-        }
-        query.roomId = showtime.roomId;
-    } else if (req.query.roomId) {
-        query.roomId = req.query.roomId;
+    const showtime = await Showtime.findOne({
+        _id: showtimeId,
+        status: "Available",
+        isDeleted: false,
+    });
+
+    if(!showtime){
+        next(new AppError('Không có lịch chiếu này', 404));
     }
 
-    // Lấy danh sách ghế
-    seats = await Seat.find(query).lean();
+    const seats = await Seat.find({ roomId: showtime.roomId, hidden: 'false' });
 
-    // Chọn các trường cần thiết
-    const responseSeats = seats.map(seat => ({
-        _id: seat._id,
-        roomId: seat.roomId,
-        seatRow: seat.seatRow || null,
-        seatNumber: seat.seatNumber || null,
-        seatType: seat.seatType,
-        status: seat.status,
-        coupleId: seat.coupleId || null,
-        coupleDisplayName: seat.coupleDisplayName || null,
-        hidden: seat.hidden
-    }));
+    const activeBookings = await Booking.find({
+        showtimeId,
+        status: { $in: ['success', 'pending'] },
+    });
+
+    const bookingMap = {};
+    activeBookings.forEach(booking => {
+        bookingMap[booking.seatId.toString()] = booking;
+    });
+
+    const seatsWithStatus = seats.map(seat => {
+        const booking = bookingMap[seat._id.toString()];
+
+        return {
+            ...seat.toObject(),
+            isAvailable: !booking,
+            // status: booking ? booking.status : null
+        };
+    });
 
     res.status(200).json({
         status: 'success',
-        seats: responseSeats
+        data: seatsWithStatus
     });
 });
 
@@ -85,7 +88,6 @@ exports.createSeat = catchAsync(async (req, res, next) => {
                 seatRow: seat.seatRow.toUpperCase(),
                 seatNumber: parseInt(seat.seatNumber),
                 seatType: seat.seatType || 'normal',
-                status: seat.status || 'Available',
                 hidden: false,
                 coupleId: null,
                 coupleDisplayName: null
