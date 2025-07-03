@@ -9,6 +9,7 @@ const PriceRule = require('../model/priceRuleModel');
 const VoucherUse = require('../model/voucherUseModel');
 const TicketFood = require('../model/ticketFoodModel');
 const TicketSeat = require('../model/ticketSeatModel');
+const Booking = require("../model/bookingModel");
 
 exports.createTicket = catchAsync(async (req, res, next) => {
     const { showtimeId, seatsId, foodsId, paymentMethodId, voucherUseId } = req.body;
@@ -30,7 +31,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             .session(session);
 
         if (!showtime || showtime.status !== 'Available') {
-            throw new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400);
+            next(new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400));
         }
 
         // Kiểm tra ghế trong database
@@ -42,7 +43,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         }).session(session);
 
         if (seats.length !== seatsId.length) {
-            throw new AppError('Một số ghế không tồn tại', 400);
+            next(new AppError('Một số ghế không tồn tại', 400));
         }
 
         // Kiểm tra đồ ăn
@@ -62,7 +63,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
                 format: showtime.formatId.name
             }).session(session);
             if (!priceRule) {
-                throw new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400);
+                next(new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400));
             }
             return { seatId, price: priceRule.price };
         }));
@@ -132,10 +133,23 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         }
 
         // Cập nhật trạng thái ghế trong database
-        await Seat.updateMany(
-            { _id: { $in: seatsId } },
-            { status: 'Occupied' },
-            { session }
+        await Promise.all(
+            seatsId.map(seatId =>
+                Booking.updateOne(
+                    {
+                        seatId,
+                        showtimeId,
+                        userId,
+                    },
+                    {
+                        $set: { status: 'pending' }
+                    },
+                    {
+                        session,
+                        upsert: true // nếu chưa có thì tạo mới
+                    }
+                )
+            )
         );
 
         // Cập nhật inventory đồ ăn
