@@ -9,7 +9,10 @@ const searchDB = require("../utils/searchDB");
 exports.getAllPosts = catchAsync(async (req, res, next) => {
   const user = req.user;
 
-  const { limit = 10, page = 1, type, sort, search } = req.query;
+  // Ép kiểu an toàn cho limit và page
+  const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const { type, sort, search } = req.query;
 
   const filter = {};
   const pipeline = [];
@@ -47,7 +50,6 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
         ? {
             $in: [
               { $toObjectId: user._id },
-
               {
                 $map: {
                   input: "$likes",
@@ -74,7 +76,7 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
   // Bỏ trường likes nếu không cần
   pipeline.push({ $unset: ["likes"] });
 
-  // Dùng APIAggregate để thực thi & trả về
+  // Gọi aggregate với limit/page đã ép kiểu
   const data = await APIAggregate(Post, { limit, page }, pipeline);
 
   res.status(200).json(data);
