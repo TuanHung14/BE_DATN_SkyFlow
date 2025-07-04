@@ -11,7 +11,7 @@ const priceRuleSchema = new mongoose.Schema({
     trim: true
   },
   formats: {
-    type: [mongoose.Schema.Types.ObjectId],
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Format',
     required: true
   },

@@ -391,4 +391,5 @@ exports.getAllShowTime = catchAsync(async (req, res) => {
 });
 
 exports.getOneShowTimeById = Factory.getOne(Showtime, 'movieId roomId formatId');
+
 exports.deleteShowTime = Factory.softDeleteOne(Showtime);
