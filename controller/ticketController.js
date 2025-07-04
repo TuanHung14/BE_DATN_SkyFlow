@@ -316,6 +316,20 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
         },
         {
             $lookup: {
+                from: "movies",
+                localField: "showtimeId.movieId",
+                foreignField: "_id",
+                as: "showtimeId.movieId"
+            }
+        },
+        {
+            $unwind: {
+                path: "$showtimeId.movieId",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
                 from: 'formats',
                 localField: 'showtimeId.formatId',
                 foreignField: '_id',
