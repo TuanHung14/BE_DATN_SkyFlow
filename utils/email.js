@@ -57,6 +57,10 @@ module.exports = class Email {
     async sendPasswordReset(){
         await this.send('passwordReset', 'Mã đặt lại mật khẩu của bạn (chỉ có giá trị trong 10 phút)');
     }
+
+    async sendBookingConfirmation(){
+        await this.send('bookingConfirmation', 'Xác nhận đặt vé thành công');
+    }
 }
 
 
