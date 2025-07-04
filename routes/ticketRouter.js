@@ -83,7 +83,6 @@ router.post('/', ticketController.createTicket);
  *       401:
  *         description: Chưa xác thực
  */
-
 router.get('/me', auth, ticketController.getMyTickets);
 
 /**
@@ -112,8 +111,6 @@ router.get('/me', auth, ticketController.getMyTickets);
  *       404:
  *         description: Không tìm thấy vé
  */
-
-
 router.get('/me/:id', auth, ticketController.getTicketById);
 
 module.exports = router;

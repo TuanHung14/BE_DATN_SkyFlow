@@ -37,6 +37,19 @@ const cinemaSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    location: {
+          type: {
+              type: String,
+              default: 'Point',
+              enum: ['Point'],
+              required: true,
+          },
+          coordinates: {
+              type: [Number], // [longitude, latitude]
+              required: true,
+          },
+    }
+    ,
     isDeleted: {
       type: Boolean,
       default: false,
@@ -44,6 +57,8 @@ const cinemaSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+cinemaSchema.index({ location: '2dsphere' });
 
 const Cinema = mongoose.model("Cinema", cinemaSchema);
 
