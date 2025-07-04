@@ -56,7 +56,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/').get(roomController.getAllRooms).post(roomController.getFieldRoom, roomController.createRoom);
+router.route('/').get(roomController.getAllRooms).post(roomController.createRoom);
 
 /**
  * @swagger

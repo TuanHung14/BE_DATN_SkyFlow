@@ -1,10 +1,11 @@
-const Seat = require('../model/seatModel');
+const Seat = require('../model/seatModel');``
 const Room = require('../model/roomModel');
 const Showtime = require("../model/showtimeModel");
 const Booking = require("../model/bookingModel");
 const catchAsync = require('../utils/catchAsync');
 const mongoose = require('mongoose');
 const AppError = require("../utils/appError");
+const Factory = require('./handleFactory');
 
 exports.getAllSeat = catchAsync(async (req, res, next) => {
     const { showtimeId } = req.params;
@@ -46,6 +47,21 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
         data: seatsWithStatus
     });
 });
+
+exports.getAllSeatByRoom = catchAsync(async (req, res, next) => {
+    const { roomId } = req.params;
+    const seats = await Seat.find({ roomId, hidden: false }).lean();
+
+    const seatsWithStatus = seats.map(seat => ({
+        ...seat,
+        isAvailable: true, // Giả sử ghế luôn khả dụng nếu không kiểm tra showtime
+    }));
+
+    res.status(200).json({
+        status: 'success',
+        data: seatsWithStatus
+    })
+})
 
 exports.createSeat = catchAsync(async (req, res, next) => {
     const seatsData = req.body;
