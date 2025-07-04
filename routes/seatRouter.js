@@ -32,6 +32,8 @@ router.get("/:showtimeId", seatController.getAllSeat);
 
 router.post("/", seatController.createSeat);
 
+router.get('/edit/:roomid', seatController.getAllSeatByRoom);
+
 router.patch("/edit", seatController.updateSeat);
 
 module.exports = router;
