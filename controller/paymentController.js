@@ -142,7 +142,6 @@ const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {
     const movie = info[0].movie;
     const room = info[0].room;
 
-    console.log(info[0].userId);
 
     const emailContent = {
         bookingCode: ticket.ticketCode,
@@ -168,7 +167,6 @@ const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {
 
     await new Email(userInfo, emailContent).sendBookingConfirmation();
 }
-
 
 exports.getPaymentGateways = Factory.getAll(PaymentMethod);
 
