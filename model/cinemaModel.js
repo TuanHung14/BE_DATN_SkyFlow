@@ -65,7 +65,6 @@ const cinemaSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Index để tìm kiếm theo vị trí
 cinemaSchema.index({ location: "2dsphere" });
 
 const Cinema = mongoose.model("Cinema", cinemaSchema);

@@ -42,6 +42,17 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             hidden: false
         }).session(session);
 
+        const bookingSeats = await Booking.find({
+            seatId: { $in: seatsId },
+            showtimeId,
+            status: { $in: ['pending', 'confirmed'] },
+            userId
+        })
+
+        if (bookingSeats.length > 0) {
+            next(new AppError('Một số ghế đã được đặt hoặc đang chờ xác nhận', 400));
+        }
+
         if (seats.length !== seatsId.length) {
             next(new AppError('Một số ghế không tồn tại', 400));
         }
@@ -60,7 +71,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             const seat = seats.find(s => s._id.equals(seatId));
             const priceRule = await PriceRule.findOne({
                 seatType: seat.seatType,
-                format: showtime.formatId.name
+                formats: showtime.formatId
             }).session(session);
             if (!priceRule) {
                 next(new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400));
@@ -98,8 +109,10 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             totalAmount = Math.max(0, totalAmount - discount);
         }
 
+        const ticketCode = `TICKET_${Math.floor(100000 + Math.random() * 900000)}`;
         // Tạo vé
         const ticket = await Ticket.create([{
+            ticketCode,
             bookingDate: new Date(),
             totalAmount,
             paymentStatus: 'Pending',
@@ -168,6 +181,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             status: 'success',
             data: {
                 ticketId: ticket[0]._id,
+                ticketCode: ticket[0].ticketCode,
                 bookingDate: ticket[0].bookingDate,
                 totalAmount: ticket[0].totalAmount,
                 paymentStatus: ticket[0].paymentStatus,

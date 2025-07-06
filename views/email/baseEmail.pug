@@ -11,35 +11,10 @@ html
     include _style
 
   body
-    table.body(role='presentation', border='0', cellpadding='0', cellspacing='0')
-      tbody
-        tr
-          td
-          td.container
-            .content
-              // START CENTERED WHITE CONTAINER
-              table.main(role='presentation')
+    .email-container
+      div.email-content
+        block content
 
-                // START MAIN AREA
-                tbody
-                  tr
-                    td.wrapper
-                      table(role='presentation', border='0', cellpadding='0', cellspacing='0')
-                        tbody
-                          tr
-                            td
-                              // CONTENT
-                              block content
-
-
-              // START FOOTER
-              .footer
-                table(role='presentation', border='0', cellpadding='0', cellspacing='0')
-                  tbody
-                    tr
-                      td.content-block
-                        span.apple-link SkyFlow Inc, 123 Phố Hàng Đào, Quận Hoàn Kiếm, Hà Nội, Việt Nam
-                        br
-                        |  Không thích những email này? 
-                        a(href='#') Hủy đăng ký
-          //- td
+      .footer
+        p SkyFlow Cinema © 2023. All rights reserved.
+        p If you have any questions, feel free to contact us at

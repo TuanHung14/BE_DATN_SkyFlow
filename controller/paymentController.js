@@ -9,13 +9,19 @@ const crypto = require("crypto");
 const CryptoJS = require('crypto-js');
 const qs = require('qs');
 const axios = require("axios");
-
+//
 const Ticket = require("../model/ticketModel");
+const Food = require("../model/foodModel");
+const Cinema = require("../model/cinemaModel");
+const Showtime = require("../model/showtimeModel");
+const Seat = require("../model/seatModel");
 const TicketSeat = require("../model/ticketSeatModel");
+const TicketFood = require("../model/ticketFoodModel");
 const Booking = require("../model/bookingModel");
 const User = require("../model/userModel");
 const PaymentMethod = require("../model/paymentMethodModel");
 const Factory = require("./handleFactory");
+const Email = require("../utils/email");
 
 const validatePaymentData = (data, next) => {
   const required = ["orderId", "amount", "gateway"];
@@ -49,10 +55,14 @@ const updateTicketStatus = async (orderId, status) => {
       throw new Error("Không tìm thấy vé với orderId: " + orderId)
     }
 
-    const tiketSeats = await TicketSeat.find({
+    const ticketSeats = await TicketSeat.find({
       ticketId: orderId,
     })
-    const seatIds = tiketSeats.map((item) => item.seatId);
+    const ticketFoods = await TicketFood.find({
+        ticketId: orderId,
+    });
+
+    const seatIds = ticketSeats.map((item) => item.seatId);
 
     if( status === "Paid" ) {
       await Booking.updateMany(
@@ -68,8 +78,8 @@ const updateTicketStatus = async (orderId, status) => {
         _id: ticket.userId,
       }, {
             $inc: { memberShipPoints: ticket.totalAmount },
-        }
-      )
+        })
+      await sendBookingConfirmationEmail(ticket, seatIds, ticketFoods);
     }
     else {
       await Booking.deleteMany({
@@ -81,6 +91,82 @@ const updateTicketStatus = async (orderId, status) => {
 
 }
 
+const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {
+    const user = ticket.userId;
+    const userInfo = await User.findById(user).select('name email');
+    const showtime = ticket.showtimeId;
+    const info = await Showtime.aggregate([{
+        $match: { _id: showtime }
+    }, {
+        $lookup: {
+            from: 'movies',
+            localField: 'movieId',
+            foreignField: '_id',
+            as: 'movie'
+        }
+    }, {
+        $unwind: '$movie'
+    },
+    {
+        $lookup: {
+            from: 'rooms',
+            localField: 'roomId',
+            foreignField: '_id',
+            as: 'room'
+        }
+    }, {
+        $unwind: '$room'
+    }]);
+
+    const cinema = await Cinema.findById(info[0].room.cinemaId);
+
+
+    const seatDetails = await Promise.all(
+        seatIds.map(async (seatId) => {
+            const seat = await Seat.findById(seatId);
+            return seat;
+        })
+    );
+
+    const foodDetails = await Promise.all(
+        ticketFoods.map(async (tf) => {
+            const food = await Food.findById(tf.foodId);
+            return {
+                name: food.name,
+                quantity: tf.quantity,
+                price: tf.priceAtPurchase,
+                total: tf.quantity * tf.priceAtPurchase
+            };
+        })
+    );
+    const movie = info[0].movie;
+    const room = info[0].room;
+
+
+    const emailContent = {
+        bookingCode: ticket.ticketCode,
+        movieTitle: movie.name,
+        cinemaName: cinema.name,
+        cinemaAddress: cinema.address,
+        roomNumber: room.roomName,
+        startTime: info[0].startTime,
+        endTime: info[0].endTime,
+        seatNumbers: seatDetails.map(seat => `${seat.seatRow}${seat.seatNumber}`).join(', '),
+        ticketQuantity: seatIds.length,
+        totalAmount: ticket.totalAmount.toLocaleString('vi-VN') + ' VNĐ',
+        moviePoster: movie.posterUrl,
+        qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ticket.ticketCode}`,
+        openingHours: '8:00 - 23:00',
+        downloadTicketUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/tickets/${ticket.ticketCode}/download`,
+        manageBookingUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/my-bookings`,
+        viewMovieInfoUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/chitietsanpham/${movie.slug}`,
+        foods: foodDetails,
+        totalFoodAmount: foodDetails.reduce((sum, food) => sum + food.total, 0).toLocaleString('vi-VN') + ' VNĐ',
+        ticketAmount: (ticket.totalAmount - foodDetails.reduce((sum, food) => sum + food.total, 0)).toLocaleString('vi-VN') + ' VNĐ'
+    };
+
+    await new Email(userInfo, emailContent).sendBookingConfirmation();
+}
 
 exports.getPaymentGateways = Factory.getAll(PaymentMethod);
 
