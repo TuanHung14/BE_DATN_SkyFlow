@@ -28,6 +28,10 @@ const postSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  isPublished: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Tự động tạo slug từ title trước khi lưu
