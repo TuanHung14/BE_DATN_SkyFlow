@@ -79,7 +79,67 @@ router.post("/", auth, postController.createPost);
  *                   type: array
  */
 router.get("/favorites", auth, postController.getFavoritePosts);
-
+/**
+ * @swagger
+ * /api/v1/posts/admin:
+ *   get:
+ *     summary: Lấy danh sách tất cả bài viết (bao gồm cả chưa publish)
+ *     tags: [Posts]
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: "Sắp xếp theo trường, ví dụ: views, -createdAt"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số bài viết mỗi trang (mặc định 10)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Trang hiện tại (mặc định 1)
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [preview, review]
+ *         description: Lọc theo loại bài viết
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tiêu đề
+ *     responses:
+ *       200:
+ *         description: Danh sách bài viết (admin) được lấy thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 totalDocs:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ */
+router.get("/admin", auth, postController.getAllPostsAdmin);
 /**
  * @swagger
  * /api/v1/posts/{id}/like:

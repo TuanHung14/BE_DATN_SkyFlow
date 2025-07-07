@@ -37,19 +37,26 @@ const cinemaSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    phone: {
+      type: String,
+      trim: true,
+      required: false, // hoặc true nếu bắt buộc nhập
+    },
+    img: {
+      type: [String], // Mảng các URL hình ảnh
+      default: [],
+    },
     location: {
-          type: {
-              type: String,
-              default: 'Point',
-              enum: ['Point'],
-              required: true,
-          },
-          coordinates: {
-              type: [Number], // [longitude, latitude]
-              required: true,
-          },
-    }
-    ,
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        default: [0, 0],
+      },
+    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -58,7 +65,7 @@ const cinemaSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-cinemaSchema.index({ location: '2dsphere' });
+cinemaSchema.index({ location: "2dsphere" });
 
 const Cinema = mongoose.model("Cinema", cinemaSchema);
 
