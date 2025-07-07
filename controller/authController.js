@@ -8,6 +8,7 @@ const { promisify } = require("util");
 const otpService = require("../services/otpService");
 const resetPasswordService = require("../services/resetPasswordService");
 const userService = require("../services/userService");
+const nodemailer = require("nodemailer");
 
 exports.refreshToken = catchAsync(async (req, res, next) => {
   const { refreshToken } = req.cookies;
@@ -288,3 +289,42 @@ exports.facebookLogin = catchAsync(async (req, res, next) => {
 
     await userService.createSendToken(account, 200, res);
 })
+
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  auth: {
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
+
+exports.sendEmail = catchAsync( async(req, res, next) => {
+  const { name, email, phone, message } = req.body;
+
+  const mailOptions = {
+    from: 'vhung5912@gmail.com',
+    to: 'pvvu2002@gmail.com', // Thay bằng email nhận
+    replyTo: email,
+    subject: `Liên hệ từ ${name}`,
+    text: `Họ và Tên: ${name}\nEmail: ${email}\nSố điện thoại: ${phone}\nTin nhắn: ${message}`,
+    html: `
+      <h3>Thông tin liên hệ</h3>
+      <p><strong>Họ và Tên:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Số điện thoại:</strong> ${phone}</p>
+      <p><strong>Tin nhắn:</strong> ${message}</p>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({
+      status: 'success',
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+    });
+  }
+});
