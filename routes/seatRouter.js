@@ -32,7 +32,7 @@ router.get("/:showtimeId", seatController.getAllSeat);
 
 router.post("/", seatController.createSeat);
 
-router.get('/edit/:roomid', seatController.getAllSeatByRoom);
+router.get('/edit/:id', seatController.getAllSeatByRoom);
 
 router.patch("/edit", seatController.updateSeat);
 

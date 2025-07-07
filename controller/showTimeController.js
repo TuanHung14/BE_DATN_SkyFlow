@@ -99,8 +99,8 @@ const checkConflictingShowtimes = async (roomId, startTime, endTime, movieId, sh
         };
 
         // Loại trừ showtime hiện tại khi cập nhật
-        if (showTimeId && mongoose.isValidObjectId(showTimeId)) {
-            roomConflictQuery._id = {$ne: new mongoose.Types.ObjectId(showTimeId)};
+        if (showTimeId) {
+            roomConflictQuery._id = {$ne: showTimeId};
         }
 
         // Kiểm tra xung đột phòng chiếu
@@ -220,7 +220,7 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
         const {endTime} = await calculateEndTime(movieId, startTime, next);
         req.body.endTime = endTime;
 
-        const conflicShowTime = await checkConflictingShowtimes(roomId, startTime, endTime, req.params.id);
+        const conflicShowTime = await checkConflictingShowtimes(roomId, startTime, endTime, movieId, req.params.id);
         if (conflicShowTime) {
             return next(new AppError('Đã có suất chiếu khác trong thời gian này', 409));
         }
@@ -250,15 +250,28 @@ exports.getAllShowTime = catchAsync(async (req, res) => {
     const skip = (page - 1) * limit;
 
     // 1. Search by movie name
-    if (req.query['search[name]']) {
+    let searchTerm = req.query.search?.name || req.query['search[name]'];
+    if (searchTerm) {
+        // Loại bỏ khoảng trắng thừa
+        searchTerm = searchTerm.trim();
+        if (!searchTerm) {
+            return res.status(200).json({
+                status: 'success',
+                data: { data: [] },
+                page: page,
+                totalPages: 0,
+                total: 0,
+                message: 'Chuỗi tìm kiếm rỗng'
+            });
+        }
+
+        // Tìm phim theo tên
         const movies = await Movie.find({
-            name: { $regex: req.query['search[name]'], $options: 'i' },
+            name: { $regex: searchTerm, $options: 'i' },
             isDeleted: { $ne: true }
         }).select('_id name');
 
-        if (movies.length > 0) {
-            filter.movieId = { $in: movies.map(movie => movie._id) };
-        } else {
+        if (!movies.length) {
             return res.status(200).json({
                 status: 'success',
                 data: { data: [] },
@@ -268,6 +281,8 @@ exports.getAllShowTime = catchAsync(async (req, res) => {
                 message: 'Không tìm thấy phim nào'
             });
         }
+
+        filter.movieId = { $in: movies.map(movie => movie._id) };
     }
 
     // 2. Filter by cinema
@@ -368,7 +383,7 @@ exports.getAllShowTime = catchAsync(async (req, res) => {
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 });
-
+    // console.log('showtime: ', showtimes)
     // Filter out showtimes where populated fields are null (due to match conditions)
     const filteredShowtimes = showtimes.filter(showtime =>
         showtime.movieId &&

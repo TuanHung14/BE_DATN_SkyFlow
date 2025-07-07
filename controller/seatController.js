@@ -49,17 +49,12 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllSeatByRoom = catchAsync(async (req, res, next) => {
-    const { roomId } = req.params;
-    const seats = await Seat.find({ roomId, hidden: false }).lean();
-
-    const seatsWithStatus = seats.map(seat => ({
-        ...seat,
-        isAvailable: true, // Giả sử ghế luôn khả dụng nếu không kiểm tra showtime
-    }));
+    const { id } = req.params;
+    const seats = await Seat.find({ roomId: id, hidden: false }).lean();
 
     res.status(200).json({
         status: 'success',
-        data: seatsWithStatus
+        data: seats
     })
 })
 
@@ -85,7 +80,15 @@ exports.createSeat = catchAsync(async (req, res, next) => {
             coupleDisplayName: null
         }));
 
+        const numberOfSeats = seatsToCreate.length;
+
         const savedSeats = await Seat.insertMany(seatsToCreate, { session });
+
+        await Room.updateOne(
+            { _id: roomId },
+            { $inc: { capacity: numberOfSeats } },
+            { session }
+        )
 
         await session.commitTransaction();
         res.status(201).json({
