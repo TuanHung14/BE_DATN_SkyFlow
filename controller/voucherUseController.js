@@ -47,7 +47,7 @@ exports.getVoucherUsage = catchAsync(async (req, res, next) => {
 
     // Lấy tất cả voucher đã sử dụng của người dùng
     const voucherUsages = await VoucherUse.find({ userId: userId, $expr: { $lt: ["$usageCount", "$usageLimit"] } })
-        .populate('voucherId', 'voucherCode voucherName points description imageUrl')
+        .populate('voucherId', 'voucherCode voucherName discountValue description imageUrl')
 
     res.status(200).json({
         status: 'success',

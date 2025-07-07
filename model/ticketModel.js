@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 
 const ticketSchema = new mongoose.Schema({
+  ticketCode: {
+    type: String,
+    required: [true, 'Mã vé không được để trống'],
+    unique: true,
+    trim: true,
+    match: [/^TICKET_\d{6}$/, 'Mã vé phải có định dạng TICKET_123456 (6 chữ số)']
+  },
   bookingDate: {
     type: Date,
     default: Date.now

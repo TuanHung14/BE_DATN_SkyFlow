@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoidHVhbmh1bmcxNDEwMjAwNCIsImEiOiJjbWNvZ25uNXYxN3drMmpxMGQ3Nzg2dzh3In0.z2I_04fI02yMA24cYZelQA';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/tuanhung14102004/cmcoi9zdn01tz01sh97k32w17',
+    });
+
+    map.on('style.load', () => {
+      map.setFog({});
+
+      // Toạ độ rạp chiếu phim
+      const longitude = 106.660172;
+      const latitude = 10.762622;
+
+      new mapboxgl.Marker({ color: '#034EA2' })
+              .setLngLat([longitude, latitude])
+              .addTo(map);
+
+      new mapboxgl.Popup({ offset: 35 })
+              .setLngLat([longitude, latitude])
+              .setHTML('<div> <h3>Rạp chiếu phim</h3><p>Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</p> </div>')
+              .addTo(map);
+
+      map.flyTo({
+        center: [longitude, latitude],
+        zoom: 8,
+        essential: true
+      });
+    });
+  </script>
+</body>
+</html>
