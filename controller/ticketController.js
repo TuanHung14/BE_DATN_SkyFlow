@@ -263,6 +263,20 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
         },
         {
             $lookup: {
+                from: 'paymentmethods',
+                localField: 'paymentMethodId',
+                foreignField: '_id',
+                as: 'paymentMethodId'
+            }
+        },
+        {
+            $unwind: {
+                path: "$paymentMethodId",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
                 from: 'seats',
                 localField: 'ticketSeats.seatId',
                 foreignField: '_id',
@@ -270,11 +284,23 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
             }
         },
         {
+          $unwind: {
+              path: '$ticketFoods',
+              preserveNullAndEmptyArrays: true
+          }
+        },
+        {
             $lookup: {
                 from: 'foods',
                 localField: 'ticketFoods.foodId',
                 foreignField: '_id',
                 as: 'ticketFoods.food'
+            }
+        },
+        {
+            $unwind: {
+                path: '$ticketFoods.food',
+                preserveNullAndEmptyArrays: true
             }
         },
         {
