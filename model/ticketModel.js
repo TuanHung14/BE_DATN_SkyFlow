@@ -58,6 +58,10 @@ const ticketSchema = new mongoose.Schema({
     ref: 'User',
     required: [true, 'ID người dùng không được để trống'],
     index: true,
+  },
+  voucherUseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'VoucherUse',
   }
 }, {
   timestamps: true

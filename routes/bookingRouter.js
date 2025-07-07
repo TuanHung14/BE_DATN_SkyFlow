@@ -76,7 +76,6 @@ const router = express.Router();
  *       500:
  *         description: Lỗi máy chủ
  */
-
 router.get("/", bookingController.getTicketBooking);
 
 module.exports = router;

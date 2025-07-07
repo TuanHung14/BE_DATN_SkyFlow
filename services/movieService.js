@@ -25,4 +25,12 @@ async function getMovies(){
     }).populate("directorId genresId castId").sort('-createdAt');
 }
 
-module.exports = { updateMovieStatusLogic, getMovies };
+async function getCountMoviesNow() {
+    return await Movie.countDocuments({
+        status: 'NOW_SHOWING',
+        isDeleted: false,
+        publishStatus: { $ne: 'DRAFT' }
+    });
+}
+
+module.exports = { updateMovieStatusLogic, getMovies, getCountMoviesNow };

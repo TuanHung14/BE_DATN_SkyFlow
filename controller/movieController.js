@@ -93,6 +93,7 @@ exports.updateMovie = catchAsync(async (req, res, next) => {
         data: {data: movie},
     });
 });
+
 exports.getMovieBySlug = catchAsync(async (req, res, next) => {
     const movie = await Movie.findOne({
         slug: req.params.slug,
@@ -112,15 +113,19 @@ exports.getMovieBySlug = catchAsync(async (req, res, next) => {
         data: movie,
     });
 });
+
 exports.getAllMovies = (req, res, next) => {
     req.query.publishStatus = "PUBLISHED";
     return Factory.getAll(Movie, "castId genresId directorId")(req, res, next);
 };
+
 exports.getAllMoviesAdmin = Factory.getAll(Movie, "castId genresId directorId");
+
 exports.getMovie = Factory.getOne(Movie, "castId genresId directorId");
 
 // SOFT DELETE
 exports.softDeleteMovie = Factory.softDeleteOne(Movie);
+
 exports.updateMovieStatusHandler = catchAsync(async (req, res, next) => {
     const count = await updateMovieStatusLogic();
 
