@@ -119,6 +119,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             bookingStatus: 'Confirmed',
             showtimeId,
             paymentMethodId,
+            voucherUseId,
             userId
         }], { session });
 

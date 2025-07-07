@@ -20,6 +20,7 @@ const TicketFood = require("../model/ticketFoodModel");
 const Booking = require("../model/bookingModel");
 const User = require("../model/userModel");
 const PaymentMethod = require("../model/paymentMethodModel");
+const VoucherUse = require("../model/voucherUseModel");
 const Factory = require("./handleFactory");
 const Email = require("../utils/email");
 
@@ -81,14 +82,34 @@ const updateTicketStatus = async (orderId, status) => {
         })
       await sendBookingConfirmationEmail(ticket, seatIds, ticketFoods);
     }
-    else {
+    else if ( status === "Failed" ) {
       await Booking.deleteMany({
         seatId: { $in: seatIds },
         userId: ticket.userId,
         showtimeId: ticket.showtimeId,
       });
-    }
 
+      // Giảm lượt sử dụng lại
+      if(ticket.voucherUseId){
+          await VoucherUse.updateOne(
+              {
+                  _id: ticket.voucherUseId,
+                  usageCount: { $gt: 0 }
+              },
+              {
+                  $inc: { usageCount: -1 }
+              }
+          )
+      }
+
+      // **Tăng lại stock food**
+      for (const tf of ticketFoods) {
+        await Food.updateOne(
+            { _id: tf.foodId },
+            { $inc: { inventoryCount: tf.quantity } }
+        );
+      }
+    }
 }
 
 const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {

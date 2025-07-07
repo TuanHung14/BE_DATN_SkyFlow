@@ -39,6 +39,7 @@ const foodRouter = require("./routes/foodRouter");
 const bookingRouter = require("./routes/bookingRouter");
 const ticketRouter = require("./routes/ticketRouter");
 const priceRouter = require("./routes/priceRuleRouter");
+const statisticRouter = require("./routes/statisticRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
@@ -125,6 +126,7 @@ app.use("/api/v1/chatAI", chatAIRouter);
 app.use("/api/v1/bookings", bookingRouter);
 app.use("/api/v1/tickets", ticketRouter);
 app.use("/api/v1/price-rules", priceRouter);
+app.use("/api/v1/statistics", statisticRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {

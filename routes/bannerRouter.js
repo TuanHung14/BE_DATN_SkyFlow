@@ -1,5 +1,6 @@
 const express = require("express");
 const bannerController = require("../controller/bannerController");
+const auth = require("../middleware/authMiddleware");
 const router = express.Router();
 
 /**
@@ -33,6 +34,8 @@ const router = express.Router();
  *                     type: string
  */
 router.get("/", bannerController.getAllBanners);
+
+router.use(auth);
 
 /**
  * @swagger
