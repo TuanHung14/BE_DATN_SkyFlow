@@ -11,7 +11,7 @@ exports.createMomoPayment = async (paymentData) => {
     }
 
     const requestId = orderId;
-    const requestType = 'payWithATM';
+    const requestType = 'captureWallet';
     const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.REDIRECT_URL}&requestId=${requestId}&requestType=${requestType}`;
 
     const signature = crypto.createHmac('sha256', process.env.MOMO_SECRET_KEY)
