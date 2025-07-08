@@ -61,6 +61,10 @@ module.exports = class Email {
     async sendBookingConfirmation(){
         await this.send('bookingConfirmation', 'Xác nhận đặt vé thành công');
     }
+
+    async sendContactMail() {
+        await this.send('sendContactMail', 'Gửi mail thành công');
+    }
 }
 
 

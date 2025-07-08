@@ -14,11 +14,6 @@ const movieRatingSchema = new mongoose.Schema({
     required: [true, 'ID người dùng không được để trống'],
     index: true
   },
-  comment: {
-    type: String,
-    trim: true,
-    maxlength: [500, 'Bình luận không được vượt quá 500 ký tự']
-  },
   rating: {
     type: Number,
     required: [true, 'Điểm đánh giá không được để trống'],

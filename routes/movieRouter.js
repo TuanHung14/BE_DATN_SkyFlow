@@ -1,10 +1,11 @@
 const express = require("express");
 const movieController = require("../controller/movieController");
 const movieRatingRouter = require("../routes/movieRatingRouter");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.use("/:movieId/movie-ratings", movieRatingRouter);
+router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
 
 /**
  * @swagger
