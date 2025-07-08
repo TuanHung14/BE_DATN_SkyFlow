@@ -1,7 +1,7 @@
-const epress = require("express");
+const express = require("express");
 const paymentController = require("../controller/paymentController");
 
-const router = epress.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -114,7 +114,6 @@ router.post("/callback/momo", paymentController.momoCallback);
  *       500:
  *         description: Lỗi máy chủ
  */
-
 router.get("/callback/vnpay", paymentController.vnpayCallback);
 
 router.post("/callback/zalopay", paymentController.zalopayCallback);
