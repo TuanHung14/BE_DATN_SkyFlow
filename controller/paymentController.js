@@ -214,6 +214,7 @@ exports.createPayment = catchAsync(async (req, res, next) => {
 });
 
 exports.momoCallback = catchAsync(async (req, res, next) => {
+    console.log("CallBack từ momo");
   const valid = await verifyCallbackByGateway("momo", req.body);
 
   if (!valid.isValid) {
@@ -255,6 +256,7 @@ exports.vnpayCallback = catchAsync(async (req, res, next) => {
 });
 
 exports.zalopayCallback = catchAsync(async (req, res, next) => {
+    console.log("CallBack từ zalopay");
     const valid = await verifyCallbackByGateway("zalopay", req.body);
     if (valid.return_code !== 1) {
       return next(new AppError("Chữ ký không hợp lệ", 400));
