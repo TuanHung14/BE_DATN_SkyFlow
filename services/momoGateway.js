@@ -10,6 +10,8 @@ exports.createMomoPayment = async (paymentData) => {
         ipnUrl = `${process.env.CLIENT_HOST}/api/v1/payments/callback/momo`;
     }
 
+    console.log(ipnUrl);
+
     const requestId = orderId;
     const requestType = 'captureWallet';
     const rawSignature = `accessKey=${process.env.MOMO_ACCESS_KEY}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${process.env.MOMO_PARTNER_CODE}&redirectUrl=${process.env.REDIRECT_URL}&requestId=${requestId}&requestType=${requestType}`;
