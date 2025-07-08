@@ -5,7 +5,6 @@ const Booking = require("../model/bookingModel");
 const catchAsync = require('../utils/catchAsync');
 const mongoose = require('mongoose');
 const AppError = require("../utils/appError");
-const Factory = require('./handleFactory');
 
 exports.getAllSeat = catchAsync(async (req, res, next) => {
     const { showtimeId } = req.params;
@@ -111,21 +110,33 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
     const { seats, seatType, roomId } = req.body;
     const seatList = seats.split(',').map(seat => seat.trim()).filter(seat => seat);
 
+    if (!seatList.length) {
+        return next(new AppError('Danh sách ghế không hợp lệ', 400));
+    }
+
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-        const room = await Room.findById(roomId).session(session);
-        if (!room) {
-            return next(new AppError(`Phòng không tồn tại!`, 404));
-        }
+        const updatedSeatIds = [];
         if (seatType === 'couple') {
             if (seatList.length === 1 && mongoose.isValidObjectId(seatList[0])) {
-                const seat = await Seat.findOne({ _id: seatList[0], roomId, seatType: 'couple', hidden: false }).session(session);
+                const seat = await Seat.findOne({
+                    _id: seatList[0],
+                    roomId,
+                    seatType: 'couple',
+                    hidden: false
+                }).session(session);
+
                 if (!seat) {
-                    return next(new AppError(`Ghế ${seatList[0]} không phải ghế đôi hợp lệ`, 404))
+                    return next(new AppError(`Ghế ${seatList[0]} không phải ghế đôi hợp lệ`, 404));
                 }
+                updatedSeatIds.push(seat._id);
             } else {
+                if (seatList.length % 2 !== 0) {
+                    return next(new AppError('Số lượng ghế phải là số chẵn để tạo ghế đôi', 400));
+                }
+
                 const sortedSeats = seatList.sort((a, b) => {
                     const [rowA, numA] = [a[0], parseInt(a.slice(1))];
                     const [rowB, numB] = [b[0], parseInt(b.slice(1))];
@@ -134,11 +145,18 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
 
                 for (let i = 0; i < sortedSeats.length; i += 2) {
                     const [seatCode, nextSeatCode] = [sortedSeats[i], sortedSeats[i + 1]];
-                    const [seatRow, seatNumber] = [seatCode[0], parseInt(seatCode.slice(1))];
-                    const [nextSeatRow, nextSeatNumber] = [nextSeatCode[0], parseInt(nextSeatCode.slice(1))];
+                    const match1 = seatCode.match(/^([A-Z])(\d+)$/);
+                    const match2 = nextSeatCode.match(/^([A-Z])(\d+)$/);
+
+                    if (!match1 || !match2) {
+                        return next(new AppError(`Mã ghế ${seatCode} hoặc ${nextSeatCode} không hợp lệ`, 400));
+                    }
+
+                    const [seatRow, seatNumber] = [match1[1], parseInt(match1[2])];
+                    const [nextSeatRow, nextSeatNumber] = [match2[1], parseInt(match2[2])];
 
                     if (seatRow !== nextSeatRow || nextSeatNumber !== seatNumber + 1) {
-                        return next(new AppError(`Ghế ${seatCode} và ${nextSeatCode} không liền kề`, 404))
+                        return next(new AppError(`Ghế ${seatCode} và ${nextSeatCode} không liền kề`, 400));
                     }
 
                     const seats = await Seat.find({
@@ -149,22 +167,36 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
                     }).session(session);
 
                     if (seats.length !== 2 || seats.some(seat => seat.coupleId)) {
-                        return next(new AppError(`Ghế ${seatCode} hoặc ${nextSeatCode} không hợp lệ hoặc đã thuộc ghế đôi`, 404));
+                        return next(new AppError(`Ghế ${seatCode} hoặc ${nextSeatCode} không hợp lệ hoặc đã thuộc ghế đôi`, 400));
                     }
 
                     const coupleId = new mongoose.Types.ObjectId();
                     const coupleDisplayName = `${seatRow}${seatNumber}-${nextSeatRow}${nextSeatNumber}`;
 
-                    await Seat.updateMany(
-                        { _id: { $in: seats.map(s => s._id) } },
+                    // Cập nhật ghế đầu tiên (hiện)
+                    await Seat.updateOne(
+                        { _id: seats[0]._id },
                         {
                             seatType: 'couple',
                             coupleId,
                             coupleDisplayName,
-                            hidden: { $cond: { if: { $eq: ['$seatNumber', seatNumber] }, then: false, else: true } }
+                            hidden: false
                         },
                         { session }
                     );
+
+                    // Cập nhật ghế thứ hai (ẩn)
+                    await Seat.updateOne(
+                        { _id: seats[1]._id },
+                        {
+                            seatType: 'couple',
+                            coupleId,
+                            coupleDisplayName,
+                            hidden: true
+                        },
+                        { session }
+                    );
+                    updatedSeatIds.push(seats[0]._id, seats[1]._id);
                 }
             }
         } else {
@@ -181,13 +213,27 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
                         return next(new AppError(`Ghế ${seatCode} không phải ghế đôi hợp lệ`, 404));
                     }
 
+                    const coupleSeats = await Seat.find({
+                        coupleId: coupleSeat.coupleId,
+                        roomId
+                    }).session(session);
+
+                    if (coupleSeats.length !== 2) {
+                        return next(new AppError(`Ghế đôi ${seatCode} có dữ liệu không hợp lệ`, 400));
+                    }
+
                     await Seat.updateMany(
-                        { roomId, coupleId: coupleSeat.coupleId },
+                        { coupleId: coupleSeat.coupleId, roomId },
                         { seatType, coupleId: null, coupleDisplayName: null, hidden: false },
                         { session }
                     );
+                    updatedSeatIds.push(...coupleSeats.map(s => s._id));
                 } else {
                     const match = seatCode.match(/^([A-Z])(\d+)$/);
+                    if (!match) {
+                        return next(new AppError(`Mã ghế ${seatCode} không hợp lệ`, 400));
+                    }
+
                     const [, seatRow, seatNumber] = match;
                     const number = parseInt(seatNumber);
 
@@ -199,18 +245,26 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
                         coupleId: null
                     }).session(session);
 
+                    if (!seat) {
+                        return next(new AppError(`Ghế ${seatCode} không tồn tại hoặc không hợp lệ`, 404));
+                    }
+
                     await Seat.updateOne(
                         { _id: seat._id },
                         { seatType, coupleId: null, coupleDisplayName: null },
                         { session }
                     );
+                    updatedSeatIds.push(seat._id);
                 }
             }
         }
 
+        const updatedSeats = await Seat.find({ _id: { $in: updatedSeatIds } })
+            .lean()
+            .session(session);
+
         await session.commitTransaction();
 
-        const updatedSeats = await Seat.find({ roomId, hidden: false }).lean().session(session);
         res.status(200).json({
             status: 'success',
             message: 'Cập nhật ghế thành công',
@@ -228,10 +282,7 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
         });
     } catch (error) {
         await session.abortTransaction();
-        res.status(400).json({
-            status: 'fail',
-            message: error.message
-        });
+        return next(new AppError(error.message, 400));
     } finally {
         session.endSession();
     }
