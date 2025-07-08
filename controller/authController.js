@@ -301,11 +301,13 @@ exports.sendEmail = catchAsync(async (req, res, next) => {
         phone: phone || 'Không cung cấp',
         message
     }
-    const emailInstance = new Email({
-        email,
+
+    const user = {
         name,
-        emailContent
-    });
+        email
+    }
+
+    const emailInstance = new Email(user , emailContent);
     await emailInstance.sendContactMail();
 
     res.status(200).json({
