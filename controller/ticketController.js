@@ -31,7 +31,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             .session(session);
 
         if (!showtime) {
-            next(new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400));
+            return next(new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400));
         }
 
         // Kiểm tra ghế trong database
@@ -50,18 +50,18 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         })
 
         if (bookingSeats.length > 0) {
-            next(new AppError('Một số ghế đã được đặt hoặc đang chờ xác nhận', 400));
+            return next(new AppError('Một số ghế đã được đặt hoặc đang chờ xác nhận', 400));
         }
 
         if (seats.length !== seatsId.length) {
-            next(new AppError('Một số ghế không tồn tại', 400));
+            return next(new AppError('Một số ghế không tồn tại', 400));
         }
 
         // Kiểm tra đồ ăn
         const foodPrices = foodsId?.length ? await Promise.all(foodsId.map(async ({ foodId, quantity }) => {
             const food = await Food.findOne({_id: foodId, status: 'active'}).session(session);
             if (food.inventoryCount < quantity) {
-                next(new AppError(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`, 400));
+                return next(new AppError(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`, 400));
             }
             return { foodId, quantity, price: food.price * quantity, priceAtPurchase: food.price };
         })) : [];
@@ -74,7 +74,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
                 formats: showtime.formatId
             }).session(session);
             if (!priceRule) {
-                next(new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400));
+                return next(new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400));
             }
             return { seatId, price: priceRule.price };
         }));
@@ -92,15 +92,15 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             }).populate('voucherId', 'discountValue isActive').session(session);
             // Kiểm tra voucher có tồn tại và thuộc về người dùng
             if (!voucher) {
-                next(new AppError('Voucher không hợp lệ hoặc không thuộc về bạn', 400));
+                return next(new AppError('Voucher không hợp lệ hoặc không thuộc về bạn', 400));
             }
             // Kiểm tra voucher có còn hiệu lực không
             if (!voucher.voucherId || !voucher.voucherId.isActive) {
-                next(new AppError('Voucher không còn hiệu lực', 400));
+                return next(new AppError('Voucher không còn hiệu lực', 400));
             }
             // Kiểm tra số lần sử dụng của voucher
             if (voucher.usageCount >= voucher.usageLimit) {
-                next(new AppError('Voucher đã hết lượt sử dụng', 400));
+                return next(new AppError('Voucher đã hết lượt sử dụng', 400));
             }
             // Cập nhật số lần sử dụng của voucher
             await VoucherUse.findByIdAndUpdate(voucher._id, { $inc: { usageCount: 1 } }, { session });
