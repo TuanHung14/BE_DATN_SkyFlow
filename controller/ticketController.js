@@ -202,7 +202,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 exports.getMyTickets = catchAsync(async (req, res, next) => {
     const tickets = await Ticket.aggregate([
         {
-            $match: { userId: new mongoose.Types.ObjectId(req.user.id) }
+            $match: { userId: new mongoose.Types.ObjectId(req.user.id), paymentStatus: { $ne: "Failed" } }
         },
         {
             $lookup: {
@@ -302,6 +302,39 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
             $unwind: {
                 path: '$ticketFoods.food',
                 preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'movieratings',
+                let: { ticketId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ['$ticketId', '$$ticketId'] }
+                        }
+                    },
+                    {
+                        $limit: 1
+                    }
+                ],
+                as: 'ratingInfo'
+            }
+        },
+        {
+            $addFields: {
+                isRated: {
+                    $cond: {
+                        if: { $gt: [{ $size: '$ratingInfo' }, 0] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                ratingInfo: 0
             }
         },
         {

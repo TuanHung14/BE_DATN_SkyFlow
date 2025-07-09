@@ -3,11 +3,12 @@ const catchAsync = require('../utils/catchAsync');
 
 
 exports.createMovieRating = catchAsync(async (req, res, next) => {
-    const { rating } = req.body;
+    const { rating, ticketId } = req.body;
 
     const newRating = await MovieRating.create({
         movieId: req.params.movieId,
         userId: req.user._id,
+        ticketId,
         rating,
     });
 
