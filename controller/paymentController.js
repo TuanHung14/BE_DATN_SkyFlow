@@ -214,7 +214,7 @@ exports.createPayment = catchAsync(async (req, res, next) => {
 });
 
 exports.momoCallback = catchAsync(async (req, res, next) => {
-    console.log("CallBack từ momo");
+  console.log("CallBack từ momo");
   const valid = await verifyCallbackByGateway("momo", req.body);
 
   if (!valid.isValid) {
@@ -256,7 +256,6 @@ exports.vnpayCallback = catchAsync(async (req, res, next) => {
 });
 
 exports.zalopayCallback = catchAsync(async (req, res, next) => {
-    console.log("CallBack từ zalopay");
     const valid = await verifyCallbackByGateway("zalopay", req.body);
     if (valid.return_code !== 1) {
       return next(new AppError("Chữ ký không hợp lệ", 400));
@@ -301,30 +300,21 @@ exports.queryMomoPayment = async (orderId) => {
   };
   try {
     const response = await axios(options);
+    const data  = response.data;
 
-    if (response.data.resultCode === 0) {
-      const { orderId } = response.data;
+    if (data.resultCode === 0) {
       await updateTicketStatus(orderId, "Paid");
     }else{
         // Cập nhật trạng thái thanh toán không thành công
         await updateTicketStatus(orderId, "Failed");
-        return next(new AppError("Thanh toán không thành công", 400));
     }
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        resultCode: response.data.resultCode,
-        message: response.data.message,
-      },
-    });
   }catch (error) {
-    return next(new AppError(`Lỗi khi truy vấn MoMo: ${error.message}`, 500));
+      console.error(`[Momo] 🔥 Lỗi truy vấn thanh toán: ${error.message}`);
   }
 
 };
 
-exports.queryZaloPayPayment = async (appTransId) => {
+exports.queryZaloPayPayment = async (appTransId, orderId) => {
   let postData = {
     app_id: process.env.ZALOPAY_APP_ID,
     app_trans_id: appTransId, // Input your app_trans_id
@@ -344,26 +334,13 @@ exports.queryZaloPayPayment = async (appTransId) => {
 
   try{
     const result = await axios(postConfig);
-
     if (result.data.return_code === 1) {
-      const embedData = JSON.parse(result.data.embed_data);
-      const orderId = embedData.order_id;
-
       await updateTicketStatus(orderId, "Paid");
     } else if (result.data.return_code === 2) {
       await updateTicketStatus(orderId, "Failed");
-      return next(new AppError("Giao dịch thất bại", 400));
     }
-
-    res.status(200).json({
-        status: "success",
-        data: {
-            transactionStatus: result.data.return_code,
-            message: result.data.return_message
-        }
-    })
   }
   catch (error) {
-      return next(new AppError(`Lỗi khi truy vấn ZaloPay: ${error.message}`, 500));
+      console.error(`[ZaloPay] 🔥 Lỗi truy vấn thanh toán: ${error.message}`);
   }
 };
