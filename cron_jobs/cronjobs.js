@@ -33,26 +33,32 @@ module.exports = () => {
 
     // Cron job kiểm tra payment status mỗi 5 phút
     cron.schedule("*/5 * * * *", async () => {
-        const now = Date.now();
-        const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
-        const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000);
-        const pendingTickets = await Ticket.find({
-            paymentStatus: "Pending",
-            createdAt: {
-                $gte: oneDayAgo,
-                $lte: fifteenMinutesAgo
-            },
-        }).populate("paymentMethodId");
+       try{
+           const now = Date.now();
+           const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+           const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000);
+           const pendingTickets = await Ticket.find({
+               paymentStatus: "Pending",
+               createdAt: {
+                   $gte: oneDayAgo,
+                   $lte: fifteenMinutesAgo
+               },
+           }).populate("paymentMethodId");
 
-        if (pendingTickets.length > 0) {
-            for (const ticket of pendingTickets) {
-               if(ticket.paymentMethodId.type === "Momo" && ticket._id) {
-                   await queryMomoPayment(ticket._id);
-               }else if(ticket.paymentMethodId.type === "Zalopay" && ticket.appTransId) {
-                   await queryZaloPayPayment(ticket.appTransId);
+
+           if (pendingTickets.length > 0) {
+               for (const ticket of pendingTickets) {
+                   if(ticket.paymentMethodId.type === "Momo" && ticket._id) {
+                       await queryMomoPayment(ticket._id);
+                   }else if(ticket.paymentMethodId.type === "Zalopay" && ticket.appTransId) {
+                       await queryZaloPayPayment(ticket.appTransId, ticket._id);
+                   }
                }
-            }
-        }
+           }
+           console.log("Update status payment success");
+       }catch (error) {
+           console.error("Update status error", error);
+       }
     });
 
     // Cron job: Cập nhật trạng thái showtime khi sắp đến giờ chiếu (5 phút trước)
