@@ -63,7 +63,13 @@ router.post("/query/momo", paymentController.queryMomoPayment);
 
 router.post("/query/zalopay", paymentController.queryZaloPayPayment);
 
-router.post("/callback/momo", paymentController.momoCallback);
+
+router.post("/callback/momo", (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+} ,paymentController.momoCallback);
 
 /**
  * @swagger
