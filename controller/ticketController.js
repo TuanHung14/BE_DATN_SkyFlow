@@ -202,7 +202,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 exports.getMyTickets = catchAsync(async (req, res, next) => {
     const tickets = await Ticket.aggregate([
         {
-            $match: { userId: new mongoose.Types.ObjectId(req.user.id) }
+            $match: { userId: new mongoose.Types.ObjectId(req.user.id), paymentStatus: { $ne: "Failed" } }
         },
         {
             $lookup: {
