@@ -6,9 +6,9 @@ exports.createMomoPayment = async (paymentData) => {
 
     let ipnUrl = process.env.MOMO_IPN_URL;
 
-    if(process.env.NODE_ENV === 'production') {
-        ipnUrl = `${process.env.CLIENT_HOST}/api/v1/payments/callback/momo`;
-    }
+    // if(process.env.NODE_ENV === 'production') {
+    //     ipnUrl = `${process.env.CLIENT_HOST}/api/v1/payments/callback/momo`;
+    // }
 
     console.log(ipnUrl);
 
