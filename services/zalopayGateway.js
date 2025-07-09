@@ -34,6 +34,8 @@ exports.createZaloPayPayment = async (paymentData) => {
         ipnUrl = `${process.env.CLIENT_HOST}/api/v1/payments/callback/zalopay`;
     }
 
+    console.log(ipnUrl);
+
     const appTransId = `${moment().format('YYMMDD')}_${orderId}`;
 
     const order = {

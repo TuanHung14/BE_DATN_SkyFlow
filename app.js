@@ -53,12 +53,14 @@ whiteList.push(
   "http://localhost:4200",
   "http://localhost:63342"
 );
-app.use(
-  cors({
-    origin: whiteList,
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: whiteList,
+//     credentials: true,
+//   })
+// );
+app.use(cors());
+app.options("*", cors());
 
 app.use(express.static(path.join(__dirname, "public")));
 
