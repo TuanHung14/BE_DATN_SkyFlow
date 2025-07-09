@@ -14,6 +14,12 @@ const movieRatingSchema = new mongoose.Schema({
     required: [true, 'ID người dùng không được để trống'],
     index: true
   },
+  ticketId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Ticket',
+    required: [true, 'ID đơn hàng không được để trống'],
+    index: true
+  },
   rating: {
     type: Number,
     required: [true, 'Điểm đánh giá không được để trống'],
@@ -25,7 +31,7 @@ const movieRatingSchema = new mongoose.Schema({
 });
 
 // mỗi người chỉ được đánh giá một phim một lần
-movieRatingSchema.index({ movieId: 1, userId: 1 }, { unique: true });
+movieRatingSchema.index({ movieId: 1, userId: 1, ticketId: 1 }, { unique: true });
 
 // tính toán thống kê đánh giá cho một phim
 movieRatingSchema.statics.calcAverageRating = async function(movieId) {
