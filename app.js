@@ -44,6 +44,7 @@ const statisticRouter = require("./routes/statisticRouter");
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 app.set("query parser", "extended");
+app.set('trust proxy', 1);
 
 //Implement cors
 const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
