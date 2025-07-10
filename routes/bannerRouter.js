@@ -114,6 +114,8 @@ router.get("/", bannerController.getAllBannersClient);
 
 router.use(auth);
 
+router.use(auth);
+
 /**
  * @swagger
  * /api/v1/banners/{id}:
