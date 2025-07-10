@@ -11,28 +11,105 @@ const router = express.Router();
 
 /**
  * @swagger
+ * /api/v1/banners/admin:
+ *   get:
+ *     summary: Lấy tất cả banners cho quản trị viên
+ *     tags: [Banners]
+ *     parameters:
+ *       - in: query
+ *         name: search[title]
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tiêu đề banner
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Trang hiện tại
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số lượng bản ghi mỗi trang
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: "Sắp xếp theo trường, ví dụ: -createdAt"
+ *     responses:
+ *       200:
+ *         description: Danh sách banners cho quản trị viên
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 totalDocs:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           imageUrl:
+ *                             type: string
+ */
+router.get("/admin", bannerController.getAllBannersAdmin);
+
+/**
+ * @swagger
  * /api/v1/banners:
  *   get:
  *     summary: Lấy tất cả banners
  *     tags: [Banners]
+ *     parameters:
+ *       - in: query
+ *         name: search[title]
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tiêu đề banner
  *     responses:
  *       200:
  *         description: Danh sách banners
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   title:
- *                     type: string
- *                   imageUrl:
- *                     type: string
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           imageUrl:
+ *                             type: string
  */
-router.get("/", bannerController.getAllBanners);
+router.get("/", bannerController.getAllBannersClient);
 
 /**
  * @swagger
@@ -55,12 +132,17 @@ router.get("/", bannerController.getAllBanners);
  *             schema:
  *               type: object
  *               properties:
- *                 id:
+ *                 status:
  *                   type: string
- *                 title:
- *                   type: string
- *                 imageUrl:
- *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     imageUrl:
+ *                       type: string
  *       404:
  *         description: Không tìm thấy banner
  */
@@ -176,5 +258,37 @@ router.patch("/:id", bannerController.updateBanner);
  *         description: Không tìm thấy banner
  */
 router.delete("/:id", bannerController.deleteBanner);
-
+/**
+ * @swagger
+ * /api/v1/banners/{id}/change-status:
+ *   patch:
+ *     summary: Chuyển đổi trạng thái banner (active/inActive)
+ *     tags: [Banners]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của banner
+ *     responses:
+ *       200:
+ *         description: Trạng thái đã được cập nhật thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *
+ *       404:
+ *         description: Không tìm thấy banner
+ *       500:
+ *         description: Lỗi server
+ */
+router.patch("/:id/change-status", bannerController.changeBannerStatus);
 module.exports = router;

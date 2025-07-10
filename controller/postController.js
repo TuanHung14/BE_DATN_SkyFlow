@@ -7,7 +7,6 @@ const APIAggregate = require("../utils/apiAggregate");
 const searchDB = require("../utils/searchDB");
 exports.getAllPostsAdmin = catchAsync(async (req, res, next) => {
   const user = req.user;
-  console.log("User in getAllPosts:", user);
 
   // Ép kiểu an toàn cho limit và page
   const limit = Math.max(parseInt(req.query.limit) || 10, 1);
@@ -83,7 +82,6 @@ exports.getAllPostsAdmin = catchAsync(async (req, res, next) => {
 });
 exports.getAllPosts = catchAsync(async (req, res, next) => {
   const user = req.user;
-  console.log("User in getAllPosts:", user);
 
   // Ép kiểu an toàn cho limit và page
   const limit = Math.max(parseInt(req.query.limit) || 10, 1);
@@ -165,7 +163,7 @@ exports.deletePost = Factory.deleteOne(Post);
 exports.likePost = catchAsync(async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;
-  console.log("User ID in likePost:", req.user);
+
   // 1. Kiểm tra bài viết tồn tại
   const post = await Post.findById(postId);
   if (!post) {
@@ -196,12 +194,12 @@ exports.likePost = catchAsync(async (req, res, next) => {
 exports.getFavoritePosts = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
-  const favorites = await LikePost.find({ userId }).populate("postId");
-
-  const posts = [];
-  favorites.forEach((item) => {
-    posts.push(item.postId);
+  const favorites = await LikePost.find({ userId }).populate({
+    path: "postId",
+    match: { isPublished: true }, // chỉ lấy post đã được publish
   });
+
+  const posts = favorites.map((item) => item.postId);
 
   res.status(200).json({
     status: "success",
@@ -214,7 +212,7 @@ exports.getPostBySlug = catchAsync(async (req, res, next) => {
   const user = req.user;
 
   const post = await Post.findOneAndUpdate(
-    { slug },
+    { slug, isPublished: true },
     { $inc: { views: 1 } },
     { new: true }
   );
