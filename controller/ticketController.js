@@ -31,7 +31,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             .session(session);
 
         if (!showtime) {
-            next(new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400));
+            return next(new AppError('Suất chiếu không tồn tại hoặc không khả dụng', 400));
         }
 
         // Kiểm tra ghế trong database
@@ -50,18 +50,18 @@ exports.createTicket = catchAsync(async (req, res, next) => {
         })
 
         if (bookingSeats.length > 0) {
-            next(new AppError('Một số ghế đã được đặt hoặc đang chờ xác nhận', 400));
+            return next(new AppError('Một số ghế đã được đặt hoặc đang chờ xác nhận', 400));
         }
 
         if (seats.length !== seatsId.length) {
-            next(new AppError('Một số ghế không tồn tại', 400));
+            return next(new AppError('Một số ghế không tồn tại', 400));
         }
 
         // Kiểm tra đồ ăn
         const foodPrices = foodsId?.length ? await Promise.all(foodsId.map(async ({ foodId, quantity }) => {
             const food = await Food.findOne({_id: foodId, status: 'active'}).session(session);
             if (food.inventoryCount < quantity) {
-                next(new AppError(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`, 400));
+                return next(new AppError(`Thức ăn ${food?.name || 'này'} không đủ số lượng hoặc không khả dụng`, 400));
             }
             return { foodId, quantity, price: food.price * quantity, priceAtPurchase: food.price };
         })) : [];
@@ -74,7 +74,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
                 formats: showtime.formatId
             }).session(session);
             if (!priceRule) {
-                next(new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400));
+                return next(new AppError(`Không tìm thấy quy tắc giá cho loại ghế ${seat.seatType} và định dạng ${showtime.formatId.name}`, 400));
             }
             return { seatId, price: priceRule.price };
         }));
@@ -92,15 +92,15 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             }).populate('voucherId', 'discountValue isActive').session(session);
             // Kiểm tra voucher có tồn tại và thuộc về người dùng
             if (!voucher) {
-                next(new AppError('Voucher không hợp lệ hoặc không thuộc về bạn', 400));
+                return next(new AppError('Voucher không hợp lệ hoặc không thuộc về bạn', 400));
             }
             // Kiểm tra voucher có còn hiệu lực không
             if (!voucher.voucherId || !voucher.voucherId.isActive) {
-                next(new AppError('Voucher không còn hiệu lực', 400));
+                return next(new AppError('Voucher không còn hiệu lực', 400));
             }
             // Kiểm tra số lần sử dụng của voucher
             if (voucher.usageCount >= voucher.usageLimit) {
-                next(new AppError('Voucher đã hết lượt sử dụng', 400));
+                return next(new AppError('Voucher đã hết lượt sử dụng', 400));
             }
             // Cập nhật số lần sử dụng của voucher
             await VoucherUse.findByIdAndUpdate(voucher._id, { $inc: { usageCount: 1 } }, { session });
@@ -119,6 +119,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
             bookingStatus: 'Confirmed',
             showtimeId,
             paymentMethodId,
+            voucherUseId,
             userId
         }], { session });
 
@@ -201,7 +202,7 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 exports.getMyTickets = catchAsync(async (req, res, next) => {
     const tickets = await Ticket.aggregate([
         {
-            $match: { userId: new mongoose.Types.ObjectId(req.user.id) }
+            $match: { userId: new mongoose.Types.ObjectId(req.user.id), paymentStatus: { $ne: "Failed" } }
         },
         {
             $lookup: {
@@ -263,6 +264,20 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
         },
         {
             $lookup: {
+                from: 'paymentmethods',
+                localField: 'paymentMethodId',
+                foreignField: '_id',
+                as: 'paymentMethodId'
+            }
+        },
+        {
+            $unwind: {
+                path: "$paymentMethodId",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
                 from: 'seats',
                 localField: 'ticketSeats.seatId',
                 foreignField: '_id',
@@ -270,11 +285,56 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
             }
         },
         {
+          $unwind: {
+              path: '$ticketFoods',
+              preserveNullAndEmptyArrays: true
+          }
+        },
+        {
             $lookup: {
                 from: 'foods',
                 localField: 'ticketFoods.foodId',
                 foreignField: '_id',
                 as: 'ticketFoods.food'
+            }
+        },
+        {
+            $unwind: {
+                path: '$ticketFoods.food',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'movieratings',
+                let: { ticketId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ['$ticketId', '$$ticketId'] }
+                        }
+                    },
+                    {
+                        $limit: 1
+                    }
+                ],
+                as: 'ratingInfo'
+            }
+        },
+        {
+            $addFields: {
+                isRated: {
+                    $cond: {
+                        if: { $gt: [{ $size: '$ratingInfo' }, 0] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                ratingInfo: 0
             }
         },
         {

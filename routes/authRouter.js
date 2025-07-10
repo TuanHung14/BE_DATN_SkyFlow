@@ -4,6 +4,8 @@ const  auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+router.post("/sendMail", authController.sendEmail);
+
 /**
  * @swagger
  * /api/v1/auth/login:

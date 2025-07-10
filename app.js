@@ -39,10 +39,12 @@ const foodRouter = require("./routes/foodRouter");
 const bookingRouter = require("./routes/bookingRouter");
 const ticketRouter = require("./routes/ticketRouter");
 const priceRouter = require("./routes/priceRuleRouter");
+const statisticRouter = require("./routes/statisticRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
 app.set("query parser", "extended");
+app.set('trust proxy', 1);
 
 //Implement cors
 const whiteList = process.env.FE_ADMIN_CLIENT_HOST.split(",");
@@ -57,6 +59,9 @@ app.use(
     credentials: true,
   })
 );
+// chổ này lúc em làm payment có ghi anh comment lại nha
+// app.use(cors());
+// app.options("*", cors());
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -80,7 +85,7 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 
 // Body parser, reading data from body into req.body
-app.use(express.json({ limit: "50kb" }));
+app.use(express.json({ limit: "1mb" }));
 
 //Làm sạch dữ liệu chống lại việc tiêm truy vấn NO SQL
 app.use(mongoSanitize());
@@ -125,6 +130,7 @@ app.use("/api/v1/chatAI", chatAIRouter);
 app.use("/api/v1/bookings", bookingRouter);
 app.use("/api/v1/tickets", ticketRouter);
 app.use("/api/v1/price-rules", priceRouter);
+app.use("/api/v1/statistics", statisticRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {

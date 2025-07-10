@@ -1,22 +1,8 @@
 const express = require('express');
 const movieRatingController = require('../controller/movieRatingController');
-const { auth, restrictTo } = require('../middleware/authMiddleware');
 
 const router = express.Router({ mergeParams: true });
 
-/**
- * @swagger
- * /api/v1/movies/{id}/movie-ratings:
- *   get:
- *     summary: Lấy tất cả đánh giá phim
- *     description: Lấy danh sách tất cả các đánh giá phim
- *     tags: [Movie Ratings]
- *     responses:
- *       200:
- *         description: Danh sách các đánh giá phim
- *       500:
- *         description: Lỗi máy chủ
- */
 /**
  * @swagger
  * /api/v1/movies/{id}/movie-ratings:
@@ -31,16 +17,12 @@ const router = express.Router({ mergeParams: true });
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - movieId
+ *               - ticketId
  *               - rating
  *             properties:
- *               userId:
+ *               ticketId:
  *                 type: string
  *                 example: "68314e4833e810b1c25e55da"
- *               movieId:
- *                 type: string
- *                 example: "682f5b7ab23c54d8e5f1627e"
  *               rating:
  *                 type: integer
  *                 example: 5
@@ -54,8 +36,6 @@ const router = express.Router({ mergeParams: true });
  *       500:
  *         description: Lỗi máy chủ
  */
-
-router.get("/", movieRatingController.getAllRatings);
 router.post("/", movieRatingController.createMovieRating);
 
 module.exports = router;

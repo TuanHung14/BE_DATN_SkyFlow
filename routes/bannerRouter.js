@@ -1,5 +1,6 @@
 const express = require("express");
 const bannerController = require("../controller/bannerController");
+const auth = require("../middleware/authMiddleware");
 const router = express.Router();
 
 /**
@@ -110,6 +111,8 @@ router.get("/admin", bannerController.getAllBannersAdmin);
  *                             type: string
  */
 router.get("/", bannerController.getAllBannersClient);
+
+router.use(auth);
 
 /**
  * @swagger

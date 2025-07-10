@@ -4,6 +4,7 @@ const auth = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.use(auth);
+
 /**
  * @swagger
  * /api/v1/chatAI:
