@@ -17,16 +17,12 @@ const router = express.Router({ mergeParams: true });
  *           schema:
  *             type: object
  *             required:
- *               - userId
- *               - movieId
+ *               - ticketId
  *               - rating
  *             properties:
- *               userId:
+ *               ticketId:
  *                 type: string
  *                 example: "68314e4833e810b1c25e55da"
- *               movieId:
- *                 type: string
- *                 example: "682f5b7ab23c54d8e5f1627e"
  *               rating:
  *                 type: integer
  *                 example: 5
