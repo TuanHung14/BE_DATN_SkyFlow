@@ -49,6 +49,7 @@ exports.createMomoPayment = async (paymentData) => {
 };
 
 exports.verifyMomoCallback = (callbackData) => {
+    console.log("CallBack từ Momo");
     const { signature, ...data } = callbackData;
 
     data.accessKey = process.env.MOMO_ACCESS_KEY;

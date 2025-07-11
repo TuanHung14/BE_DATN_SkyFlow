@@ -59,11 +59,6 @@ router.post("/", paymentController.createPayment);
  */
 router.get("/", paymentController.getPaymentGateways);
 
-router.post("/query/momo", paymentController.queryMomoPayment);
-
-router.post("/query/zalopay", paymentController.queryZaloPayPayment);
-
-
 router.post("/callback/momo", paymentController.momoCallback);
 
 /**
