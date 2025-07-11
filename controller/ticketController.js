@@ -459,7 +459,30 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                 foreignField: '_id',
                 as: 'ticketFoods.food'
             }
-        }
+        },
+        {
+            $lookup: {
+                from: 'movieratings',
+                let: { ticketId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: { $eq: ['$ticketId', '$$ticketId'] }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            rating: 1
+                        }
+                    },
+                    {
+                        $limit: 1
+                    }
+                ],
+                as: 'ratingInfo'
+            }
+        },
     ]);
 
     if (!tickets || tickets.length === 0) {
