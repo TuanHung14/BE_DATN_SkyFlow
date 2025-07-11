@@ -315,12 +315,6 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                         }
                     },
                     {
-                        $project: {
-                            _id: 0,
-                            rating: 1
-                        }
-                    },
-                    {
                         $limit: 1
                     }
                 ],
@@ -474,6 +468,12 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                     {
                         $match: {
                             $expr: { $eq: ['$ticketId', '$$ticketId'] }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            rating: 1
                         }
                     },
                     {
