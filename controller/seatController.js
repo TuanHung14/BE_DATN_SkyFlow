@@ -37,16 +37,14 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
         return {
             ...seat.toObject(),
             isAvailable: !booking,
+            format: showtime.formatId
             // status: booking ? booking.status : null
         };
     });
 
     res.status(200).json({
         status: 'success',
-        data: {
-            ...seatsWithStatus,
-            format: showtime.formatId
-        }
+        data: seatsWithStatus
     });
 });
 
