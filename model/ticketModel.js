@@ -16,6 +16,10 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  transDate: {
+    type: String,
+    default: null
+  },
   totalAmount: {
     type: Number,
     required: [true, 'Tổng tiền không được để trống'],

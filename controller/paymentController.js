@@ -344,3 +344,48 @@ exports.queryZaloPayPayment = async (appTransId, orderId) => {
       console.error(`[ZaloPay] 🔥 Lỗi truy vấn thanh toán: ${error.message}`);
   }
 };
+
+exports.queryVnPayPayment = async (orderId, transDate) => {
+    const vnp_Version = "2.1.0";
+    const vnp_Command = "querydr";
+    const vnp_RequestId = Date.now().toString();
+    const vnp_CreateDate = new Date().toISOString().replace(/[-:TZ]/g, "").slice(0, 14);
+    const vnp_IpAddr = "127.0.0.1";
+
+    const data = {
+        vnp_RequestId,
+        vnp_Version,
+        vnp_Command,
+        vnp_TmnCode: process.env.VNPAY_TMN_CODE,
+        vnp_TxnRef: orderId,
+        vnp_TransactionDate: transDate,
+        vnp_CreateDate,
+        vnp_IpAddr,
+    };
+
+    const sortedData = Object.keys(data).sort().reduce((r, k) => {
+        r[k] = data[k];
+        return r;
+    }, {});
+
+    const signData = qs.stringify(sortedData, { encode: false });
+    const secureHash = crypto.createHmac("sha512", process.env.VNPAY_SECRET_KEY).update(signData).digest("hex");
+
+    try {
+        const response = await axios.post(process.env.VNPAY_APIURL, {
+            ...data,
+            vnp_SecureHash: secureHash,
+        });
+
+        const result = response.data;
+
+        if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus === "00") {
+            await updateTicketStatus(orderId, "Paid");
+        } else if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus !== "00") {
+            await updateTicketStatus(orderId, "Failed");
+        }
+    } catch (error) {
+        console.error(`[VnPay] 🔥 Lỗi truy vấn thanh toán: ${error.message}`);
+        return null;
+    }
+}
