@@ -113,4 +113,22 @@ router.get('/me', auth, ticketController.getMyTickets);
  */
 router.get('/me/:id', auth, ticketController.getTicketById);
 
+/**
+ * @swagger
+ * /api/v1/tickets/admin:
+ *   get:
+ *     tags:
+ *       - Tickets
+ *     summary: Lấy danh sách tất cả vé
+ *     operationId: getAllTicketsAdmin
+ *     security:
+ *       - bearer: []
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách vé thành công
+ *       401:
+ *         description: Chưa xác thực
+ */
+router.get("/admin", ticketController.getAllTicketsAdmin);
+
 module.exports = router;
