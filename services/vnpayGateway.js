@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const querystring = require("querystring");
 
 const { VNPay, ignoreLogger, ProductCode, dateFormat, VnpLocale} = require("vnpay");
+const Ticket = require("../model/ticketModel");
 
 const sortObject = (obj) => {
   return Object.keys(obj)
@@ -31,8 +32,12 @@ exports.createVNPayPayment = async (paymentData) => {
         }
     );
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1); // Thêm 1 ngày
+    const now = new Date();
+    const expireDate = new Date();
+    expireDate.setDate(now.getDate() + 1);
+
+    const vnp_CreateDate = dateFormat(now);
+    const vnp_ExpireDate = dateFormat(expireDate);
 
     const paymentUrl = await vnpay.buildPaymentUrl({
       vnp_Amount: amount,
@@ -42,12 +47,18 @@ exports.createVNPayPayment = async (paymentData) => {
       vnp_OrderInfo: orderInfo,
       vnp_OrderType: ProductCode.Other,
       vnp_Locale: VnpLocale.VN,
-      vnp_CreateDate: dateFormat(new Date()),
-      vnp_ExpireDate: dateFormat(tomorrow),
+      vnp_CreateDate,
+      vnp_ExpireDate,
     });
+    const ticketDetails = await Ticket.findById(orderId);
+
+    if(ticketDetails){
+      ticketDetails.transDate = vnp_CreateDate;
+
+      await ticketDetails.save();
+    }
 
     return { paymentUrl };
-
 
   } catch (error) {
     throw new Error(`Failed to create VNPay payment: ${error.message}`);

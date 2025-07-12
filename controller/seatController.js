@@ -16,7 +16,7 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
     });
 
     if(!showtime){
-        next(new AppError('Không có lịch chiếu này', 404));
+        return next(new AppError('Không có lịch chiếu này', 404));
     }
 
     const seats = await Seat.find({ roomId: showtime.roomId, hidden: 'false' });
@@ -43,7 +43,10 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         status: 'success',
-        data: seatsWithStatus
+        data: {
+            ...seatsWithStatus,
+            format: showtime.formatId
+        }
     });
 });
 
