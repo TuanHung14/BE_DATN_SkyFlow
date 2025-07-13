@@ -1,9 +1,8 @@
 const express = require("express");
 const userController = require("../controller/userController");
-
 const auth = require("../middleware/authMiddleware");
-
 const authorize = require("../middleware/authorizeMiddleware");
+const {Action, Resource} = require("../model/permissionModel");
 
 const router = express.Router();
 
@@ -66,7 +65,7 @@ router.get("/me", userController.getMe, userController.getUser);
  *       400:
  *         description: Dữ liệu không hợp lệ hoặc đã tồn tại email
  */
-router.post("/", userController.fieldCreate, userController.createUser);
+router.post("/", authorize(`${Action.Create}_${Resource.User}`),userController.fieldCreate, userController.createUser);
 
 /**
  * @swagger
@@ -168,7 +167,7 @@ router.patch("/updateMe", userController.updateMe);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route("/").get(userController.getAllUsers);
+router.route("/").get(authorize(`${Action.Read}_${Resource.User}`),userController.getAllUsers);
 
 /**
  * @swagger
@@ -240,6 +239,6 @@ router.route("/").get(userController.getAllUsers);
 router
   .route("/:id")
   .get(userController.getUser)
-  .patch(userController.fieldUpdate, userController.updateUser);
+  .patch(authorize(`${Action.Update}_${Resource.User}`), userController.fieldUpdate, userController.updateUser);
 
 module.exports = router;

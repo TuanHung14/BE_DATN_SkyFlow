@@ -1,10 +1,12 @@
 const express = require('express');
 const showTimeController = require("../controller/showTimeController");
 const auth = require("../middleware/authMiddleware");
+const authorizer = require("../middleware/authorizeMiddleware");
+const {Action, Resource} = require("../model/permissionModel");
 
 const router = express.Router();
 
-// router.use(auth);
+router.use(auth);
 
 /**
  * @swagger
@@ -316,12 +318,11 @@ const router = express.Router();
 
  router.route('/')
      .get(showTimeController.getAllShowTime)
-     .post(showTimeController.createShowTime);
+     .post(authorizer(`${Action.Create}_${Resource.ShowTime}`),showTimeController.createShowTime);
 
  router.route('/:id')
      .get(showTimeController.getOneShowTimeById)
-     .patch(showTimeController.updateShowTime)
-     .delete(showTimeController.deleteShowTime);
+     .patch(authorizer(`${Action.Update}_${Resource.ShowTime}`),showTimeController.updateShowTime)
+     .delete(authorizer(`${Action.Delete}_${Resource.ShowTime}`),showTimeController.deleteShowTime);
 
- router.delete('/:id', showTimeController.deleteShowTime);
 module.exports = router;

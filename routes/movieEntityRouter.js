@@ -1,11 +1,13 @@
 const express = require('express');
 const movieEntityController = require('../controller/movieEntityController');
 const auth = require('../middleware/authMiddleware');
-const {checkDuplicateName} = require("../controller/movieEntityController")
+const {checkDuplicateName} = require("../controller/movieEntityController");
+const authorizers = require('../middleware/authorizeMiddleware');
+const {Action, Resource} = require('../model/permissionModel');
 
 const router = express.Router();
 
-// router.use(auth);
+router.use(auth);
 
 /**
  * @swagger
@@ -43,7 +45,7 @@ const router = express.Router();
  *       401:
  *         description: Chưa đăng nhập hoặc token không hợp lệ
  */
-router.post('/', checkDuplicateName ,movieEntityController.createMovieEntity);
+router.post('/', authorizers(`${Action.Create}_${Resource.MovieEntites}`), checkDuplicateName ,movieEntityController.createMovieEntity);
 
 /**
  * @swagger
@@ -248,7 +250,7 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *       404:
  *         description: Không tìm thấy thực thể
  */
-router.patch('/:id', checkDuplicateName ,movieEntityController.updateMovieEntity);
+router.patch('/:id', authorizers(`${Action.Update}_${Resource.MovieEntites}`), checkDuplicateName ,movieEntityController.updateMovieEntity);
 
 /**
  * @swagger
@@ -274,6 +276,6 @@ router.patch('/:id', checkDuplicateName ,movieEntityController.updateMovieEntity
  *       500:
  *         description: Lỗi server
  */
-router.delete('/:id', movieEntityController.deleteMovieEntity);
+router.delete('/:id', authorizers(`${Action.Delete}_${Resource.MovieEntites}`) ,movieEntityController.deleteMovieEntity);
 
 module.exports = router;

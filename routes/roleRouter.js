@@ -1,5 +1,9 @@
 const express = require("express");
 const roleController = require("../controller/roleController");
+const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const {Action, Resource} = require("../model/permissionModel");
+
 const router = express.Router();
 
 /**
@@ -63,7 +67,7 @@ router.get("/", roleController.findAllRole);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", roleController.createRole);
+router.post("/", auth, authorize(`${Action.Create}_${Resource.Role}`), roleController.createRole);
 
 /**
  * @swagger
@@ -136,6 +140,6 @@ router.get("/:id", roleController.findOneRole);
  *       404:
  *         description: Không tìm thấy vai trò
  */
-router.patch("/:id", roleController.updateRole);
+router.patch("/:id", auth, authorize(`${Action.Update}_${Resource.Role}`), roleController.updateRole);
 
 module.exports = router;

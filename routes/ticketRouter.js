@@ -1,6 +1,8 @@
 const express = require('express');
 const ticketController = require('../controller/ticketController');
 const auth = require('../middleware/authMiddleware');
+const authorizer = require('../middleware/authorizeMiddleware');
+const {Action, Resource} = require("../model/permissionModel");
 
 const router = express.Router();
 
@@ -83,7 +85,7 @@ router.post('/', ticketController.createTicket);
  *       401:
  *         description: Chưa xác thực
  */
-router.get('/me', auth, ticketController.getMyTickets);
+router.get('/me', ticketController.getMyTickets);
 
 /**
  * @swagger
@@ -111,7 +113,7 @@ router.get('/me', auth, ticketController.getMyTickets);
  *       404:
  *         description: Không tìm thấy vé
  */
-router.get('/me/:id', auth, ticketController.getTicketById);
+router.get('/me/:id', ticketController.getTicketById);
 
 /**
  * @swagger
@@ -129,6 +131,6 @@ router.get('/me/:id', auth, ticketController.getTicketById);
  *       401:
  *         description: Chưa xác thực
  */
-router.get("/admin", ticketController.getAllTicketsAdmin);
+router.get("/admin", authorizer(`${Action.Read}_${Resource.Ticket}`), ticketController.getAllTicketsAdmin);
 
 module.exports = router;

@@ -71,9 +71,9 @@ const findUserByFBId = async (id, select = "") => {
 const findUserById = async (userId) => {
     return await User.findById(userId).populate({
         path: 'role',
-        select: 'name isActive permission',
+        select: 'name isActive permissions',
         populate: {
-            path: 'permission',
+            path: 'permissions',
             model: 'Permission',
             select: 'name'
         }

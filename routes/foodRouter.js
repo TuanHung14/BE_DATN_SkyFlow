@@ -1,7 +1,12 @@
 const express = require("express");
 const foodController = require("../controller/foodController");
+const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const {Action, Resource} = require("../model/permissionModel");
 
 const router = express.Router();
+
+router.use(auth);
 
 /**
  * @swagger
@@ -159,7 +164,7 @@ router.get("/:id", foodController.getFoodById);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", foodController.createFood);
+router.post("/", authorize(`${Action.Create}_${Resource.Food}`) ,foodController.createFood);
 
 /**
  * @swagger
@@ -227,7 +232,7 @@ router.post("/", foodController.createFood);
  *       404:
  *         description: Không tìm thấy món ăn
  */
-router.patch("/:id", foodController.updateFood);
+router.patch("/:id", authorize(`${Action.Update}_${Resource.Food}`) ,foodController.updateFood);
 
 /**
  * @swagger
@@ -248,6 +253,6 @@ router.patch("/:id", foodController.updateFood);
  *       404:
  *         description: Không tìm thấy món ăn
  */
-router.delete("/:id", foodController.deleteFood);
+router.delete("/:id", authorize(`${Action.Delete}_${Resource.Food}`) ,foodController.deleteFood);
 
 module.exports = router;

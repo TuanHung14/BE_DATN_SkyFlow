@@ -1,6 +1,8 @@
 const express = require('express');
 const auth = require('../middleware/authMiddleware');
 const roomController = require('../controller/roomController');
+const authorize = require("../middleware/authorizeMiddleware");
+const {Action, Resource} = require("../model/permissionModel");
 const router = express.Router();
 
 router.use(auth);
@@ -56,7 +58,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/').get(roomController.getAllRooms).post(roomController.createRoom);
+router.route('/').get(roomController.getAllRooms).post(authorize(`${Action.Create}_${Resource.Room}`),roomController.createRoom);
 
 /**
  * @swagger
@@ -146,6 +148,6 @@ router.route('/').get(roomController.getAllRooms).post(roomController.createRoom
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/:id').get(roomController.getRoom).patch(roomController.getFieldRoom,roomController.updateRoom).delete(roomController.deleteRoom);
+router.route('/:id').get(roomController.getRoom).patch(authorize(`${Action.Update}_${Resource.Room}`),roomController.getFieldRoom,roomController.updateRoom).delete(roomController.deleteRoom);
 
 module.exports = router;

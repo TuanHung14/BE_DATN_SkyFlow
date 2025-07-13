@@ -2,8 +2,12 @@ const express = require("express");
 const movieController = require("../controller/movieController");
 const movieRatingRouter = require("../routes/movieRatingRouter");
 const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const { Action, Resource } = require("../model/permissionModel");
 
 const router = express.Router();
+
+router.use(auth)
 
 router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
 
@@ -90,7 +94,7 @@ router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/admin", movieController.getAllMoviesAdmin);
+router.get("/admin", authorize(`${Action.Read}_${Resource.Movie}`) ,movieController.getAllMoviesAdmin);
 
 /**
  * @swagger
@@ -185,7 +189,7 @@ router.get("/:id", movieController.getMovie);
  *       400:
  *         description: Dữ liệu gửi lên không hợp lệ
  */
-router.post("/", movieController.createMovie);
+router.post("/", authorize(`${Action.Create}_${Resource.Movie}`),movieController.createMovie);
 
 /**
  * @swagger
@@ -252,7 +256,7 @@ router.post("/", movieController.createMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/:id", movieController.updateMovie);
+router.patch("/:id", authorize(`${Action.Update}_${Resource.Movie}`),movieController.updateMovie);
 
 /**
  * @swagger
@@ -275,7 +279,7 @@ router.patch("/:id", movieController.updateMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete("/:id", movieController.softDeleteMovie);
+router.delete("/:id", authorize(`${Action.Delete}_${Resource.Movie}`), movieController.softDeleteMovie);
 
 /**
  * @swagger
