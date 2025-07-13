@@ -16,7 +16,7 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
     });
 
     if(!showtime){
-        next(new AppError('Không có lịch chiếu này', 404));
+        return next(new AppError('Không có lịch chiếu này', 404));
     }
 
     const seats = await Seat.find({ roomId: showtime.roomId, hidden: 'false' });
@@ -37,6 +37,7 @@ exports.getAllSeat = catchAsync(async (req, res, next) => {
         return {
             ...seat.toObject(),
             isAvailable: !booking,
+            format: showtime.formatId
             // status: booking ? booking.status : null
         };
     });

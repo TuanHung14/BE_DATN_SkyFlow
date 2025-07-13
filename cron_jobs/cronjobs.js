@@ -2,7 +2,7 @@ const cron = require("node-cron");
 const { updateMovieStatusLogic } = require("../services/movieService");
 const Showtime = require("../model/showtimeModel");
 const Ticket = require("../model/ticketModel");
-const { queryMomoPayment, queryZaloPayPayment } = require("../controller/paymentController");
+const { queryMomoPayment, queryZaloPayPayment, queryVnPayPayment } = require("../controller/paymentController");
 
 module.exports = () => {
     // Cron job chạy hàng ngày lúc 00:00
@@ -52,6 +52,8 @@ module.exports = () => {
                        await queryMomoPayment(ticket._id);
                    }else if(ticket.paymentMethodId.type === "Zalopay" && ticket.appTransId) {
                        await queryZaloPayPayment(ticket.appTransId, ticket._id);
+                   }else if(ticket.paymentMethodId.type === "VnPay" && ticket.transDate) {
+                       await queryVnPayPayment(ticket._id, ticket.transDate)
                    }
                }
            }

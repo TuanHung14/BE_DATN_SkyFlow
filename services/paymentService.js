@@ -5,7 +5,7 @@ const createPaymentByGateway = async (gateway, paymentData) => {
   switch (gateway) {
     case "Momo":
       return await createMomoPayment(paymentData);
-    case "Vnpay":
+    case "VnPay":
       return await createVNPayPayment(paymentData);
     case "Zalopay":
         return await createZaloPayPayment(paymentData);
