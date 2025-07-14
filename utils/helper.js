@@ -9,13 +9,9 @@ exports.filterObj = (obj, ...allowedFields) => {
 };
 
 exports.getRBACOnResorce = (resource) => {
-    const arrayResource = Object.keys(Resource);
-    if(!arrayResource.includes(resource)){
-        return {};
-    }
     const rbacPermission = new Object();
     for (const [actionKey, actionValue] of Object.entries(Action)){
-        rbacPermission[`rbac_${actionValue}`] = `${actionValue}_${Resource[resource]}`
+        rbacPermission[`${actionValue}`] = `${actionValue}_${resource}`
     }
     return rbacPermission;
 }

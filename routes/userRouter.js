@@ -3,8 +3,6 @@ const userController = require("../controller/userController");
 
 const auth = require("../middleware/authMiddleware");
 
-const authorize = require("../middleware/authorizeMiddleware");
-
 const router = express.Router();
 
 // Protect all routes after this middleware
@@ -30,7 +28,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/me", userController.getMe, userController.getUser);
+router.get("/me" ,userController.getMe, userController.getUser);
 
 /**
  * @swagger
@@ -114,7 +112,6 @@ router.post("/", userController.fieldCreate, userController.createUser);
 router.patch("/updateMe", userController.updateMe);
 // router.delete('/deleteMe', userController.deleteMe);
 
-// router.use(restrictTo('admin'));
 /**
  * @swagger
  * /api/v1/users:
