@@ -2,7 +2,10 @@ const express = require("express");
 const cinemaController = require("../controller/cinemaController");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Cinema);
+
 const router = express.Router();
 
 router.use(auth); // Uncomment nếu bạn cần xác thực
@@ -100,7 +103,7 @@ router.get("/show-times", cinemaController.getFilteredCinemas);
  *       500:
  *         description: Lỗi server
  */
-router.get("/admin", authorize(`${Action.Read}_${Resource.Cinema}`),cinemaController.getAllCinemas);
+router.get("/admin", authorize(permissions['read']),cinemaController.getAllCinemas);
 
 /**
  * @swagger
@@ -178,7 +181,7 @@ router.get("/admin", authorize(`${Action.Read}_${Resource.Cinema}`),cinemaContro
 router
     .route("/")
     .get(cinemaController.getAllCinemas)
-    .post(authorize(`${Action.Create}_${Resource.Cinema}`),cinemaController.createCinema);
+    .post(authorize(permissions['create']),cinemaController.createCinema);
 
 /**
  * @swagger
@@ -270,7 +273,7 @@ router
 router
     .route("/:id")
     .get(cinemaController.getOneCinema)
-    .patch(authorize(`${Action.Update}_${Resource.Cinema}`),cinemaController.updateCinema)
-    .delete(authorize(`${Action.Delete}_${Resource.Cinema}`),cinemaController.deleteCinema);
+    .patch(authorize(permissions['update']),cinemaController.updateCinema)
+    .delete(authorize(permissions['delete']),cinemaController.deleteCinema);
 
 module.exports = router;

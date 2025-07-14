@@ -2,9 +2,13 @@ const express = require("express");
 const roleController = require("../controller/roleController");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Role);
 
 const router = express.Router();
+
+router.use(auth)
 
 /**
  * @swagger
@@ -25,7 +29,7 @@ const router = express.Router();
  *       200:
  *         description: Danh sách các vai trò
  */
-router.get("/", roleController.findAllRole);
+router.get("/", authorize(permissions['read']), roleController.findAllRole);
 
 /**
  * @swagger
@@ -67,7 +71,7 @@ router.get("/", roleController.findAllRole);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", auth, authorize(`${Action.Create}_${Resource.Role}`), roleController.createRole);
+router.post("/", authorize(permissions['create']), roleController.createRole);
 
 /**
  * @swagger
@@ -140,6 +144,6 @@ router.get("/:id", roleController.findOneRole);
  *       404:
  *         description: Không tìm thấy vai trò
  */
-router.patch("/:id", auth, authorize(`${Action.Update}_${Resource.Role}`), roleController.updateRole);
+router.patch("/:id", authorize(permissions['update']), roleController.updateRole);
 
 module.exports = router;

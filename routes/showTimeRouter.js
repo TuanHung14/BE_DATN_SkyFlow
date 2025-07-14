@@ -2,7 +2,9 @@ const express = require('express');
 const showTimeController = require("../controller/showTimeController");
 const auth = require("../middleware/authMiddleware");
 const authorizer = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.ShowTime);
 
 const router = express.Router();
 
@@ -318,11 +320,11 @@ router.use(auth);
 
  router.route('/')
      .get(showTimeController.getAllShowTime)
-     .post(authorizer(`${Action.Create}_${Resource.ShowTime}`),showTimeController.createShowTime);
+     .post(authorizer(permissions['create']),showTimeController.createShowTime);
 
  router.route('/:id')
      .get(showTimeController.getOneShowTimeById)
-     .patch(authorizer(`${Action.Update}_${Resource.ShowTime}`),showTimeController.updateShowTime)
-     .delete(authorizer(`${Action.Delete}_${Resource.ShowTime}`),showTimeController.deleteShowTime);
+     .patch(authorizer(permissions['update']),showTimeController.updateShowTime)
+     .delete(authorizer(permissions['delete']),showTimeController.deleteShowTime);
 
 module.exports = router;

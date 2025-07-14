@@ -3,7 +3,9 @@ const postController = require("../controller/postController");
 const auth = require("../middleware/authMiddleware");
 const optionalAuth = require("../middleware/optionalAuthMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Post);
 
 const router = express.Router();
 
@@ -58,7 +60,7 @@ router.use(auth);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", authorize(`${Action.Create}_${Resource.Post}`) ,postController.createPost);
+router.post("/", authorize(permissions['create']) ,postController.createPost);
 
 /**
  * @swagger
@@ -143,7 +145,7 @@ router.get("/favorites", postController.getFavoritePosts);
  *                     data:
  *                       type: array
  */
-router.get("/admin", postController.getAllPostsAdmin);
+router.get("/admin", authorize(permissions['read']), postController.getAllPostsAdmin);
 /**
  * @swagger
  * /api/v1/posts/{id}/like:
@@ -239,7 +241,7 @@ router.get("/:id", postController.getPostById);
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.patch("/:id", authorize(`${Action.Update}_${Resource.Post}`), postController.updatePost);
+router.patch("/:id", authorize(permissions['update']), postController.updatePost);
 
 /**
  * @swagger
@@ -261,7 +263,7 @@ router.patch("/:id", authorize(`${Action.Update}_${Resource.Post}`), postControl
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.delete("/:id", authorize(`${Action.Delete}_${Resource.Post}`), postController.deletePost);
+router.delete("/:id", authorize(permissions['delete']), postController.deletePost);
 
 /**
  * @swagger

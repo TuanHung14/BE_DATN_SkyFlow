@@ -2,7 +2,10 @@ const express = require("express");
 const bannerController = require("../controller/bannerController");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Banner);
+
 const router = express.Router();
 
 router.use(auth);
@@ -75,7 +78,7 @@ router.use(auth);
  *                           imageUrl:
  *                             type: string
  */
-router.get("/admin", authorize(`${Action.Read}_${Resource.Banner}`) ,bannerController.getAllBannersAdmin);
+router.get("/admin", authorize(permissions['read']) ,bannerController.getAllBannersAdmin);
 
 /**
  * @swagger
@@ -193,7 +196,7 @@ router.get("/:id", bannerController.getBannerById);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", authorize(`${Action.Create}_${Resource.Banner}`) ,bannerController.createBanner);
+router.post("/", authorize(permissions['create']) ,bannerController.createBanner);
 
 /**
  * @swagger
@@ -241,7 +244,7 @@ router.post("/", authorize(`${Action.Create}_${Resource.Banner}`) ,bannerControl
  *       404:
  *         description: Không tìm thấy banner
  */
-router.patch("/:id", authorize(`${Action.Update}_${Resource.Banner}`) ,bannerController.updateBanner);
+router.patch("/:id", authorize(permissions['update']) ,bannerController.updateBanner);
 
 /**
  * @swagger
@@ -262,7 +265,7 @@ router.patch("/:id", authorize(`${Action.Update}_${Resource.Banner}`) ,bannerCon
  *       404:
  *         description: Không tìm thấy banner
  */
-router.delete("/:id", authorize(`${Action.Delete}_${Resource.Banner}`) ,bannerController.deleteBanner);
+router.delete("/:id", authorize(permissions['delete']) ,bannerController.deleteBanner);
 /**
  * @swagger
  * /api/v1/banners/{id}/change-status:

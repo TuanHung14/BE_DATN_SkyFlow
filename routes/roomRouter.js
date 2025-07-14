@@ -2,7 +2,10 @@ const express = require('express');
 const auth = require('../middleware/authMiddleware');
 const roomController = require('../controller/roomController');
 const authorize = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Room);
+
 const router = express.Router();
 
 router.use(auth);
@@ -58,7 +61,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/').get(roomController.getAllRooms).post(authorize(`${Action.Create}_${Resource.Room}`),roomController.createRoom);
+router.route('/').get(roomController.getAllRooms).post(authorize(permissions['create']), roomController.createRoom);
 
 /**
  * @swagger
@@ -148,6 +151,9 @@ router.route('/').get(roomController.getAllRooms).post(authorize(`${Action.Creat
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/:id').get(roomController.getRoom).patch(authorize(`${Action.Update}_${Resource.Room}`),roomController.getFieldRoom,roomController.updateRoom).delete(roomController.deleteRoom);
+router.route('/:id')
+    .get(roomController.getRoom)
+    .patch(authorize(permissions['update']),roomController.getFieldRoom,roomController.updateRoom)
+    .delete(authorize(permissions['delete']),roomController.deleteRoom);
 
 module.exports = router;

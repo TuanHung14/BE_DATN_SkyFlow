@@ -3,7 +3,9 @@ const movieEntityController = require('../controller/movieEntityController');
 const auth = require('../middleware/authMiddleware');
 const {checkDuplicateName} = require("../controller/movieEntityController");
 const authorizers = require('../middleware/authorizeMiddleware');
-const {Action, Resource} = require('../model/permissionModel');
+const { Resource} = require('../model/permissionModel');
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.MovieEntites);
 
 const router = express.Router();
 
@@ -45,7 +47,7 @@ router.use(auth);
  *       401:
  *         description: Chưa đăng nhập hoặc token không hợp lệ
  */
-router.post('/', authorizers(`${Action.Create}_${Resource.MovieEntites}`), checkDuplicateName ,movieEntityController.createMovieEntity);
+router.post('/', authorizers(permissions['create']), checkDuplicateName ,movieEntityController.createMovieEntity);
 
 /**
  * @swagger
@@ -250,7 +252,7 @@ router.get('/:id', movieEntityController.getMovieEntityById);
  *       404:
  *         description: Không tìm thấy thực thể
  */
-router.patch('/:id', authorizers(`${Action.Update}_${Resource.MovieEntites}`), checkDuplicateName ,movieEntityController.updateMovieEntity);
+router.patch('/:id', authorizers(permissions['update']), checkDuplicateName ,movieEntityController.updateMovieEntity);
 
 /**
  * @swagger
@@ -276,6 +278,6 @@ router.patch('/:id', authorizers(`${Action.Update}_${Resource.MovieEntites}`), c
  *       500:
  *         description: Lỗi server
  */
-router.delete('/:id', authorizers(`${Action.Delete}_${Resource.MovieEntites}`) ,movieEntityController.deleteMovieEntity);
+router.delete('/:id', authorizers(permissions['delete']) ,movieEntityController.deleteMovieEntity);
 
 module.exports = router;

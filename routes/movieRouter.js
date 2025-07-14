@@ -3,13 +3,15 @@ const movieController = require("../controller/movieController");
 const movieRatingRouter = require("../routes/movieRatingRouter");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
-const { Action, Resource } = require("../model/permissionModel");
+const { Resource } = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Movie);
 
 const router = express.Router();
 
 router.use(auth)
 
-router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
+router.use("/:movieId/movie-ratings", movieRatingRouter);
 
 /**
  * @swagger
@@ -94,7 +96,7 @@ router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/admin", authorize(`${Action.Read}_${Resource.Movie}`) ,movieController.getAllMoviesAdmin);
+router.get("/admin", authorize(permissions['read']) ,movieController.getAllMoviesAdmin);
 
 /**
  * @swagger
@@ -189,7 +191,7 @@ router.get("/:id", movieController.getMovie);
  *       400:
  *         description: Dữ liệu gửi lên không hợp lệ
  */
-router.post("/", authorize(`${Action.Create}_${Resource.Movie}`),movieController.createMovie);
+router.post("/", authorize(permissions['create']),movieController.createMovie);
 
 /**
  * @swagger
@@ -256,7 +258,7 @@ router.post("/", authorize(`${Action.Create}_${Resource.Movie}`),movieController
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/:id", authorize(`${Action.Update}_${Resource.Movie}`),movieController.updateMovie);
+router.patch("/:id", authorize(permissions['update']),movieController.updateMovie);
 
 /**
  * @swagger
@@ -279,7 +281,7 @@ router.patch("/:id", authorize(`${Action.Update}_${Resource.Movie}`),movieContro
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete("/:id", authorize(`${Action.Delete}_${Resource.Movie}`), movieController.softDeleteMovie);
+router.delete("/:id", authorize(permissions['delete']), movieController.softDeleteMovie);
 
 /**
  * @swagger

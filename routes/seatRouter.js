@@ -2,7 +2,10 @@ const express = require('express');
 const seatController = require('../controller/seatController');
 const auth = require('../middleware/authMiddleware');
 const authorize = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Seat);
+
 const router = express.Router();
 
 router.use(auth);
@@ -34,10 +37,10 @@ router.use(auth);
  */
 router.get("/:showtimeId", seatController.getAllSeat);
 
-router.post("/", authorize(`${Action.Create}_${Resource.Seat}`), seatController.createSeat);
+router.post("/", authorize(permissions['create']), seatController.createSeat);
 
-router.get('/edit/:id', authorize(`${Action.Read}_${Resource.Seat}`), seatController.getAllSeatByRoom);
+router.get('/edit/:id', authorize(permissions['read']), seatController.getAllSeatByRoom);
 
-router.patch("/edit", authorize(`${Action.Update}_${Resource.Seat}`),seatController.updateSeat);
+router.patch("/edit", authorize(permissions['update']),seatController.updateSeat);
 
 module.exports = router;

@@ -3,7 +3,9 @@ const voucherUseController = require("../controller/voucherUseController");
 const express = require("express");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Voucher);
 
 const router = express.Router();
 
@@ -61,7 +63,7 @@ router.use(auth);
  */
 router.route("/")
     .get(voucherController.getAllVouchers)
-    .post(authorize(`${Action.Create}_${Resource.Voucher}`),voucherController.createVoucher);
+    .post(authorize(permissions['create']),voucherController.createVoucher);
 
 /**
  * @swagger
@@ -203,8 +205,8 @@ router.post("/buy", voucherUseController.buyVoucher);
  */
 router.route("/:id")
     .get(voucherController.getVoucher)
-    .patch(authorize(`${Action.Update}_${Resource.Voucher}`), voucherController.updateVoucher)
-    .delete(authorize(`${Action.Delete}_${Resource.Voucher}`), voucherController.deleteVoucher);
+    .patch(authorize(permissions['update']), voucherController.updateVoucher)
+    .delete(authorize(permissions['delete']), voucherController.deleteVoucher);
 
 
 module.exports = router;

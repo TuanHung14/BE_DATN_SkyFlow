@@ -2,7 +2,9 @@ const express = require('express');
 const ticketController = require('../controller/ticketController');
 const auth = require('../middleware/authMiddleware');
 const authorizer = require('../middleware/authorizeMiddleware');
-const {Action, Resource} = require("../model/permissionModel");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Ticket);
 
 const router = express.Router();
 
@@ -131,6 +133,6 @@ router.get('/me/:id', ticketController.getTicketById);
  *       401:
  *         description: Chưa xác thực
  */
-router.get("/admin", authorizer(`${Action.Read}_${Resource.Ticket}`), ticketController.getAllTicketsAdmin);
+router.get("/admin", authorizer(permissions['read']), ticketController.getAllTicketsAdmin);
 
 module.exports = router;
