@@ -29,7 +29,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/me", userController.getMe, userController.getUser);
+router.get("/me" ,userController.getMe, userController.getUser);
 
 /**
  * @swagger
@@ -113,7 +113,6 @@ router.post("/", authorize(`${Action.Create}_${Resource.User}`),userController.f
 router.patch("/updateMe", userController.updateMe);
 // router.delete('/deleteMe', userController.deleteMe);
 
-// router.use(restrictTo('admin'));
 /**
  * @swagger
  * /api/v1/users:
