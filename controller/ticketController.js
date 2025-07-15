@@ -501,6 +501,17 @@ exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
         'paymentStatus': { $ne: 'Failed' },
     };
 
+    // Thêm bộ lọc cho ticket trong hôm nay
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Đặt thời gian về 00:00:00 của ngày hôm nay
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // Ngày mai
+
+    filter.bookingDate = {
+        $gte: today,
+        $lt: tomorrow
+    };
+
     if (req.query.search) {
         const searchTerm = req.query.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         filter.ticketCode = { $regex: searchTerm, $options: 'i' };
