@@ -83,7 +83,6 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await userService
     .findUser(email, "+password +isAdmin")
     .populate("role");
-  console.log(user);
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Email hoặc mật khẩu không chính xác", 401));
