@@ -4,8 +4,6 @@ const  auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post("/sendMail", authController.sendEmail);
-
 /**
  * @swagger
  * /api/v1/auth/login:
@@ -300,5 +298,53 @@ router.patch("/updateMyPassword", authController.updatePassword);
  *         description: Lỗi máy chủ
  */
 router.patch("/setMyPassword", authController.setPassword);
+
+/**
+ * @swagger
+ * /api/v1/auth/sendMail:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Gửi email liên hệ
+ *     operationId: sendEmail
+ *     security:
+ *       - bearer: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - message
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Tên người gửi
+ *                 example: Nguyễn Văn A
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email của người gửi
+ *                 example: example@gmail.com
+ *               phone:
+ *                 type: string
+ *                 description: Số điện thoại (không bắt buộc)
+ *                 example: 0123456789
+ *               message:
+ *                 type: string
+ *                 description: Nội dung tin nhắn
+ *                 example: Tôi muốn liên hệ để hỏi về dịch vụ.
+ *     responses:
+ *       200:
+ *         description: Gửi email thành công
+ *       400:
+ *         description: Thiếu thông tin bắt buộc
+ *       401:
+ *         description: Chưa xác thực
+ */
+router.post("/sendMail", authController.sendEmail);
 
 module.exports = router;

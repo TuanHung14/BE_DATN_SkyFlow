@@ -1,7 +1,14 @@
 const express = require('express');
 const priceRuleController = require('../controller/priceRuleController');
+const auth = require('../middleware/authMiddleware');
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.PriceRule);
 
 const router = express.Router();
+
+router.use(auth);
 
 /**
  * @swagger
@@ -39,7 +46,7 @@ const router = express.Router();
  *       400:
  *         description: Dữ liệu đầu vào không hợp lệ
  */
-router.post('/', priceRuleController.createPriceRule);
+router.post('/', authorize(permissions['create']) ,priceRuleController.createPriceRule);
 
 /**
  * @swagger
@@ -91,6 +98,6 @@ router.get('/', priceRuleController.getAllPriceRules);
  *       404:
  *         description: Không tìm thấy quy tắc giá
  */
-router.patch('/:id', priceRuleController.updatePriceRule);
+router.patch('/:id', authorize(permissions['update']) ,priceRuleController.updatePriceRule);
 
 module.exports = router;

@@ -1,9 +1,14 @@
 const express = require("express");
 const cinemaController = require("../controller/cinemaController");
 const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Cinema);
+
 const router = express.Router();
 
-// router.use(auth); // Uncomment nếu bạn cần xác thực
+router.use(auth); // Uncomment nếu bạn cần xác thực
 
 /**
  * @swagger
@@ -98,7 +103,7 @@ router.get("/show-times", cinemaController.getFilteredCinemas);
  *       500:
  *         description: Lỗi server
  */
-router.get("/admin", cinemaController.getAllCinemas);
+router.get("/admin", authorize(permissions['read']),cinemaController.getAllCinemas);
 
 /**
  * @swagger
@@ -174,9 +179,9 @@ router.get("/admin", cinemaController.getAllCinemas);
  *         description: Lỗi server
  */
 router
-  .route("/")
-  .get(cinemaController.getAllCinemas)
-  .post(cinemaController.createCinema);
+    .route("/")
+    .get(cinemaController.getAllCinemas)
+    .post(authorize(permissions['create']),cinemaController.createCinema);
 
 /**
  * @swagger
@@ -266,9 +271,9 @@ router
  *         description: Không tìm thấy
  */
 router
-  .route("/:id")
-  .get(cinemaController.getOneCinema)
-  .patch(cinemaController.updateCinema)
-  .delete(cinemaController.deleteCinema);
+    .route("/:id")
+    .get(cinemaController.getOneCinema)
+    .patch(authorize(permissions['update']),cinemaController.updateCinema)
+    .delete(authorize(permissions['delete']),cinemaController.deleteCinema);
 
 module.exports = router;

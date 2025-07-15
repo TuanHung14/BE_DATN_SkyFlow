@@ -53,7 +53,9 @@ module.exports = () => {
                    }else if(ticket.paymentMethodId.type === "Zalopay" && ticket.appTransId) {
                        await queryZaloPayPayment(ticket.appTransId, ticket._id);
                    }else if(ticket.paymentMethodId.type === "VnPay" && ticket.transDate) {
+                       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
                        await queryVnPayPayment(ticket._id, ticket.transDate)
+                       await delay(1500);
                    }
                }
            }

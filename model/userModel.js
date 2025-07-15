@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
+      ref: "Role",
       default: null,
     },
     password: {
@@ -99,9 +99,13 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-userSchema.pre("save", function (next) {
-  if (this.role === "user") return next();
-  this.isAdmin = true;
+userSchema.pre("save", async function (next) {
+  if (!this.role) return next();
+
+  const roleDoc = await mongoose.model("Role").findById(this.role);
+  if (!roleDoc) return next();
+
+  this.isAdmin = roleDoc.name !== "user"; // Nếu role là 'user' thì isAdmin = false
   next();
 });
 
@@ -119,15 +123,15 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-userSchema.pre("save",async function (next) {
-    if (!this.role) {
-        const userRole = await mongoose.model('Role').findOne({ name: 'user' });
-        if (userRole) {
-            this.role = userRole._id;
-        }
+userSchema.pre("save", async function (next) {
+  if (!this.role) {
+    const userRole = await mongoose.model("Role").findOne({ name: "user" });
+    if (userRole) {
+      this.role = userRole._id;
     }
-    next();
-})
+  }
+  next();
+});
 
 userSchema.methods.correctPassword = async function (
   cadidatePassword,

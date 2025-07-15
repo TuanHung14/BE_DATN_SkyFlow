@@ -1,6 +1,10 @@
 const express = require('express');
 const ticketController = require('../controller/ticketController');
 const auth = require('../middleware/authMiddleware');
+const authorizer = require('../middleware/authorizeMiddleware');
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Ticket);
 
 const router = express.Router();
 
@@ -83,7 +87,7 @@ router.post('/', ticketController.createTicket);
  *       401:
  *         description: Chưa xác thực
  */
-router.get('/me', auth, ticketController.getMyTickets);
+router.get('/me', ticketController.getMyTickets);
 
 /**
  * @swagger
@@ -111,6 +115,24 @@ router.get('/me', auth, ticketController.getMyTickets);
  *       404:
  *         description: Không tìm thấy vé
  */
-router.get('/me/:id', auth, ticketController.getTicketById);
+router.get('/me/:id', ticketController.getTicketById);
+
+/**
+ * @swagger
+ * /api/v1/tickets/admin:
+ *   get:
+ *     tags:
+ *       - Tickets
+ *     summary: Lấy danh sách tất cả vé
+ *     operationId: getAllTicketsAdmin
+ *     security:
+ *       - bearer: []
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách vé thành công
+ *       401:
+ *         description: Chưa xác thực
+ */
+router.get("/admin", authorizer(permissions['read']), ticketController.getAllTicketsAdmin);
 
 module.exports = router;

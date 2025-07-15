@@ -2,8 +2,14 @@ const voucherController = require("../controller/voucherController");
 const voucherUseController = require("../controller/voucherUseController");
 const express = require("express");
 const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Voucher);
 
 const router = express.Router();
+
+router.use(auth);
 /**
  * @swagger
  * /api/v1/vouchers:
@@ -57,7 +63,7 @@ const router = express.Router();
  */
 router.route("/")
     .get(voucherController.getAllVouchers)
-    .post(voucherController.createVoucher);
+    .post(authorize(permissions['create']),voucherController.createVoucher);
 
 /**
  * @swagger
@@ -74,7 +80,7 @@ router.route("/")
  *       200:
  *         description: Danh sách voucher đã mua
  */
-router.get("/owned", auth,voucherUseController.getVoucherUsage);
+router.get("/owned", voucherUseController.getVoucherUsage);
 
 /**
  * @swagger
@@ -112,7 +118,7 @@ router.get("/owned", auth,voucherUseController.getVoucherUsage);
  *       401:
  *         description: Chưa đăng nhập
  */
-router.post("/buy", auth, voucherUseController.buyVoucher);
+router.post("/buy", voucherUseController.buyVoucher);
 
 /**
  * @swagger
@@ -199,8 +205,8 @@ router.post("/buy", auth, voucherUseController.buyVoucher);
  */
 router.route("/:id")
     .get(voucherController.getVoucher)
-    .patch(voucherController.updateVoucher)
-    .delete(voucherController.deleteVoucher);
+    .patch(authorize(permissions['update']), voucherController.updateVoucher)
+    .delete(authorize(permissions['delete']), voucherController.deleteVoucher);
 
 
 module.exports = router;

@@ -1,7 +1,14 @@
 const express = require('express');
 const seatController = require('../controller/seatController');
+const auth = require('../middleware/authMiddleware');
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Seat);
+
 const router = express.Router();
 
+router.use(auth);
 
 /**
  * @swagger
@@ -30,10 +37,10 @@ const router = express.Router();
  */
 router.get("/:showtimeId", seatController.getAllSeat);
 
-router.post("/", seatController.createSeat);
+router.post("/", authorize(permissions['create']), seatController.createSeat);
 
-router.get('/edit/:id', seatController.getAllSeatByRoom);
+router.get('/edit/:id', authorize(permissions['read']), seatController.getAllSeatByRoom);
 
-router.patch("/edit", seatController.updateSeat);
+router.patch("/edit", authorize(permissions['update']),seatController.updateSeat);
 
 module.exports = router;
