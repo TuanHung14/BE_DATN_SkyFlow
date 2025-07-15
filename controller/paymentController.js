@@ -394,8 +394,6 @@ exports.queryVnPayPayment = async (orderId, transDate) => {
 
         const result = response.data;
 
-        console.log(result);
-
         if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus === "00") {
             await updateTicketStatus(orderId, "Paid");
         } else if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus !== "00") {
