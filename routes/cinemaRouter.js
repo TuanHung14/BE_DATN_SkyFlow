@@ -8,7 +8,7 @@ const permissions = getRBACOnResorce(Resource.Cinema);
 
 const router = express.Router();
 
-router.use(auth); // Uncomment nếu bạn cần xác thực
+// router.use(auth);
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.get("/show-times", cinemaController.getFilteredCinemas);
  *       500:
  *         description: Lỗi server
  */
-router.get("/admin", authorize(permissions['read']),cinemaController.getAllCinemas);
+router.get("/admin", auth, authorize(permissions['read']),cinemaController.getAllCinemas);
 
 /**
  * @swagger
@@ -181,7 +181,7 @@ router.get("/admin", authorize(permissions['read']),cinemaController.getAllCinem
 router
     .route("/")
     .get(cinemaController.getAllCinemas)
-    .post(authorize(permissions['create']),cinemaController.createCinema);
+    .post(auth, authorize(permissions['create']),cinemaController.createCinema);
 
 /**
  * @swagger
@@ -273,7 +273,7 @@ router
 router
     .route("/:id")
     .get(cinemaController.getOneCinema)
-    .patch(authorize(permissions['update']),cinemaController.updateCinema)
-    .delete(authorize(permissions['delete']),cinemaController.deleteCinema);
+    .patch(auth, authorize(permissions['update']),cinemaController.updateCinema)
+    .delete(auth, authorize(permissions['delete']),cinemaController.deleteCinema);
 
 module.exports = router;
