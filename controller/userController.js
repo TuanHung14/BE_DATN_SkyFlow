@@ -61,14 +61,15 @@ exports.fieldUpdate = (req, res, next) => {
 
 exports.getAllUsers = Factory.getAll(User, 'role');
 exports.createUser = Factory.createOne(User);
-exports.getUser = Factory.getOne(User, {
-    path: 'role',
-    select: 'name displayName isActive permissions',
-    populate: {
-        path: 'permissions',
-        select: 'name'
-    }
-});
+exports.getUser = Factory.getOne(User, 'role');
+// exports.getUser = Factory.getOne(User, {
+//     path: 'role',
+//     select: 'name displayName isActive permissions',
+//     populate: {
+//         path: 'permissions',
+//         select: 'name'
+//     }
+// });
 exports.updateUser = Factory.updateOne(User);
 // exports.deleteUser = Factory.deleteOne(User);
 
