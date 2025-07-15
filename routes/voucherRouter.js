@@ -9,7 +9,6 @@ const permissions = getRBACOnResorce(Resource.Voucher);
 
 const router = express.Router();
 
-router.use(auth);
 /**
  * @swagger
  * /api/v1/vouchers:
@@ -63,8 +62,8 @@ router.use(auth);
  */
 router.route("/")
     .get(voucherController.getAllVouchers)
-    .post(authorize(permissions['create']),voucherController.createVoucher);
-
+    .post(auth, authorize(permissions['create']),voucherController.createVoucher);
+router.use(auth);
 /**
  * @swagger
  * /api/v1/vouchers/owned:

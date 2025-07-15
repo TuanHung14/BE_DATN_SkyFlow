@@ -9,8 +9,6 @@ const permissions = getRBACOnResorce(Resource.Post);
 
 const router = express.Router();
 
-router.use(auth);
-
 /**
  * @swagger
  * tags:
@@ -60,7 +58,7 @@ router.use(auth);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", authorize(permissions['create']) ,postController.createPost);
+router.post("/", auth, authorize(permissions['create']) ,postController.createPost);
 
 /**
  * @swagger
@@ -145,7 +143,7 @@ router.get("/favorites", postController.getFavoritePosts);
  *                     data:
  *                       type: array
  */
-router.get("/admin", authorize(permissions['read']), postController.getAllPostsAdmin);
+router.get("/admin", auth, authorize(permissions['read']), postController.getAllPostsAdmin);
 /**
  * @swagger
  * /api/v1/posts/{id}/like:
@@ -241,7 +239,7 @@ router.get("/:id", postController.getPostById);
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.patch("/:id", authorize(permissions['update']), postController.updatePost);
+router.patch("/:id", auth, authorize(permissions['update']), postController.updatePost);
 
 /**
  * @swagger
@@ -263,7 +261,7 @@ router.patch("/:id", authorize(permissions['update']), postController.updatePost
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.delete("/:id", authorize(permissions['delete']), postController.deletePost);
+router.delete("/:id", auth, authorize(permissions['delete']), postController.deletePost);
 
 /**
  * @swagger
