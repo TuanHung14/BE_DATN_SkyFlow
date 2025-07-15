@@ -1,7 +1,10 @@
 const express = require("express");
 const userController = require("../controller/userController");
-
 const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const {Resource} = require("../model/permissionModel");
+const {getRBACOnResorce} = require("../utils/helper")
+const permissions = getRBACOnResorce(Resource.User);
 
 const router = express.Router();
 
@@ -64,7 +67,7 @@ router.get("/me" ,userController.getMe, userController.getUser);
  *       400:
  *         description: Dữ liệu không hợp lệ hoặc đã tồn tại email
  */
-router.post("/", userController.fieldCreate, userController.createUser);
+router.post("/", authorize(permissions['create']),userController.fieldCreate, userController.createUser);
 
 /**
  * @swagger
@@ -165,7 +168,7 @@ router.patch("/updateMe", userController.updateMe);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route("/").get(userController.getAllUsers);
+router.route("/").get(authorize(permissions['read']),userController.getAllUsers);
 
 /**
  * @swagger
@@ -237,6 +240,6 @@ router.route("/").get(userController.getAllUsers);
 router
   .route("/:id")
   .get(userController.getUser)
-  .patch(userController.fieldUpdate, userController.updateUser);
+  .patch(authorize(permissions['update']), userController.fieldUpdate, userController.updateUser);
 
 module.exports = router;

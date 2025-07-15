@@ -2,8 +2,14 @@ const express = require("express");
 const postController = require("../controller/postController");
 const auth = require("../middleware/authMiddleware");
 const optionalAuth = require("../middleware/optionalAuthMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Post);
 
 const router = express.Router();
+
+router.use(auth);
 
 /**
  * @swagger
@@ -54,7 +60,7 @@ const router = express.Router();
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", auth, postController.createPost);
+router.post("/", authorize(permissions['create']) ,postController.createPost);
 
 /**
  * @swagger
@@ -78,7 +84,7 @@ router.post("/", auth, postController.createPost);
  *                 data:
  *                   type: array
  */
-router.get("/favorites", auth, postController.getFavoritePosts);
+router.get("/favorites", postController.getFavoritePosts);
 /**
  * @swagger
  * /api/v1/posts/admin:
@@ -139,7 +145,7 @@ router.get("/favorites", auth, postController.getFavoritePosts);
  *                     data:
  *                       type: array
  */
-router.get("/admin", auth, postController.getAllPostsAdmin);
+router.get("/admin", authorize(permissions['read']), postController.getAllPostsAdmin);
 /**
  * @swagger
  * /api/v1/posts/{id}/like:
@@ -162,7 +168,7 @@ router.get("/admin", auth, postController.getAllPostsAdmin);
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.post("/:id/like", auth, postController.likePost);
+router.post("/:id/like", postController.likePost);
 
 /**
  * @swagger
@@ -235,7 +241,7 @@ router.get("/:id", postController.getPostById);
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.patch("/:id", auth, postController.updatePost);
+router.patch("/:id", authorize(permissions['update']), postController.updatePost);
 
 /**
  * @swagger
@@ -257,7 +263,7 @@ router.patch("/:id", auth, postController.updatePost);
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.delete("/:id", auth, postController.deletePost);
+router.delete("/:id", authorize(permissions['delete']), postController.deletePost);
 
 /**
  * @swagger
@@ -288,7 +294,7 @@ router.delete("/:id", auth, postController.deletePost);
  *                   type: boolean
  *                   example: true
  */
-router.get("/:id/liked", auth, postController.checkLikedPost);
+router.get("/:id/liked", postController.checkLikedPost);
 
 router.use(optionalAuth);
 /**

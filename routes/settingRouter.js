@@ -1,6 +1,14 @@
 const express = require("express");
 const settingController = require("../controller/settingController");
+const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Setting);
+
 const router = express.Router();
+
+router.use(auth);
 
 /**
  * @swagger
@@ -38,7 +46,7 @@ const router = express.Router();
  *                   logoUrl:
  *                     type: string
  */
-router.get("/", settingController.getAllSettings);
+router.get("/", authorize(permissions['read']), settingController.getAllSettings);
 
 /**
  * @swagger
@@ -134,7 +142,7 @@ router.get("/:id", settingController.getSettingById);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", settingController.createSetting);
+router.post("/", authorize(permissions['create']), settingController.createSetting);
 
 /**
  * @swagger
@@ -194,7 +202,7 @@ router.post("/", settingController.createSetting);
  *       404:
  *         description: Không tìm thấy setting
  */
-router.patch("/:id", settingController.updateSetting);
+router.patch("/:id", authorize(permissions['update']), settingController.updateSetting);
 
 /**
  * @swagger
@@ -215,7 +223,7 @@ router.patch("/:id", settingController.updateSetting);
  *       404:
  *         description: Không tìm thấy setting
  */
-router.delete("/:id", settingController.deleteSetting);
+router.delete("/:id", authorize(permissions['delete']), settingController.deleteSetting);
 
 /**
  * @swagger

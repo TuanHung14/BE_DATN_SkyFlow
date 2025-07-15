@@ -7,12 +7,23 @@ const Action = {
     Delete: 'delete'
 }
 const Resource = {
-    User: 'user',
-    Movie: 'movie',
-    Room: 'room',
-    Seat: 'seat',
     Setting: 'setting',
-    MovieEntites: 'movieEntities'
+    Format: 'format',
+    PaymentMethod: 'paymentMethod',
+    Banner: 'banner',
+    Role: 'role',
+    Post: 'post',
+    Voucher: 'voucher',
+    Food: 'food',
+    PriceRule: 'pricerule',
+    Ticket: 'ticket',
+    ShowTime: 'showtime',
+    MovieEntites: 'movieEntities',
+    Movie: 'movie',
+    Seat: 'seat',
+    Room: 'room',
+    Cinema: 'cinema',
+    User: 'user'
 }
 const permissionSchema = new mongoose.Schema({
     name: {
@@ -39,12 +50,23 @@ permissionSchema.on('init',  async (model) => {
     }
 
     const resourceDisplay = {
-        [Resource.User]: 'Người Dùng',
+        [Resource.Setting]: 'Cài Đặt',
+        [Resource.Format]: 'Kiểu',
+        [Resource.PaymentMethod]: 'Phương Thức Thanh Toán',
+        [Resource.Banner]: 'Banner',
+        [Resource.Role]: 'Quyền Hạn',
+        [Resource.Post]: 'Bài Viết',
+        [Resource.Voucher]: 'Mã Khuyến Mãi',
+        [Resource.Food]: 'Thức Ăn',
+        [Resource.PriceRule]: 'Quản Lý Giá Vé',
+        [Resource.Ticket]: 'Vé',
+        [Resource.ShowTime]: 'Suất Chiếu',
+        [Resource.MovieEntites]: 'Thực Thể Phim',
+        [Resource.Movie]: 'Phim',
         [Resource.Seat]: 'Ghế',
         [Resource.Room]: 'Phòng',
-        [Resource.Movie]: 'Phim',
-        [Resource.Setting]: 'Cài Đặt',
-        [Resource.MovieEntites]: 'Thực Thể Phim'
+        [Resource.Cinema]: 'Rạp Chiếu',
+        [Resource.User]: 'Người Dùng',
     }
 
     const permissionsToCreate = [];

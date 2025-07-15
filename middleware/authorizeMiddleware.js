@@ -10,7 +10,7 @@ const authorize = (requiredPermission) => catchAsync(async (req, res, next) => {
 
     const permissionList = [];
 
-    for (const permission of user.role.permission) {
+    for (const permission of user.role.permissions) {
         permissionList.push(permission.name);
     }
 
