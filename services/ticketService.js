@@ -169,8 +169,8 @@ async function getTopMovies() {
         {
             $project: {
                 _id: 0,
-                movieTitle: "$movie.title",
-                totalTickets: 1
+                movieTitle: "$movie.name",
+                totalTickets: "$totalSeats"
             }
         },
         {
