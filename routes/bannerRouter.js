@@ -8,7 +8,6 @@ const permissions = getRBACOnResorce(Resource.Banner);
 
 const router = express.Router();
 
-router.use(auth);
 
 /**
  * @swagger
@@ -16,69 +15,6 @@ router.use(auth);
  *   name: Banners
  *   description: Quản lý thông tin banner
  */
-
-/**
- * @swagger
- * /api/v1/banners/admin:
- *   get:
- *     summary: Lấy tất cả banners cho quản trị viên
- *     tags: [Banners]
- *     parameters:
- *       - in: query
- *         name: search[title]
- *         schema:
- *           type: string
- *         description: Tìm kiếm theo tiêu đề banner
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *         description: Trang hiện tại
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Số lượng bản ghi mỗi trang
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *         description: "Sắp xếp theo trường, ví dụ: -createdAt"
- *     responses:
- *       200:
- *         description: Danh sách banners cho quản trị viên
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 totalDocs:
- *                   type: integer
- *                 totalPages:
- *                   type: integer
- *                 page:
- *                   type: integer
- *                 limit:
- *                   type: integer
- *                 data:
- *                   type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           _id:
- *                             type: string
- *                           title:
- *                             type: string
- *                           imageUrl:
- *                             type: string
- */
-router.get("/admin", authorize(permissions['read']) ,bannerController.getAllBannersAdmin);
 
 /**
  * @swagger
@@ -155,6 +91,71 @@ router.get("/", bannerController.getAllBannersClient);
  *         description: Không tìm thấy banner
  */
 router.get("/:id", bannerController.getBannerById);
+
+router.use(auth);
+/**
+ * @swagger
+ * /api/v1/banners/admin:
+ *   get:
+ *     summary: Lấy tất cả banners cho quản trị viên
+ *     tags: [Banners]
+ *     parameters:
+ *       - in: query
+ *         name: search[title]
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tiêu đề banner
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Trang hiện tại
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số lượng bản ghi mỗi trang
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *         description: "Sắp xếp theo trường, ví dụ: -createdAt"
+ *     responses:
+ *       200:
+ *         description: Danh sách banners cho quản trị viên
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 totalDocs:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           imageUrl:
+ *                             type: string
+ */
+router.get("/admin", authorize(permissions['read']) ,bannerController.getAllBannersAdmin);
+
 
 /**
  * @swagger

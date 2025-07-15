@@ -9,9 +9,7 @@ const permissions = getRBACOnResorce(Resource.Movie);
 
 const router = express.Router();
 
-router.use(auth)
-
-router.use("/:movieId/movie-ratings", movieRatingRouter);
+router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
 
 /**
  * @swagger
@@ -96,7 +94,7 @@ router.use("/:movieId/movie-ratings", movieRatingRouter);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/admin", authorize(permissions['read']) ,movieController.getAllMoviesAdmin);
+router.get("/admin", auth, authorize(permissions['read']) ,movieController.getAllMoviesAdmin);
 
 /**
  * @swagger
@@ -191,7 +189,7 @@ router.get("/:id", movieController.getMovie);
  *       400:
  *         description: Dữ liệu gửi lên không hợp lệ
  */
-router.post("/", authorize(permissions['create']),movieController.createMovie);
+router.post("/", auth, authorize(permissions['create']),movieController.createMovie);
 
 /**
  * @swagger
@@ -258,7 +256,7 @@ router.post("/", authorize(permissions['create']),movieController.createMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/:id", authorize(permissions['update']),movieController.updateMovie);
+router.patch("/:id", auth, authorize(permissions['update']),movieController.updateMovie);
 
 /**
  * @swagger
@@ -281,7 +279,7 @@ router.patch("/:id", authorize(permissions['update']),movieController.updateMovi
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete("/:id", authorize(permissions['delete']), movieController.softDeleteMovie);
+router.delete("/:id", auth, authorize(permissions['delete']), movieController.softDeleteMovie);
 
 /**
  * @swagger
