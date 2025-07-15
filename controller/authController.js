@@ -80,7 +80,10 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError("Vui lòng cung cấp email và mật khẩu", 400));
   }
 
-  const user = await userService.findUser(email, "+password").populate("role");
+  const user = await userService
+    .findUser(email, "+password +isAdmin")
+    .populate("role");
+  console.log(user);
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Email hoặc mật khẩu không chính xác", 401));
