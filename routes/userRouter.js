@@ -31,7 +31,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/me" ,userController.getMe, userController.getUser);
+router.get("/me", auth ,userController.getMe, userController.getUser);
 
 /**
  * @swagger
