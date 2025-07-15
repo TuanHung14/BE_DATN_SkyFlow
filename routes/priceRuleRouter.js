@@ -60,7 +60,7 @@ router.post('/', authorize(permissions['create']) ,priceRuleController.createPri
  *       200:
  *         description: Danh sách quy tắc giá
  */
-router.get('/', authorize(permissions['read']) ,priceRuleController.getAllPriceRules);
+router.get('/', priceRuleController.getAllPriceRules);
 
 /**
  * @swagger
