@@ -82,7 +82,7 @@ router.post("/", auth, authorize(permissions['create']) ,postController.createPo
  *                 data:
  *                   type: array
  */
-router.get("/favorites", postController.getFavoritePosts);
+router.get("/favorites", auth, postController.getFavoritePosts);
 /**
  * @swagger
  * /api/v1/posts/admin:
@@ -166,7 +166,7 @@ router.get("/admin", auth, authorize(permissions['read']), postController.getAll
  *       404:
  *         description: Không tìm thấy bài viết
  */
-router.post("/:id/like", postController.likePost);
+router.post("/:id/like", auth, postController.likePost);
 
 /**
  * @swagger
@@ -292,7 +292,7 @@ router.delete("/:id", auth, authorize(permissions['delete']), postController.del
  *                   type: boolean
  *                   example: true
  */
-router.get("/:id/liked", postController.checkLikedPost);
+router.get("/:id/liked", auth, postController.checkLikedPost);
 
 router.use(optionalAuth);
 /**
