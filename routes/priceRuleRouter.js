@@ -7,6 +7,19 @@ const { getRBACOnResorce } = require("../utils/helper");
 const permissions = getRBACOnResorce(Resource.PriceRule);
 
 const router = express.Router();
+/**
+ * @swagger
+ * /api/v1/price-rules:
+ *   get:
+ *     tags:
+ *       - Price Rules
+ *     summary: Lấy tất cả các quy tắc giá
+ *     operationId: getAllPriceRules
+ *     responses:
+ *       200:
+ *         description: Danh sách quy tắc giá
+ */
+router.get('/', priceRuleController.getAllPriceRules);
 
 router.use(auth);
 
@@ -47,20 +60,6 @@ router.use(auth);
  *         description: Dữ liệu đầu vào không hợp lệ
  */
 router.post('/', authorize(permissions['create']) ,priceRuleController.createPriceRule);
-
-/**
- * @swagger
- * /api/v1/price-rules:
- *   get:
- *     tags:
- *       - Price Rules
- *     summary: Lấy tất cả các quy tắc giá
- *     operationId: getAllPriceRules
- *     responses:
- *       200:
- *         description: Danh sách quy tắc giá
- */
-router.get('/', priceRuleController.getAllPriceRules);
 
 /**
  * @swagger
