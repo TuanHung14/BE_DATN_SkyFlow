@@ -578,3 +578,170 @@ exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+exports.scanTicket = catchAsync(async (req, res, next) => {
+    const { ticketCode } = req.params;
+
+    const ticket = await Ticket.aggregate([
+        {
+            $match: { ticketCode: ticketCode, paymentStatus: "Paid" }
+        },
+        {
+            $lookup: {
+                from: 'ticketseats',
+                localField: '_id',
+                foreignField: 'ticketId',
+                as: 'ticketSeats',
+                pipeline: [
+                    {
+                        $project: { seatId: 1 },
+                    },
+                ],
+            }
+        },
+        {
+            $lookup: {
+                from: 'ticketfoods',
+                localField: '_id',
+                foreignField: 'ticketId',
+                as: 'ticketFoods',
+                pipeline: [
+                    {
+                        $project: { foodId: 1 },
+                    },
+                ],
+            }
+        },
+        {
+            $lookup: {
+                from: 'showtimes',
+                localField: 'showtimeId',
+                foreignField: '_id',
+                as: 'showtimeId',
+                pipeline: [
+                    {
+                        $project: { showDate: 1, startTime: 1, endTime: 1, movieId: 1, roomId: 1 },
+                    },
+                ],
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: "movies",
+                localField: "showtimeId.movieId",
+                foreignField: "_id",
+                as: "showtimeId.movieId"
+            }
+        },
+
+        {
+            $unwind: {
+                path: "$showtimeId.movieId",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $addFields: {
+                movieName: '$showtimeId.movieId.name'
+            }
+        },
+        {
+            $lookup: {
+                from: 'rooms',
+                localField: 'showtimeId.roomId',
+                foreignField: '_id',
+                as: 'showtimeId.roomId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId.roomId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $addFields: {
+                roomName: '$showtimeId.roomId.roomName'
+            }
+        },
+        {
+            $lookup: {
+                from: 'cinemas',
+                localField: 'showtimeId.roomId.cinemaId',
+                foreignField: '_id',
+                as: 'showtimeId.roomId.cinema'
+            }
+        },
+        {
+            $unwind: {
+                path: '$showtimeId.roomId.cinema',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $addFields: {
+                cinemaName: '$showtimeId.roomId.cinema.name'
+            }
+        },
+        {
+            $lookup: {
+                from: 'seats',
+                localField: 'ticketSeats.seatId',
+                foreignField: '_id',
+                as: 'ticketSeats.seat'
+            }
+        },
+        {
+            $lookup: {
+                from: 'foods',
+                localField: 'ticketFoods.foodId',
+                foreignField: '_id',
+                as: 'ticketFoods.food'
+            }
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'userId',
+                foreignField: '_id',
+                as: 'users',
+                pipeline: [
+                    {
+                        $project: { name: 1, email: 1},
+                    },
+                ],
+            }
+        },
+        {
+            $unwind: {
+                path: '$users',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $project: {
+                'showtimeId.movieId': 0,
+                'showtimeId.roomId': 0,
+                bookingStatus: 0,
+                paymentStatus: 0,
+                appTransId: 0,
+                transDate: 0
+            }
+        }
+    ])
+
+    if (!ticket || ticket.length === 0) {
+        return next(new AppError("Không tìm thấy vé hợp lệ hoặc vé chưa thanh toán.", 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: ticket[0]
+    })
+})

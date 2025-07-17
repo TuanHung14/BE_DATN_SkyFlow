@@ -135,4 +135,32 @@ router.get('/me/:id', ticketController.getTicketById);
  */
 router.get("/admin", authorizer(permissions['read']), ticketController.getAllTicketsAdmin);
 
+/**
+ * @swagger
+ * /api/v1/tickets/scan/{ticketCode}:
+ *   get:
+ *     tags:
+ *       - Tickets
+ *     summary: Quét mã vé và lấy thông tin vé
+ *     operationId: scanTicket
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - name: ticketCode
+ *         in: path
+ *         required: true
+ *         description: Mã code của vé cần quét
+ *         schema:
+ *           type: string
+ *           example: "ABC123XYZ"
+ *     responses:
+ *       200:
+ *         description: Quét vé thành công, trả về thông tin vé
+ *       401:
+ *         description: Chưa xác thực
+ *       404:
+ *         description: Không tìm thấy vé với mã đã cung cấp
+ */
+router.get("/scan/:ticketCode", authorizer(permissions['read']), ticketController.scanTicket);
+
 module.exports = router;
