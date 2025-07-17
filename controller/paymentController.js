@@ -24,6 +24,7 @@ const PaymentMethod = require("../model/paymentMethodModel");
 const VoucherUse = require("../model/voucherUseModel");
 const Factory = require("./handleFactory");
 const Email = require("../utils/email");
+const mongoose = require("mongoose");
 
 const validatePaymentData = (data, next) => {
   const required = ["orderId", "amount", "gateway"];
@@ -43,75 +44,98 @@ const validatePaymentData = (data, next) => {
 };
 
 const updateTicketStatus = async (orderId, status) => {
-    const ticket = await Ticket.findByIdAndUpdate({
-      _id: orderId,
-    }, {
-      paymentStatus: status,
-      bookingStatus: "Confirmed",
-    }, {
-      new: true,
-      runValidators: true,
-    })
-
-    if(!ticket) {
-      throw new Error("Không tìm thấy vé với orderId: " + orderId)
-    }
-
-    const ticketSeats = await TicketSeat.find({
-      ticketId: orderId,
-    })
-    const ticketFoods = await TicketFood.find({
-        ticketId: orderId,
-    });
-
-    const seatIds = ticketSeats.map((item) => item.seatId);
-
-    if( status === "Paid" ) {
-      await Booking.updateMany(
-          {
-            seatId: {$in: seatIds},
-            userId: ticket.userId,
-            showtimeId: ticket.showtimeId
-          },
-          {status: "success"}
-      );
-      // Tăng memberShipPoints
-      await User.updateOne({
-        _id: ticket.userId,
-      }, {
-            $inc: { memberShipPoints: ticket.totalAmount },
-        })
-      await sendBookingConfirmationEmail(ticket, seatIds, ticketFoods);
-    }
-    else if ( status === "Failed" ) {
-      await Booking.deleteMany({
-        seatId: { $in: seatIds },
-        userId: ticket.userId,
-        showtimeId: ticket.showtimeId,
-      });
-
-      // Giảm lượt sử dụng lại
-      if(ticket.voucherUseId){
-          await VoucherUse.updateOne(
-              {
-                  _id: ticket.voucherUseId,
-                  usageCount: { $gt: 0 }
-              },
-              {
-                  $inc: { usageCount: -1 }
-              }
-          )
-      }
-
-      // **Tăng lại stock food**
-      for (const tf of ticketFoods) {
-        await Food.updateOne(
-            { _id: tf.foodId },
-            { $inc: { inventoryCount: tf.quantity } }
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        // Toàn bộ logic update đặt trong session
+        const ticket = await Ticket.findByIdAndUpdate(
+            { _id: orderId },
+            {
+                paymentStatus: status,
+                bookingStatus: "Confirmed",
+            },
+            {
+                new: true,
+                runValidators: true,
+                session,
+            }
         );
-      }
+
+        if (!ticket) {
+            throw new Error("Không tìm thấy vé với orderId: " + orderId);
+        }
+
+        const ticketSeats = await TicketSeat.find({ ticketId: orderId }, null, { session });
+        const ticketFoods = await TicketFood.find({ ticketId: orderId }, null, { session });
+
+        const seatIds = ticketSeats.map((item) => item.seatId);
+
+        if (status === "Paid") {
+            await Booking.updateMany(
+                {
+                    seatId: { $in: seatIds },
+                    userId: ticket.userId,
+                    showtimeId: ticket.showtimeId,
+                },
+                { status: "success" },
+                { session }
+            );
+
+            await User.updateOne(
+                { _id: ticket.userId },
+                { $inc: { memberShipPoints: ticket.totalAmount } },
+                { session }
+            );
+
+            const realTicket = await Ticket.findById(ticket._id).session(session);
+            realTicket.qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ticket.ticketCode}`;
+            await realTicket.save({ session });
+
+            await session.commitTransaction();
+            session.endSession();
+
+            // Gửi email sau khi commit transaction
+            await sendBookingConfirmationEmail(realTicket, seatIds, ticketFoods);
+        } else if (status === "Failed") {
+            await Booking.deleteMany(
+                {
+                    seatId: { $in: seatIds },
+                    userId: ticket.userId,
+                    showtimeId: ticket.showtimeId,
+                },
+                { session }
+            );
+
+            if (ticket.voucherUseId) {
+                await VoucherUse.updateOne(
+                    {
+                        _id: ticket.voucherUseId,
+                        usageCount: { $gt: 0 },
+                    },
+                    {
+                        $inc: { usageCount: -1 },
+                    },
+                    { session }
+                );
+            }
+
+            for (const tf of ticketFoods) {
+                await Food.updateOne(
+                    { _id: tf.foodId },
+                    { $inc: { inventoryCount: tf.quantity } },
+                    { session }
+                );
+            }
+
+            await session.commitTransaction();
+            session.endSession();
+        }
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
     }
-}
+};
 
 const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {
     const user = ticket.userId;
@@ -177,7 +201,7 @@ const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {
         ticketQuantity: seatIds.length,
         totalAmount: ticket.totalAmount.toLocaleString('vi-VN') + ' VNĐ',
         moviePoster: movie.posterUrl,
-        qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ticket.ticketCode}`,
+        qrCode: ticket.qrUrl,
         openingHours: '8:00 - 23:00',
         downloadTicketUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/tickets/${ticket.ticketCode}/download`,
         manageBookingUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/my-bookings`,

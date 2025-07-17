@@ -29,6 +29,10 @@ const ticketSchema = new mongoose.Schema({
       message: '{VALUE} không phải là tổng tiền hợp lệ'
     }
   },
+  qrUrl: {
+    type: String,
+    default: null
+  },
   paymentStatus: {
     type: String,
     enum: {
