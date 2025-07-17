@@ -528,7 +528,7 @@ exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
             path: 'showtimeId',
             select: 'showDate movieId roomId startTime',
             populate: [
-                { path: 'movieId', select: 'name format age' },
+                { path: 'movieId', select: 'name format age posterUrl' },
                 { path: 'roomId', select: 'roomName', populate: { path: 'cinemaId', select: 'name' } }
             ],
         },
@@ -559,6 +559,7 @@ exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
         return {
             ...ticket,
             seats,
+            seatCount: seats.length,
         };
     });
 
