@@ -242,4 +242,6 @@ router
   .get(userController.getUser)
   .patch(authorize(permissions['update']), userController.fieldUpdate, userController.updateUser);
 
+router.post("/reset", userController.resetPass);
+
 module.exports = router;
