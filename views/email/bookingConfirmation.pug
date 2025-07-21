@@ -55,8 +55,8 @@ block content
                                 td.value.strong #{emailContent.totalFoodAmount}
 
         .movie-poster
-            if emailContent.moviePoster
-                img(src=emailContent.moviePoster, alt='#{emailContent.movieTitle}', style='max-width: 200px; height: auto; border-radius: 8px;')
+        if emailContent.moviePoster
+            img(src=emailContent.moviePoster, alt=emailContent.movieTitle, style='max-width: 200px; height: auto; border-radius: 8px;')
 
     .important-info
         h2 ⚠️ Lưu ý quan trọng
@@ -84,7 +84,7 @@ block content
                             tbody
                                 tr
                                     td
-                                        a(href='#{emailContent.downloadTicketUrl}') Tải vé về máy
+                                        a(href=emailContent.downloadTicketUrl) Tải vé về máy
 
         p
             | Bạn cũng có thể

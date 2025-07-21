@@ -109,6 +109,21 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+userSchema.pre("findOneAndUpdate", async function (next) {
+    const update = this.getUpdate();
+
+    if (!update || !update.role) return next();
+
+    const roleDoc = await mongoose.model("Role").findById(this.role);
+
+    if (!roleDoc) return next();
+    update.isAdmin = roleDoc.name !== "user";
+
+    this.setUpdate(update);
+
+    next();
+})
+
 userSchema.pre("save", function (next) {
   if (this.googleId && !this.password) {
     this.isUpdatePassword = false;
