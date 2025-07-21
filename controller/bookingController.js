@@ -6,7 +6,7 @@ const catchAsync = require("../utils/catchAsync");
 const mongoose = require('mongoose');
 
 exports.getTicketBooking = catchAsync(async (req, res, next) => {
-    const { movieId, showDate, cinemaId, showtimeId } = req.query;
+    const { movieId, showDate, cinemaId, showtimeId, province } = req.query;
 
     // 1. Nếu không có tham số: Trả về danh sách phim đang chiếu
     if (!movieId && !showDate && !cinemaId && !showtimeId) {
@@ -31,6 +31,130 @@ exports.getTicketBooking = catchAsync(async (req, res, next) => {
         return res.status(400).json({
             status: 'error',
             message: 'ID phim không hợp lệ'
+        });
+    }
+
+    // 2. Nếu có province: Trả về danh sách rạp chiếu theo tỉnh và các suất chiếu
+    if (province && !cinemaId && !showtimeId) {
+        const cinemaMatch = { isDeleted: false, 'province.label': province };
+        const showtimeConditions = [
+            { $eq: ['$isDeleted', false] },
+            { $eq: ['$status', 'scheduled'] }
+        ];
+        if (movieId) {
+            showtimeConditions.push({ $eq: ['$movieId', new mongoose.Types.ObjectId(movieId)] });
+        }
+        if (showDate) {
+            const startOfDay = new Date(showDate);
+            startOfDay.setHours(0, 0, 0, 0);
+            showtimeConditions.push({ $gte: ['$showDate', startOfDay] });
+            showtimeConditions.push({ $lte: ['$showDate', new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1)] });
+        }
+
+        const pipeline = [
+            // Lọc rạp chiếu phim theo tỉnh
+            { $match: cinemaMatch },
+
+            // Lấy danh sách phòng thuộc rạp
+            {
+                $lookup: {
+                    from: 'rooms',
+                    localField: '_id',
+                    foreignField: 'cinemaId',
+                    as: 'rooms'
+                }
+            },
+
+            // Lấy ID của các phòng không bị xóa
+            {
+                $addFields: {
+                    roomIds: {
+                        $map: {
+                            input: {
+                                $filter: {
+                                    input: '$rooms',
+                                    as: 'room',
+                                    cond: { $eq: ['$$room.isDeleted', false] }
+                                }
+                            },
+                            as: 'room',
+                            in: '$$room._id'
+                        }
+                    }
+                }
+            },
+
+            // Lấy suất chiếu tương ứng với các phòng
+            {
+                $lookup: {
+                    from: 'showtimes',
+                    let: { roomIds: '$roomIds' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $in: ['$roomId', '$$roomIds'] },
+                                        ...showtimeConditions
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'formats',
+                                localField: 'formatId',
+                                foreignField: '_id',
+                                as: 'format'
+                            }
+                        },
+                        { $unwind: { path: '$format', preserveNullAndEmptyArrays: true } },
+                        { $sort: { startTime: 1 } }
+                    ],
+                    as: 'showtimes'
+                }
+            },
+
+            // Chỉ giữ lại các rạp có ít nhất một suất chiếu
+            {
+                $match: {
+                    'showtimes.0': { $exists: true }
+                }
+            },
+
+            // Định dạng kết quả
+            {
+                $project: {
+                    cinema: {
+                        _id: '$_id',
+                        name: '$name',
+                        province: '$province.label',
+                        address: '$address'
+                    },
+                    showtimes: {
+                        $map: {
+                            input: '$showtimes',
+                            as: 'showtime',
+                            in: {
+                                showtimeId: '$$showtime._id',
+                                startTime: '$$showtime.startTime',
+                                endTime: '$$showtime.endTime',
+                                format: '$showtime.format.name',
+                                roomId: '$$showtime.roomId'
+                            }
+                        }
+                    }
+                }
+            }
+        ];
+
+        const data = await Cinema.aggregate(pipeline);
+
+        return res.json({
+            status: 'success',
+            step: 'province-cinemas',
+            results: data.length,
+            data: data
         });
     }
 
