@@ -133,7 +133,7 @@ router.get('/me/:id', ticketController.getTicketById);
  *       401:
  *         description: Chưa xác thực
  */
-router.get("/admin", authorizer(permissions['read']), ticketController.getAllTicketsAdmin);
+router.get("/admin", ticketController.getAllTicketsAdmin);
 
 /**
  * @swagger
