@@ -19,13 +19,18 @@ const handleValidatorErrorDB = (err) => {
 };
 
 const handleJWTError = () => {
-    const message = `Invalid token. Please log in again.`;
+    const message = `Token không hợp lệ! Vui lòng đăng nhập lại`;
     return new AppError(message, 401);
 }
 
 const handleJWTExpiredError = () => {
-    const message = `Token expired. Please log in again.`;
+    const message = `Token đã hết hạn! Vui lòng đăng nhập lại`;
     return new AppError(message, 401);
+}
+
+const handleAxiosError = () => {
+    const message = `Lỗi kết nối tới cổng thanh toán! Vui lòng thử lại sau`;
+    return new AppError(message, 500);
 }
 
 const sendErrorDev = (err, res) => {
@@ -72,6 +77,7 @@ module.exports = (err, req, res, next) => {
         if(error.name === "ValidationError") error = handleValidatorErrorDB(error);
         if(error.name === "JsonWebTokenError") error = handleJWTError();
         if(error.name === "TokenExpiredError") error = handleJWTExpiredError();
+        if(error.name === "AxiosError") error = handleAxiosError();
         
         sendErrorProd(error, res);
     }

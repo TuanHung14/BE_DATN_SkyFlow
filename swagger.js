@@ -23,6 +23,15 @@ const swaggerDefinition = {
             description: description,
         },
     ],
+    components: {
+        securitySchemes: {
+            bearer: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT', // optional, just for UI display
+            },
+        },
+    },
 };
 
 const options = {
