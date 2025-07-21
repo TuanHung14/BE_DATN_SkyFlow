@@ -17,12 +17,23 @@ exports.getAll = (Model, popOptions) =>
       .pagination();
     const doc = await features.query.populate(popOptions);
 
+    const countQuery = new APIFeatures(Model.find(filter), req.query)
+      .filter()
+      .search();
+
+    const totalDocs = await countQuery.query.clone().countDocuments();
+
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
     res.status(200).json({
-      status: "success",
-      results: doc.length,
-      data: {
-        data: doc,
-      },
+        status: "success",
+        totalDocs,
+        totalPages: Math.ceil(totalDocs / limit),
+        page,
+        limit,
+        data: {
+            data: doc,
+        },
     });
   });
 

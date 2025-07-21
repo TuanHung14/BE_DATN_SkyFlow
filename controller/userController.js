@@ -3,7 +3,8 @@ const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const Factory = require('./handleFactory');
 const userService = require("../services/userService");
-
+const resetPasswordService = require("../services/resetPasswordService");
+const Email = require("../utils/email");
 
 const filterObj = (obj, ...allowedFields) => {
     const newObj = {};
@@ -48,14 +49,52 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 //     });
 // });
 
+exports.fieldCreate = (req, res, next) => {
+    req.body = filterObj(req.body, 'name', 'email', 'password', 'role');
+    req.body.isVerified = true;
+    next();
+}
+
 exports.fieldUpdate = (req, res, next) => {
-    req.body = filterObj(req.body, 'name', 'email', 'role');
+    req.body = filterObj(req.body, 'name', 'email', 'photo', 'role');
     next();
 }
 
 
-exports.getAllUsers = Factory.getAll(User);
-exports.getUser = Factory.getOne(User);
+exports.getAllUsers = Factory.getAll(User, 'role');
+
+exports.createUser = Factory.createOne(User);
+
+exports.getUser = Factory.getOne(User, {
+    path: 'role',
+    select: 'name displayName isActive permissions',
+    populate: {
+        path: 'permissions',
+        select: 'name'
+    }
+});
+
 exports.updateUser = Factory.updateOne(User);
+
+exports.resetPass = catchAsync(async (req, res, next) => {
+    const { email } = req.body;
+    const user = await userService.findUser(email);
+
+    if (!user) {
+        return next(new AppError("Không tồn tại người dùng có email này!", 400));
+    }
+
+    const token = await resetPasswordService.generateToken(user._id);
+
+    const resetLink = `${process.env.FE_CLIENT_HOST}/reset-password?token=${token}&email=${email}`;
+
+    await new Email(user, resetLink).sendLinkResetPass();
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Token đã gửi tới email. Vui lòng kiểm tra email!'
+    })
+})
+
 // exports.deleteUser = Factory.deleteOne(User);
 

@@ -10,11 +10,10 @@ const priceRuleSchema = new mongoose.Schema({
     required: [true, 'Seat type is required'],
     trim: true
   },
-  ageGroup: {
+  formats: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'CustomerGroup',
-    required: [true, 'Age group is required'],
-    index: true,
+    ref: 'Format',
+    required: true
   },
   price: {
     type: Number,
@@ -29,7 +28,7 @@ const priceRuleSchema = new mongoose.Schema({
   timestamps: true
 });
 
-priceRuleSchema.index({ seat_type: 1, age_group: 1 }, { unique: true });
+priceRuleSchema.index({ seatType: 1, formats: 1 }, { unique: true });
 
 const PriceRule = mongoose.model('PriceRule', priceRuleSchema);
 

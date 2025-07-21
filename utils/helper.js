@@ -1,3 +1,5 @@
+const { Action, Resource } = require("../model/permissionModel");
+
 exports.filterObj = (obj, ...allowedFields) => {
     const newObj = {};
     Object.keys(obj).forEach(el => {
@@ -5,3 +7,11 @@ exports.filterObj = (obj, ...allowedFields) => {
     })
     return newObj;
 };
+
+exports.getRBACOnResorce = (resource) => {
+    const rbacPermission = new Object();
+    for (const [actionKey, actionValue] of Object.entries(Action)){
+        rbacPermission[`${actionValue}`] = `${actionValue}_${resource}`
+    }
+    return rbacPermission;
+}

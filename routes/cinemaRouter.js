@@ -1,9 +1,76 @@
-const express = require('express');
-const cinemaController = require('../controller/cinemaController');
-const {auth} = require("../middleware/authMiddleware");
+const express = require("express");
+const cinemaController = require("../controller/cinemaController");
+const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource} = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Cinema);
+
 const router = express.Router();
 
-router.use(auth);
+// router.use(auth);
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Location:
+ *       type: object
+ *       required:
+ *         - type
+ *         - coordinates
+ *       properties:
+ *         type:
+ *           type: string
+ *           enum: [Point]
+ *         coordinates:
+ *           type: array
+ *           items:
+ *             type: number
+ *           description: [lng, lat]
+ *     AddressObject:
+ *       type: object
+ *       required:
+ *         - label
+ *         - value
+ *       properties:
+ *         label:
+ *           type: string
+ *         value:
+ *           type: string
+ */
+
+/**
+ * @swagger
+ * /api/v1/cinemas/show-times:
+ *   get:
+ *     tags:
+ *       - Cinemas
+ *     summary: Hiển thị các rạp có suất chiếu theo bộ lọc
+ *     operationId: getFilteredCinemas
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: province
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: movieId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *       500:
+ *         description: Lỗi server
+ */
+router.get("/show-times", cinemaController.getFilteredCinemas);
 
 /**
  * @swagger
@@ -11,8 +78,8 @@ router.use(auth);
  *   get:
  *     tags:
  *       - Cinemas
- *     summary: Lấy danh sách rạp chiếu phim
- *     operationId: getAllCinemas
+ *     summary: Lấy danh sách rạp (admin)
+ *     operationId: getAllCinemasAdmin
  *     security:
  *       - bearer: []
  *     parameters:
@@ -27,38 +94,45 @@ router.use(auth);
  *           type: integer
  *           default: 10
  *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *       - in: query
- *         name: fields
- *         schema:
- *           type: string
- *       - in: query
  *         name: search[name]
  *         schema:
  *           type: string
- *         description: Tìm kiếm theo tên rạp
- *       - in: query
- *         name: search[province]
- *         schema:
- *           type: string
- *         description: Tìm kiếm theo địa chỉ
  *     responses:
  *       200:
- *         description: Lấy danh sách rạp chiếu phim thành công
+ *         description: Thành công
  *       500:
- *         description: Lỗi máy chủ
+ *         description: Lỗi server
  */
-router.get('/admin',cinemaController.getAllCinemas);
+router.get("/admin", auth, authorize(permissions['read']),cinemaController.getAllCinemas);
 
 /**
  * @swagger
  * /api/v1/cinemas:
+ *   get:
+ *     tags:
+ *       - Cinemas
+ *     summary: Lấy tất cả rạp chiếu
+ *     operationId: getAllCinemas
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *       500:
+ *         description: Lỗi server
  *   post:
  *     tags:
  *       - Cinemas
- *     summary: Tạo rạp chiếu phim mới
+ *     summary: Tạo rạp chiếu mới
  *     operationId: createCinema
  *     security:
  *       - bearer: []
@@ -71,25 +145,43 @@ router.get('/admin',cinemaController.getAllCinemas);
  *             required:
  *               - name
  *               - address
+ *               - description
+ *               - province
+ *               - district
+ *               - ward
  *             properties:
  *               name:
  *                 type: string
- *                 description: Tên rạp chiếu phim
- *               province:
+ *               address:
  *                 type: string
- *                 description: Địa chỉ rạp
  *               description:
  *                 type: string
- *                 description: Mô tả về rạp
+ *               phone:
+ *                 type: string
+ *               img:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               province:
+ *                 $ref: '#/components/schemas/AddressObject'
+ *               district:
+ *                 $ref: '#/components/schemas/AddressObject'
+ *               ward:
+ *                 $ref: '#/components/schemas/AddressObject'
+ *               location:
+ *                 $ref: '#/components/schemas/Location'
  *     responses:
  *       201:
- *         description: Tạo rạp chiếu phim thành công
+ *         description: Tạo thành công
  *       400:
- *         description: Dữ liệu không hợp lệ
+ *         description: Lỗi dữ liệu
  *       500:
- *         description: Lỗi máy chủ
+ *         description: Lỗi server
  */
-router.post('/', cinemaController.createCinema);
+router
+    .route("/")
+    .get(cinemaController.getAllCinemas)
+    .post(auth, authorize(permissions['create']),cinemaController.createCinema);
 
 /**
  * @swagger
@@ -97,38 +189,34 @@ router.post('/', cinemaController.createCinema);
  *   get:
  *     tags:
  *       - Cinemas
- *     summary: Lấy thông tin chi tiết của một rạp chiếu phim
+ *     summary: Lấy chi tiết 1 rạp
  *     operationId: getOneCinema
  *     security:
  *       - bearer: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của rạp chiếu phim
  *     responses:
  *       200:
- *         description: Lấy thông tin rạp chiếu phim thành công
+ *         description: Thành công
  *       404:
- *         description: Không tìm thấy rạp chiếu phim với ID đã cung cấp
- *       500:
- *         description: Lỗi máy chủ
+ *         description: Không tìm thấy
  *   patch:
  *     tags:
  *       - Cinemas
- *     summary: Cập nhật thông tin rạp chiếu phim
+ *     summary: Cập nhật rạp
  *     operationId: updateCinema
  *     security:
  *       - bearer: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của rạp chiếu phim
  *     requestBody:
  *       required: true
  *       content:
@@ -138,44 +226,54 @@ router.post('/', cinemaController.createCinema);
  *             properties:
  *               name:
  *                 type: string
- *                 description: Tên rạp chiếu phim
- *               province:
+ *               address:
  *                 type: string
- *                 description: Địa chỉ rạp
  *               description:
  *                 type: string
- *                 description: Mô tả về rạp
+ *               phone:
+ *                 type: string
+ *               img:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               province:
+ *                 $ref: '#/components/schemas/AddressObject'
+ *               district:
+ *                 $ref: '#/components/schemas/AddressObject'
+ *               ward:
+ *                 $ref: '#/components/schemas/AddressObject'
+ *               location:
+ *                 $ref: '#/components/schemas/Location'
  *     responses:
  *       200:
- *         description: Cập nhật thông tin rạp chiếu phim thành công
+ *         description: Cập nhật thành công
  *       400:
- *         description: Dữ liệu không hợp lệ
+ *         description: Lỗi dữ liệu
  *       404:
- *         description: Không tìm thấy rạp chiếu phim với ID đã cung cấp
- *       500:
- *         description: Lỗi máy chủ
+ *         description: Không tìm thấy
  *   delete:
  *     tags:
  *       - Cinemas
- *     summary: Xóa rạp chiếu phim
+ *     summary: Xóa rạp
  *     operationId: deleteCinema
  *     security:
  *       - bearer: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của rạp chiếu phim
  *     responses:
  *       204:
- *         description: Xóa rạp chiếu phim thành công
+ *         description: Xóa thành công
  *       404:
- *         description: Không tìm thấy rạp chiếu phim với ID đã cung cấp
- *       500:
- *         description: Lỗi máy chủ
+ *         description: Không tìm thấy
  */
-router.route('/:id').get(cinemaController.getOneCinema).patch(cinemaController.updateCinema).delete(cinemaController.deleteCinema);
+router
+    .route("/:id")
+    .get(cinemaController.getOneCinema)
+    .patch(auth, authorize(permissions['update']),cinemaController.updateCinema)
+    .delete(auth, authorize(permissions['delete']),cinemaController.deleteCinema);
 
 module.exports = router;

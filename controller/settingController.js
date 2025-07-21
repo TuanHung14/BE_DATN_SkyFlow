@@ -31,3 +31,28 @@ exports.updateSetting = Factory.updateOne(Setting);
  */
 
 exports.deleteSetting = Factory.deleteOne(Setting);
+// controllers/settingController.js
+exports.setDefault = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  // Kiểm tra setting có tồn tại không
+  const setting = await Setting.findById(id);
+  if (!setting) {
+    return next(new AppError("Không tìm thấy setting với ID đã cho", 404));
+  }
+
+  // Bỏ đánh dấu mặc định với tất cả setting khác
+  await Setting.updateMany({ _id: { $ne: id } }, { isDefault: false });
+
+  // Cập nhật setting được chọn là mặc định
+  setting.isDefault = true;
+  await setting.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Đã đặt setting mặc định",
+    data: {
+      setting,
+    },
+  });
+});

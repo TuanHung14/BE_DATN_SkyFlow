@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt ghế xem phim</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .seat {
+            width: 35px;
+            height: 35px;
+            margin: 3px;
+            background-color: #ddd;
+            border-radius: 8px;
+            display: inline-block;
+            cursor: pointer;
+            line-height: 35px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .seat:hover {
+            transform: scale(1.1);
+        }
+        .seat.held {
+            background-color: #ff9800;
+            color: white;
+            border-color: #f57c00;
+        }
+        .seat.selected {
+            background-color: #2196f3;
+            color: white;
+            border-color: #1976d2;
+        }
+        .seat.booked {
+            background-color: #f44336;
+            color: white;
+            cursor: not-allowed;
+            border-color: #d32f2f;
+        }
+        .screen {
+            margin: 30px auto;
+            width: 400px;
+            background: linear-gradient(135deg, #333, #666);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .legend {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-seat {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .controls {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        button, .btn-link {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        #book-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+        #book-btn:hover {
+            background-color: #45a049;
+        }
+        #cancel-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        #cancel-btn:hover {
+            background-color: #da190b;
+        }
+        #book-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .seat-info {
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        .selected-seats {
+            color: #2196f3;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Chọn ghế xem phim</h1>
+
+    <div class="screen">MÀN HÌNH</div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-seat" style="background-color: #ddd;"></div>
+            <span>Trống</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-seat" style="background-color: #ff9800;"></div>
+            <span>Đang giữ</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-seat" style="background-color: #2196f3;"></div>
+            <span>Bạn đã chọn</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-seat" style="background-color: #f44336;"></div>
+            <span>Đã đặt</span>
+        </div>
+    </div>
+
+    <div id="seat-container"></div>
+
+    <div class="seat-info">
+        <span>Ghế đã chọn: <span id="selected-count" class="selected-seats">0</span></span>
+    </div>
+
+    <div class="controls">
+        <button id="book-btn" disabled>Đặt ghế</button>
+        <button id="cancel-btn">Hủy tất cả</button>
+    </div>
+
+    <div id="status" class="status" style="display: none;"></div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+    const showtimeId = "abc123";
+    const userId = "user" + Math.random().toString(36).substr(2, 9); // Tạo userId ngẫu nhiên
+    const socket = io("http://localhost:3000");
+
+    const seatContainer = document.getElementById('seat-container');
+    const selectedCountEl = document.getElementById('selected-count');
+    const bookBtn = document.getElementById('book-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const statusEl = document.getElementById('status');
+
+    const totalSeats = 40;
+    const seats = {};
+    let selectedSeats = [];
+
+    // Tạo ghế
+    for (let i = 1; i <= totalSeats; i++) {
+        const seat = document.createElement('div');
+        const seatId = `S${i}`;
+        seat.classList.add('seat');
+        seat.dataset.id = seatId;
+        seat.innerText = i;
+        seat.addEventListener('click', () => handleSeatClick(seatId, seat));
+        seats[seatId] = seat;
+        seatContainer.appendChild(seat);
+    }
+
+    // Xử lý click ghế
+    function handleSeatClick(seatId, seat) {
+        if (seat.classList.contains('booked')) return;
+
+        if (seat.classList.contains('selected')) {
+            // Huỷ giữ ghế đã chọn
+            socket.emit('release-seat', { showtimeId, seatId });
+        } else if (!seat.classList.contains('held')) {
+            // Giữ ghế trống
+            socket.emit('hold-seat', { showtimeId, seatId });
+        }
+    }
+
+    // Cập nhật UI
+    function updateUI() {
+        selectedSeats = Object.keys(seats).filter(seatId =>
+            seats[seatId].classList.contains('selected')
+        );
+        selectedCountEl.textContent = selectedSeats.length;
+        bookBtn.disabled = selectedSeats.length === 0;
+    }
+
+    // Hiển thị thông báo
+    function showStatus(message, type = 'success') {
+        statusEl.textContent = message;
+        statusEl.className = `status ${type}`;
+        statusEl.style.display = 'block';
+        setTimeout(() => {
+            statusEl.style.display = 'none';
+        }, 3000);
+    }
+
+    // Kết nối và tham gia phòng
+    socket.on('connect', () => {
+        socket.emit('join-room', { showtimeId, userId });
+        showStatus('Đã kết nối thành công!');
+    });
+
+    // Nhận danh sách ghế khi vào phòng
+    socket.on('seats-hold', ({ holds, bookings }) => {
+        // Reset tất cả ghế
+        Object.values(seats).forEach(seat => {
+            seat.className = 'seat';
+        });
+
+        // Ghế đang được giữ bởi người khác
+        Object.keys(holds).forEach(seatId => {
+            if (seats[seatId] && holds[seatId] !== userId) {
+                seats[seatId].classList.add('held');
+            }
+        });
+
+        // Ghế đã được đặt thành công
+        Object.keys(bookings).forEach(seatId => {
+            if (seats[seatId]) {
+                seats[seatId].classList.add('booked');
+            }
+        });
+
+        updateUI();
+    });
+
+    // Nhận ghế mình đang giữ
+    socket.on('seats-hold-me', ({ holds }) => {
+        holds.forEach(seatId => {
+            if (seats[seatId]) {
+                seats[seatId].classList.remove('held');
+                seats[seatId].classList.add('selected');
+            }
+        });
+        updateUI();
+    });
+
+    // Người khác giữ ghế
+    socket.on('seat-held', ({ seatId, userId: otherUserId }) => {
+        if (seats[seatId] && otherUserId !== userId) {
+            seats[seatId].classList.remove('selected');
+            seats[seatId].classList.add('held');
+        }
+        updateUI();
+    });
+
+    // Mình giữ ghế thành công
+    socket.on('seats-held-me', ({ seatId }) => {
+        if (seats[seatId]) {
+            seats[seatId].classList.remove('held');
+            seats[seatId].classList.add('selected');
+        }
+        updateUI();
+    });
+
+    // Ghế được huỷ
+    socket.on('seat-released', ({ seatId }) => {
+        if (seats[seatId]) {
+            seats[seatId].classList.remove('held', 'selected', 'booked');
+        }
+        updateUI();
+    });
+
+    // Lỗi
+    socket.on('error', ({ message }) => {
+        showStatus(message, 'error');
+    });
+
+    // Nút đặt ghế
+    bookBtn.addEventListener('click', () => {
+        if (selectedSeats.length === 0) {
+            showStatus('Vui lòng chọn ít nhất một ghế!', 'error');
+            return;
+        }
+
+        // Chuyển trạng thái ghế từ holding sang pending
+        socket.emit('book-seat', { showtimeId });
+
+        // Cập nhật UI ngay lập tức
+        selectedSeats.forEach(seatId => {
+            if (seats[seatId]) {
+                seats[seatId].classList.remove('selected');
+                seats[seatId].classList.add('booked');
+            }
+        });
+
+        showStatus(`Đã đặt thành công ${selectedSeats.length} ghế!`);
+        updateUI();
+
+        // Có thể chuyển hướng đến trang thanh toán
+        setTimeout(() => {
+            // window.location.href = 'payment.html';
+        }, 2000);
+    });
+
+    // Nút hủy tất cả
+    cancelBtn.addEventListener('click', () => {
+        const mySelectedSeats = Object.keys(seats).filter(seatId =>
+            seats[seatId].classList.contains('selected')
+        );
+
+        if (mySelectedSeats.length === 0) {
+            showStatus('Không có ghế nào để hủy!', 'error');
+            return;
+        }
+
+        // Hủy từng ghế
+        mySelectedSeats.forEach(seatId => {
+            socket.emit('release-seat', { showtimeId, seatId });
+        });
+
+        showStatus('Đã hủy tất cả ghế đã chọn!');
+    });
+
+    // Xử lý khi mất kết nối
+    socket.on('disconnect', () => {
+        showStatus('Mất kết nối với máy chủ!', 'error');
+    });
+
+    // Khởi tạo UI
+    updateUI();
+</script>
+
+</body>
+</html>

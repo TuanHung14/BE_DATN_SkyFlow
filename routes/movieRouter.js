@@ -1,7 +1,15 @@
 const express = require("express");
 const movieController = require("../controller/movieController");
+const movieRatingRouter = require("../routes/movieRatingRouter");
+const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const { Resource } = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
+const permissions = getRBACOnResorce(Resource.Movie);
 
 const router = express.Router();
+
+router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
 
 /**
  * @swagger
@@ -27,14 +35,31 @@ const router = express.Router();
  *         description: Tìm kiếm theo tên phim
  *       - in: query
  *         name: directorId
+ *         style: form
+ *         explode: true
  *         schema:
- *           type: string
- *         description: Lọc theo đạo diễn
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Lọc theo nhiều đạo diễn (?directorId=ID1&directorId=ID2)
  *       - in: query
  *         name: castId
+ *         style: form
+ *         explode: true
  *         schema:
- *           type: string
- *         description: Lọc theo diễn viên
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Lọc theo nhiều diễn viên (?castId=ID1&castId=ID2)
+ *       - in: query
+ *         name: genresId
+ *         style: form
+ *         explode: true
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         description: Lọc theo nhiều thể loại (?genresId=ID1&genresId=ID2)
  *       - in: query
  *         name: sort
  *         schema:
@@ -58,11 +83,6 @@ const router = express.Router();
  *           default: 10
  *         description: Số lượng phim mỗi trang
  *       - in: query
- *         name: genresId
- *         schema:
- *           type: string
- *         description: Lọc theo thể loại
- *       - in: query
  *         name: status
  *         schema:
  *           type: string
@@ -74,8 +94,7 @@ const router = express.Router();
  *       500:
  *         description: Lỗi máy chủ
  */
-
-router.get("/admin", movieController.getAllMoviesAdmin);
+router.get("/admin", auth, authorize(permissions['read']) ,movieController.getAllMoviesAdmin);
 
 /**
  * @swagger
@@ -170,7 +189,7 @@ router.get("/:id", movieController.getMovie);
  *       400:
  *         description: Dữ liệu gửi lên không hợp lệ
  */
-router.post("/", movieController.createMovie);
+router.post("/", auth, authorize(permissions['create']),movieController.createMovie);
 
 /**
  * @swagger
@@ -237,7 +256,7 @@ router.post("/", movieController.createMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/:id", movieController.updateMovie);
+router.patch("/:id", auth, authorize(permissions['update']),movieController.updateMovie);
 
 /**
  * @swagger
@@ -260,7 +279,7 @@ router.patch("/:id", movieController.updateMovie);
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete("/:id", movieController.softDeleteMovie);
+router.delete("/:id", auth, authorize(permissions['delete']), movieController.softDeleteMovie);
 
 /**
  * @swagger
@@ -271,20 +290,40 @@ router.delete("/:id", movieController.softDeleteMovie);
  *     operationId: getAllMoviesUser
  *     parameters:
  *       - in: query
+ *         name: genresId[]
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: true
+ *         description: Lọc theo nhiều thể loại
+ *         VD: ?genresId[]=ID1&genresId[]=ID2
+ *       - in: query
+ *         name: castId[]
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: true
+ *         description: Lọc theo nhiều diễn vien
+ *         VD: ?castId[]=ID1&castId[]=ID2
+ *       - in: query
+ *         name: directorId[]
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         style: form
+ *         explode: true
+ *         description: Lọc theo nhiều đạo diễn
+ *         VD: ?directorId[]=ID1&directorId[]=ID2
+ *       - in: query
  *         name: search[name]
  *         schema:
  *           type: string
  *         description: Tìm kiếm theo tên phim
- *       - in: query
- *         name: directorId
- *         schema:
- *           type: string
- *         description: Lọc theo đạo diễn
- *       - in: query
- *         name: castId
- *         schema:
- *           type: string
- *         description: Lọc theo diễn viên
  *       - in: query
  *         name: sort
  *         schema:
@@ -308,11 +347,6 @@ router.delete("/:id", movieController.softDeleteMovie);
  *           default: 10
  *         description: Số lượng phim mỗi trang
  *       - in: query
- *         name: genresId
- *         schema:
- *           type: string
- *         description: Lọc theo thể loại
- *       - in: query
  *         name: status
  *         schema:
  *           type: string
@@ -324,6 +358,7 @@ router.delete("/:id", movieController.softDeleteMovie);
  *       500:
  *         description: Lỗi máy chủ
  */
+
 router.get("/", movieController.getAllMovies);
 
 /**

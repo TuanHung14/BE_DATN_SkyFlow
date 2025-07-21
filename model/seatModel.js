@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Room = require("./roomModel");
 
 const seatSchema = new mongoose.Schema({
     roomId: {
@@ -9,7 +10,7 @@ const seatSchema = new mongoose.Schema({
     },
     seatRow: {
         type: String,
-        required: [true, "Hàng ghế là bắt buộc"],
+        // required: [true, "Hàng ghế là bắt buộc"],
         uppercase: true,
         validate: {
             validator: function(v) {
@@ -20,7 +21,7 @@ const seatSchema = new mongoose.Schema({
     },
     seatNumber: {
         type: Number,
-        required: [true, "Số ghế là bắt buộc"],
+        // required: [true, "Số ghế là bắt buộc"],
         min: [1, "Số ghế phải lớn hơn 0"],
         max: [150, "Số ghế không được vượt quá 150"],
         validate: {
@@ -31,14 +32,26 @@ const seatSchema = new mongoose.Schema({
     seatType: {
         type: String,
         enum: {
-            values: ['standard', 'vip', 'couple'],
+            values: ['normal', 'vip', 'couple'],
             message: "{VALUE} không phải là loại ghế hợp lệ"
         },
-        default: 'standard'
+        default: 'normal'
+    },
+    coupleId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
+    },
+    coupleDisplayName: {
+        type: String,
+        default: null
+    },
+    hidden: {
+        type: Boolean,
+        default: false
     },
     status: {
         type: String,
-        enum: ['active', 'inactive'],
+        enum: { values: ['active', 'inactive']},
         default: 'active'
     }
 }, {
@@ -47,25 +60,12 @@ const seatSchema = new mongoose.Schema({
 
 seatSchema.index({ roomId: 1, seatRow: 1, seatNumber: 1 }, { unique: true });
 
-// seatSchema.statics.getSeatsByRoom = function(roomId) {
-//     return this.find({ room_id: roomId })
-//                .sort({ seat_row: 1, seat_number: 1 });
-// };
-
-// seatSchema.statics.getAvailableSeatsByRoom = function(roomId) {
-//     return this.find({
-//         room_id: roomId,
-//         status: 'active'
-//     }).sort({ seat_row: 1, seat_number: 1 });
-// };
-
 // đảm bảo số lượng ghế không vượt quá capacity của phòng
 seatSchema.pre('save', async function(next) {
     if (this.isNew) {
-        const Room = mongoose.model('Room');
         const room = await Room.findById(this.roomId);
         const currentSeats = await this.constructor.countDocuments({ roomId: this.roomId });
-        
+
         if (currentSeats >= room.capacity) {
             next(new Error('Số lượng ghế đã đạt giới hạn của phòng'));
         }
@@ -95,12 +95,26 @@ seatSchema.pre('save', async function(next) {
 // xử lý trước khi cập nhật
 seatSchema.pre('findOneAndUpdate', async function(next) {
     const update = this.getUpdate();
-    if (update.room_id) {
+    if (update.roomId) {
         return next(new Error('Không thể thay đổi phòng của ghế'));
     }
     next();
 });
 
+// Đồng bộ trạng thái ghế đôi
+seatSchema.pre('findOneAndUpdate', async function(next) {
+    const update = this.getUpdate();
+    if (update.status && this._conditions._id) {
+        const seat = await this.model.findById(this._conditions._id);
+        if (seat && seat.coupleId) {
+            await this.model.updateMany(
+                { coupleId: seat.coupleId },
+                { status: update.status }
+            );
+        }
+    }
+    next();
+});
 
 const Seat = mongoose.model('Seat', seatSchema);
 module.exports = Seat;

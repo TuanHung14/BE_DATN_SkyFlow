@@ -1,12 +1,12 @@
-const express = require('express');
-const userController = require('../controller/userController');
-const authController = require('../controller/authController');
-
-const {auth, restrictTo} = require('../middleware/authMiddleware');
-
+const express = require("express");
+const userController = require("../controller/userController");
+const auth = require("../middleware/authMiddleware");
+const authorize = require("../middleware/authorizeMiddleware");
+const {Resource} = require("../model/permissionModel");
+const {getRBACOnResorce} = require("../utils/helper")
+const permissions = getRBACOnResorce(Resource.User);
 
 const router = express.Router();
-
 
 // Protect all routes after this middleware
 router.use(auth);
@@ -31,7 +31,43 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/me', userController.getMe, userController.getUser);
+router.get("/me", auth ,userController.getMe, userController.getUser);
+
+/**
+ * @swagger
+ * /api/v1/users/:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Đăng ký người dùng mới
+ *     operationId: createUser
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Tên người dùng
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email của người dùng
+ *               password:
+ *                 type: string
+ *                 description: Mật khẩu của người dùng
+ *               role:
+ *                 type: string
+ *                 enum: [user, admin, sub_admin]
+ *     responses:
+ *       201:
+ *         description: Người dùng được tạo thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ hoặc đã tồn tại email
+ */
+router.post("/", authorize(permissions['create']),userController.fieldCreate, userController.createUser);
 
 /**
  * @swagger
@@ -76,10 +112,9 @@ router.get('/me', userController.getMe, userController.getUser);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.patch('/updateMe',userController.updateMe);
+router.patch("/updateMe", userController.updateMe);
 // router.delete('/deleteMe', userController.deleteMe);
 
-// router.use(restrictTo('admin'));
 /**
  * @swagger
  * /api/v1/users:
@@ -133,7 +168,7 @@ router.patch('/updateMe',userController.updateMe);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/').get(userController.getAllUsers);
+router.route("/").get(authorize(permissions['read']),userController.getAllUsers);
 
 /**
  * @swagger
@@ -202,6 +237,43 @@ router.route('/').get(userController.getAllUsers);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.route('/:id').get(userController.getUser).patch(userController.fieldUpdate,userController.updateUser);
+router
+  .route("/:id")
+  .get(userController.getUser)
+  .patch(authorize(permissions['update']), userController.fieldUpdate, userController.updateUser);
+
+/**
+ * @swagger
+ * /api/v1/users/reset:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Yêu cầu đặt lại mật khẩu
+ *     operationId: resetPass
+ *     security:
+ *       - bearer: []
+ *     description: Gửi yêu cầu đặt lại mật khẩu, ví dụ như gửi email chứa liên kết đặt lại.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email của người dùng cần đặt lại mật khẩu
+ *             required:
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Yêu cầu đặt lại mật khẩu đã được xử lý thành công (có thể đã gửi email)
+ *       400:
+ *         description: Dữ liệu không hợp lệ hoặc email không tồn tại
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+router.post("/reset", userController.resetPass);
 
 module.exports = router;

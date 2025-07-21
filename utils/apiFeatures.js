@@ -1,63 +1,70 @@
 class APIFeatures {
-    constructor(query, queryString) {
-        this.query = query;
-        this.queryString = queryString;
+  constructor(query, queryString) {
+    this.query = query;
+    this.queryString = queryString;
+  }
+
+  filter() {
+    const queryObj = { ...this.queryString }; // Tạo đối tượng mới không ảnh hưởng đến req.query
+    const excludedFields = ["page", "sort", "limit", "fields", "search"];
+    excludedFields.forEach((el) => delete queryObj[el]);
+
+    let queryString = JSON.stringify(queryObj);
+    queryString = queryString.replace(
+      /\b(gte|gt|lte|lt)\b/g,
+      (match) => `$${match}`
+    );
+
+    this.query = this.query.find(JSON.parse(queryString));
+    return this;
+  }
+
+  search() {
+    if (this.queryString.search) {
+      const escapeRegex = (str) =>
+          str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      //Chuyển đổi obj thành array VD: search{name: "abc"} => ['name', 'abc']
+      const orConditions = Object.entries(this.queryString.search).map(
+        ([field, value]) => ({
+          [field]: { $regex: new RegExp(escapeRegex(value.trim())), $options: "i" },
+        })
+      );
+      if (orConditions.length > 0) {
+        this.query = this.query.find({ $or: orConditions });
+      }
     }
 
-    filter(){
-        const queryObj = {...this.queryString}; // Tạo đối tượng mới không ảnh hưởng đến req.query
-        const excludedFields = ['page', 'sort', "limit", 'fields', 'search'];
-        excludedFields.forEach(el => delete queryObj[el]);
+    return this;
+  }
 
-        let queryString = JSON.stringify(queryObj);
-        queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
-        
-        this.query = this.query.find(JSON.parse(queryString));
-        return this;
+  sort() {
+    if (this.queryString.sort) {
+      const sortBy = this.queryString.sort.split(",").join(" ");
+      this.query = this.query.sort(sortBy);
+    } else {
+      this.query = this.query.sort("-createdAt");
     }
+    return this;
+  }
 
-    search(){
-        if (this.queryString.search) {
-            //Chuyển đổi obj thành array VD: search{name: "abc"} => ['name', 'abc']
-            const orConditions = Object.entries(this.queryString.search).map(([field, value]) => ({
-                [field]: { $regex: value, $options: 'i' }
-            }));
-            if (orConditions.length > 0) {
-                this.query = this.query.find({ $or: orConditions });
-            }
-        }
-
-        return this;
+  limitFields() {
+    if (this.queryString.fields) {
+      const fields = this.queryString.fields.split(",").join(" ");
+      this.query = this.query.select(fields);
+    } else {
+      this.query = this.query.select("-__v");
     }
+    return this;
+  }
 
-    sort(){
-        if(this.queryString.sort){
-            const sortBy = this.queryString.sort.split(',').join(' ');
-            this.query =  this.query.sort(sortBy); 
-        }else{
-            this.query =  this.query.sort('-createdAt');
-        }
-        return this;
-    }
+  pagination() {
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+    this.query = this.query.skip(skip).limit(limit);
 
-    limitFields(){
-        if(this.queryString.fields){
-            const fields = this.queryString.fields.split(',').join(' ');
-             this.query =  this.query.select(fields);
-        }else{
-             this.query =  this.query.select('-__v');
-        }
-        return this;
-    }
-
-    pagination(){
-        const page = this.queryString.page * 1 || 1;
-        const limit = this.queryString.limit * 1 || 100;
-        const skip = (page - 1) * limit;
-        this.query = this.query.skip(skip).limit(limit);
-
-        return this;
-    }
+    return this;
+  }
 }
 
 module.exports = APIFeatures;

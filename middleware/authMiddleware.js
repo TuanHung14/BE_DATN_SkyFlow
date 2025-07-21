@@ -2,9 +2,7 @@ const {promisify} = require('util');
 const jwt = require('jsonwebtoken');
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const User = require('../model/userModel');
-
-
+const userService = require("../services/userService");
 
 const auth = catchAsync(async (req, res, next) => {
     let token;
@@ -16,8 +14,8 @@ const auth = catchAsync(async (req, res, next) => {
     }
     // promisify để chuyển hàm jwt.verify thành promises
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_ACCESS_SECRET);
-    
-    const currentUser = await User.findById(decoded.id);
+
+    const currentUser = await userService.findUserById(decoded.id);
 
     if(!currentUser) {
         return next(new AppError('Token thuộc về người dùng này không còn tồn tại', 401));
@@ -31,16 +29,4 @@ const auth = catchAsync(async (req, res, next) => {
     next();
 })
 
-const restrictTo = (...roles) => {
-    return (req, res, next) => {
-        if(!roles.includes(req.user.role)) {
-            return next(new AppError('You do not have permission to perform this action', 403));
-        }
-        next(); 
-    }
-}
-
-module.exports = {
-    auth,
-    restrictTo
-};
+module.exports = auth;
