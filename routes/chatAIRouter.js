@@ -13,6 +13,8 @@ router.use(auth);
  *       - Chat AI
  *     summary: Gửi câu hỏi đến AI và nhận phản hồi
  *     operationId: chatWithAI
+ *     security:
+ *       - bearer: []
  *     requestBody:
  *       required: true
  *       content:
