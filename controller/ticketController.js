@@ -528,8 +528,8 @@ exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
             path: 'showtimeId',
             select: 'showDate movieId roomId startTime',
             populate: [
-                { path: 'movieId', select: 'name format age posterUrl' },
-                { path: 'roomId', select: 'roomName', populate: { path: 'cinemaId', select: 'name' } }
+                { path: 'movieId', select: 'name format age posterUrl duration' },
+                { path: 'roomId', select: 'roomName', populate: { path: 'cinemaId' } }
             ],
         },
         { path: 'userId', select: 'name email phone' },
@@ -552,13 +552,22 @@ exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
         .populate("seatId", "seatRow seatNumber")
         .lean();
 
+    const ticketFoods = await TicketFood.find({ticketId: {$in: ticketIds }})
+        .select('ticketId foodId quantity priceAtPurchase')
+        .populate("foodId", "name")
+        .lean();
+
     const ticketsWithSeats = tickets.map(ticket => {
         const seats = ticketSeats
             .filter(ts => ts.ticketId.toString() === ticket._id.toString() && ts.seatId)
             .map(ts => `${ts.seatId.seatRow}${ts.seatId.seatNumber}`);
+        const foods = ticketFoods
+            .filter(tf => tf.ticketId.toString() === ticket._id.toString() && tf.foodId)
+            .map(tf => `${tf.foodId.name} x ${tf.quantity}`);
         return {
             ...ticket,
             seats,
+            foods,
             seatCount: seats.length,
         };
     });
@@ -648,7 +657,9 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
         },
         {
             $addFields: {
-                movieName: '$showtimeId.movieId.name'
+                movieName: '$showtimeId.movieId.name',
+                movieFormat: "$showtimeId.movieId.format",
+                movieDuration: "$showtimeId.movieId.duration",
             }
         },
         {
