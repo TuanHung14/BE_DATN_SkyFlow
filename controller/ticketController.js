@@ -697,7 +697,11 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
         },
         {
             $addFields: {
-                cinemaName: '$showtimeId.roomId.cinema.name'
+                cinemaName: '$showtimeId.roomId.cinema.name',
+                cinemaAddress: '$showtimeId.roomId.cinema.address',
+                cinemaProvince: '$showtimeId.roomId.cinema.province.label',
+                cinemaDistrict: '$showtimeId.roomId.cinema.district.label',
+                cinemaWard: '$showtimeId.roomId.cinema.ward.label',
             }
         },
         {
@@ -724,7 +728,7 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
                 as: 'users',
                 pipeline: [
                     {
-                        $project: { name: 1, email: 1},
+                        $project: { name: 1, email: 1, phone: 1},
                     },
                 ],
             }
@@ -732,6 +736,48 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$users',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'voucheruses',
+                localField: 'voucherUseId',
+                foreignField: '_id',
+                as: 'voucherUseId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$voucherUseId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'vouchers',
+                localField: 'voucherUseId.voucherId',
+                foreignField: '_id',
+                as: 'voucherUseId.voucherId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$voucherUseId.voucherId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+          $lookup: {
+              from: 'paymentmethods',
+              localField: 'paymentMethodId',
+              foreignField: '_id',
+              as: 'paymentMethodId'
+          }
+        },
+        {
+            $unwind: {
+                path: '$paymentMethodId',
                 preserveNullAndEmptyArrays: true
             }
         },
