@@ -35,6 +35,11 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: ID suất chiếu để lấy thông tin chọn ghế
+ *       - in: query
+ *         name: province
+ *         schema:
+ *          type: string
+ *         description: Tỉnh/thành phố để lọc danh sách rạp chiếu và suất chiếu
  *     responses:
  *       200:
  *         description: Trả về dữ liệu theo bước đang chọn
