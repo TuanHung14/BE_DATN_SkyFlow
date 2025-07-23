@@ -1,9 +1,7 @@
 const express = require('express');
 const chatAIController = require('../controller/chatAIController')
-const auth = require("../middleware/authMiddleware");
+const auth = require('../middleware/authMiddleware');
 const router = express.Router();
-
-router.use(auth);
 
 /**
  * @swagger
@@ -13,8 +11,6 @@ router.use(auth);
  *       - Chat AI
  *     summary: Gửi câu hỏi đến AI và nhận phản hồi
  *     operationId: chatWithAI
- *     security:
- *       - bearer: []
  *     requestBody:
  *       required: true
  *       content:
@@ -46,8 +42,6 @@ router.post("/", chatAIController.chatAI);
  *       - Chat AI
  *     summary: Gửi prompt có sẵn theo ID để nhận phản hồi từ AI
  *     operationId: chatWithAIByPromptId
- *     security:
- *       - bearer: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -64,5 +58,7 @@ router.post("/", chatAIController.chatAI);
  *         description: Lỗi từ server hoặc AI
  */
 router.get("/:id", chatAIController.chatAIByPrompt);
+
+router.post("/generate-review", auth, chatAIController.generateReview);
 
 module.exports = router;

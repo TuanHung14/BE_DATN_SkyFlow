@@ -1,6 +1,7 @@
 const express = require("express");
 const cinemaController = require("../controller/cinemaController");
 const auth = require("../middleware/authMiddleware");
+const optionalAuth = require("../middleware/optionalAuthMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
 const { Resource} = require("../model/permissionModel");
 const { getRBACOnResorce } = require("../utils/helper");
@@ -39,6 +40,8 @@ const router = express.Router();
  *         value:
  *           type: string
  */
+
+router.get("/distances/:unit", optionalAuth, cinemaController.getNearestCinemas)
 
 /**
  * @swagger

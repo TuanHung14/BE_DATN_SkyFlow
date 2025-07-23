@@ -38,4 +38,6 @@ const router = express.Router({ mergeParams: true });
  */
 router.post("/", movieRatingController.createMovieRating);
 
+router.get("/", movieRatingController.getAllMovieRatings);
+
 module.exports = router;

@@ -3,6 +3,7 @@ const AppError = require("../utils/appError");
 const chatAI = require("../utils/chatAI");
 const executeFunction = require("../utils/functionCall");
 const Prompt = require("../model/promptModel");
+const Movie = require("../model/movieModel");
 
 const training =  (keyText) => {
     return `
@@ -108,6 +109,35 @@ exports.chatAI = catchAsync(async (req, res, next) => {
         status: 'success',
         data: {
             content: result
+        }
+    });
+})
+
+exports.generateReview= catchAsync(async (req, res, next) => {
+    const { rating, movieId } = req.body;
+
+    if (!rating || !movieId) {
+        return next(new AppError('Rating and movieId are required', 400));
+    }
+    const movie = await Movie.findById(movieId);
+
+    const systemInstruction = `
+        Bạn là một AI chuyên viết đánh giá phim. Hãy viết một đánh giá ngắn gọn dưới 100 từ và súc tích cho bộ phim ${movie.name} với rating ${rating} sao.
+        Đánh giá nên bao gồm cảm nhận về nội dung, diễn xuất, hình ảnh và âm thanh của bộ phim.
+        Tránh sử dụng từ ngữ tục tĩu hoặc xúc phạm.
+        Chỉ trả về đánh giá dưới dạng văn bản thuần túy, không cần định dạng HTML hay markdown.
+    `;
+
+    const review = await chatAI(`Viết đánh giá cho bộ phim ${movie.name} với rating ${rating} sao`, systemInstruction);
+
+    if (!review) {
+        return next(new AppError('Không thể tạo đánh giá', 500));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            review
         }
     });
 })
