@@ -113,3 +113,72 @@ exports.getFilteredCinemas = catchAsync(async (req, res, next) => {
         data: data
     });
 });
+
+exports.getNearestCinemas = catchAsync(async (req, res, next) => {
+    const user = req.user;
+    const { unit } = req.params;
+    // unit có thể là 'mi' (dặm) hoặc 'km' (kilomet)
+    const multiplier = unit ==='mi'? 0.000621371 : 0.001;
+    let cinemas;
+
+    if (!user) {
+        cinemas = await Cinema.find(
+            {
+                isDeleted: false
+            },
+            {
+                name: 1,
+                province: 1,
+                district: 1,
+                ward: 1,
+                address: 1,
+                phone: 1
+        })
+            .sort({ createdAt: -1 })
+            .limit(4);
+
+        return res.status(200).json({
+            status: 'success',
+            data: {
+                cinemas
+            }
+        });
+    }
+
+    const [latitude, longitude] = user.location.coordinates;
+
+    cinemas = await Cinema.aggregate([
+        {
+            $geoNear: {
+                near: {
+                    type: 'Point',
+                    coordinates: [latitude * 1, longitude * 1],
+                },
+                distanceField: 'distance',
+                distanceMultiplier: multiplier,
+                query: { isDeleted: false }
+            }
+        },
+        {
+            $limit: 4
+        },
+        {
+            $project: {
+                name: 1,
+                province: 1,
+                district: 1,
+                ward: 1,
+                address: 1,
+                phone: 1,
+                distance: 1
+            }
+        }
+    ]);
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            cinemas
+        }
+    });
+});

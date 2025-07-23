@@ -46,6 +46,22 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    location: {
+      type: {
+          type: String,
+          enum: ["Point"],
+          default: "Point",
+      },
+      coordinates: {
+          type: [Number], // [longitude, latitude]
+          default: [0, 0],
+      },
+    },
+    address: {
+        type: String,
+        trim: true,
+        default: null,
+    },
     passwordChangedAt: Date,
     isAdmin: {
       type: Boolean,
@@ -80,6 +96,9 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Tạo chỉ mục địa lý cho trường location
+userSchema.index({ location: "2dsphere" });
 
 // document middleware
 // save chỉ có tác dụng với .save hay .create
