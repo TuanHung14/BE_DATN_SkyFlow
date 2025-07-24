@@ -93,7 +93,7 @@ exports.chatAI = catchAsync(async (req, res, next) => {
     const rendered = [];
     for (let prompt of fullPrompt) {
         const obj = {};
-        const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
+        const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req?.user?._id);
         obj.template = template;
         obj.systemInstruction = prompt.systemInstruction;
         obj.context = context;
