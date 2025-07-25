@@ -4,6 +4,7 @@ const chatAI = require("../utils/chatAI");
 const executeFunction = require("../utils/functionCall");
 const Prompt = require("../model/promptModel");
 const Movie = require("../model/movieModel");
+const { getChatHistory } = require("../utils/redis");
 
 const training = (keyText) => {
     return `
@@ -46,6 +47,7 @@ const callFunctionByPrompt = async (functionToCall, template, userId) => {
 
 exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
     const promptId  = req.params.id;
+    const sessionId = req.params.sessionId;
 
     if (!promptId) {
         return next(new AppError('Gợi ý không được để trống', 400));
@@ -69,7 +71,7 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
     const systemInstruction = training(keyText);
 
 
-    const result = await chatAI('Trả lời theo systemInstruction và dữ liệu là template', systemInstruction);
+    const result = await chatAI('Trả lời theo systemInstruction và dữ liệu là template', systemInstruction, sessionId);
 
     res.status(200).json({
         status: 'success',
@@ -109,6 +111,23 @@ exports.chatAI = catchAsync(async (req, res, next) => {
         status: 'success',
         data: {
             content: result
+        }
+    });
+})
+
+exports.getChatHistory = catchAsync(async (req, res, next) => {
+    const { sessionId } = req.params;
+    console.log('sessionId', sessionId);
+    const history = await getChatHistory(sessionId);
+
+    if (!history || history.length === 0) {
+        return next(new AppError('Không tìm thấy lịch sử trò chuyện', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            history
         }
     });
 })
