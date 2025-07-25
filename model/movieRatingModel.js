@@ -25,7 +25,13 @@ const movieRatingSchema = new mongoose.Schema({
     required: [true, 'Điểm đánh giá không được để trống'],
     min: [1, 'Điểm đánh giá phải từ 1-5'],
     max: [5, 'Điểm đánh giá phải từ 1-5']
-  }
+  },
+  review: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Đánh giá không được quá 500 ký tự'],
+    default: null
+  },
 }, {
   timestamps: true
 });

@@ -1,9 +1,7 @@
 const express = require('express');
 const chatAIController = require('../controller/chatAIController')
-const auth = require("../middleware/authMiddleware");
+const auth = require('../middleware/authMiddleware');
 const router = express.Router();
-
-router.use(auth);
 
 /**
  * @swagger
@@ -13,8 +11,6 @@ router.use(auth);
  *       - Chat AI
  *     summary: Gửi câu hỏi đến AI và nhận phản hồi
  *     operationId: chatWithAI
- *     security:
- *       - bearer: []
  *     requestBody:
  *       required: true
  *       content:
@@ -23,11 +19,15 @@ router.use(auth);
  *             type: object
  *             required:
  *               - prompt
+ *               - sessionId
  *             properties:
  *               prompt:
  *                 type: string
  *                 description: Câu hỏi hoặc tin nhắn gửi đến AI
  *                 example: "Xin chào AI hỗ trợ"
+ *               sessionId:
+ *                 type: string
+ *                 description: sessionId để quản lý phiên trò chuyện
  *     responses:
  *       200:
  *         description: Phản hồi từ AI
@@ -40,19 +40,47 @@ router.post("/", chatAIController.chatAI);
 
 /**
  * @swagger
- * /api/v1/chatAI/{id}:
+ * /api/v1/chatAI/history/{sessionId}:
+ *   get:
+ *     tags:
+ *       - Chat AI
+ *     summary: Lấy lịch sử trò chuyện từ Redis theo sessionId
+ *     parameters:
+ *       - name: sessionId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Mã phiên trò chuyện
+ *     responses:
+ *       200:
+ *         description: Lịch sử trò chuyện đã lưu
+ *       404:
+ *         description: Không tìm thấy lịch sử
+ *       500:
+ *         description: Lỗi server
+ */
+router.get("/history/:sessionId", chatAIController.getChatHistory);
+
+/**
+ * @swagger
+ * /api/v1/chatAI/{id}/{sessionId}:
  *   get:
  *     tags:
  *       - Chat AI
  *     summary: Gửi prompt có sẵn theo ID để nhận phản hồi từ AI
  *     operationId: chatWithAIByPromptId
- *     security:
- *       - bearer: []
  *     parameters:
  *       - name: id
  *         in: path
  *         required: true
  *         description: ID của prompt trong hệ thống
+ *         schema:
+ *           type: string
+ *       - name: sessionId
+ *         in: path
+ *         required: true
+ *         description: sessionId để quản lý phiên trò chuyện
  *         schema:
  *           type: string
  *     responses:
@@ -63,6 +91,8 @@ router.post("/", chatAIController.chatAI);
  *       500:
  *         description: Lỗi từ server hoặc AI
  */
-router.get("/:id", chatAIController.chatAIByPrompt);
+router.get("/:id/:sessionId", chatAIController.chatAIByPrompt);
+
+router.post("/generate-review", auth, chatAIController.generateReview);
 
 module.exports = router;

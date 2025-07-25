@@ -19,7 +19,6 @@ const promptSchema = new mongoose.Schema({
     },
     functionToCall: {
         type: String,
-        enum: ['getUserInfo', 'getMovies', 'getBookings', 'none'],
         default: 'none'
     },
     template: {

@@ -3,8 +3,10 @@ const AppError = require("../utils/appError");
 const chatAI = require("../utils/chatAI");
 const executeFunction = require("../utils/functionCall");
 const Prompt = require("../model/promptModel");
+const Movie = require("../model/movieModel");
+const { getChatHistory } = require("../utils/redis");
 
-const training =  (keyText) => {
+const training = (keyText) => {
     return `
         Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
         ${keyText}
@@ -45,6 +47,7 @@ const callFunctionByPrompt = async (functionToCall, template, userId) => {
 
 exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
     const promptId  = req.params.id;
+    const sessionId = req.params.sessionId;
 
     if (!promptId) {
         return next(new AppError('Gợi ý không được để trống', 400));
@@ -68,7 +71,7 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
     const systemInstruction = training(keyText);
 
 
-    const result = await chatAI('Trả lời theo systemInstruction và dữ liệu là template', systemInstruction);
+    const result = await chatAI('Trả lời theo systemInstruction và dữ liệu là template', systemInstruction, sessionId);
 
     res.status(200).json({
         status: 'success',
@@ -79,7 +82,7 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
 });
 
 exports.chatAI = catchAsync(async (req, res, next) => {
-    const { prompt } =req.body;
+    const { prompt, sessionId } =req.body;
 
     if (!prompt) {
         return next(new AppError('Prompt is required', 400));
@@ -92,7 +95,7 @@ exports.chatAI = catchAsync(async (req, res, next) => {
     const rendered = [];
     for (let prompt of fullPrompt) {
         const obj = {};
-        const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
+        const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req?.user?._id);
         obj.template = template;
         obj.systemInstruction = prompt.systemInstruction;
         obj.context = context;
@@ -102,12 +105,58 @@ exports.chatAI = catchAsync(async (req, res, next) => {
     const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template} \n data: ${JSON.stringify(item.context)}`).join('\n');
     const systemInstruction = training(keyText);
 
-    const result = await chatAI(prompt, systemInstruction);
+    const result = await chatAI(prompt, systemInstruction, sessionId);
 
     res.status(200).json({
         status: 'success',
         data: {
             content: result
+        }
+    });
+})
+
+exports.getChatHistory = catchAsync(async (req, res, next) => {
+    const { sessionId } = req.params;
+    console.log('sessionId', sessionId);
+    const history = await getChatHistory(sessionId);
+
+    if (!history || history.length === 0) {
+        return next(new AppError('Không tìm thấy lịch sử trò chuyện', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            history
+        }
+    });
+})
+
+exports.generateReview= catchAsync(async (req, res, next) => {
+    const { rating, movieId } = req.body;
+
+    if (!rating || !movieId) {
+        return next(new AppError('Rating and movieId are required', 400));
+    }
+    const movie = await Movie.findById(movieId);
+
+    const systemInstruction = `
+        Bạn là một AI chuyên viết đánh giá phim. Hãy viết một đánh giá ngắn gọn dưới 100 từ và súc tích cho bộ phim ${movie.name} với rating ${rating} sao.
+        Đánh giá nên bao gồm cảm nhận về nội dung, diễn xuất, hình ảnh và âm thanh của bộ phim.
+        Tránh sử dụng từ ngữ tục tĩu hoặc xúc phạm.
+        Chỉ trả về đánh giá dưới dạng văn bản thuần túy, không cần định dạng HTML hay markdown.
+    `;
+
+    const review = await chatAI(`Viết đánh giá cho bộ phim ${movie.name} với rating ${rating} sao`, systemInstruction);
+
+    if (!review) {
+        return next(new AppError('Không thể tạo đánh giá', 500));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            review
         }
     });
 })

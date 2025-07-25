@@ -1,6 +1,7 @@
 const express = require("express");
 const movieController = require("../controller/movieController");
 const movieRatingRouter = require("../routes/movieRatingRouter");
+const wishlistMovieRouter = require("../routes/wishlistMovieRouter");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
 const { Resource } = require("../model/permissionModel");
@@ -11,12 +12,19 @@ const router = express.Router();
 
 router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
 
+router.use("/:movieId/wish-list", auth, wishlistMovieRouter);
+router.use("/wish-list", auth, wishlistMovieRouter);
+
+
 /**
  * @swagger
  * tags:
  *   - name: Movies
  *     description: Quản lý phim (người dùng và admin)
  */
+
+
+router.get("/recommend-by-genre", auth, movieController.getMovieRecommend);
 
 /**
  * @swagger
@@ -358,7 +366,6 @@ router.delete("/:id", auth, authorize(permissions['delete']), movieController.so
  *       500:
  *         description: Lỗi máy chủ
  */
-
 router.get("/", movieController.getAllMovies);
 
 /**
@@ -381,4 +388,6 @@ router.get("/", movieController.getAllMovies);
  *         description: Không tìm thấy phim
  */
 router.get("/slug/:slug", movieController.getMovieBySlug);
+
+
 module.exports = router;
