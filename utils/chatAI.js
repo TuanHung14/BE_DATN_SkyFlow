@@ -27,7 +27,7 @@ const chatAI = async (prompt, systemInstruction, sessionId) => {
     const response = await result.response;
     const text = response.text();
 
-    const his = history.filter((item) => {
+    const his = history.map((item) => {
         if (item.role === "user") {
             item.parts = [
                 {
