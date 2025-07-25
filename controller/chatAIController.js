@@ -71,11 +71,12 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
     const systemInstruction = training(keyText);
 
 
-    const result = await chatAI('Trả lời theo systemInstruction và dữ liệu là template', systemInstruction, sessionId);
+    const result = await chatAI(prompt.description, systemInstruction, sessionId);
 
     res.status(200).json({
         status: 'success',
         data: {
+            question: prompt.description,
             content: result
         }
     });
