@@ -5,7 +5,7 @@ const executeFunction = require("../utils/functionCall");
 const Prompt = require("../model/promptModel");
 const Movie = require("../model/movieModel");
 
-const training =  (keyText) => {
+const training = (keyText) => {
     return `
         Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
         ${keyText}
@@ -80,7 +80,7 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
 });
 
 exports.chatAI = catchAsync(async (req, res, next) => {
-    const { prompt } =req.body;
+    const { prompt, sessionId } =req.body;
 
     if (!prompt) {
         return next(new AppError('Prompt is required', 400));
@@ -103,7 +103,7 @@ exports.chatAI = catchAsync(async (req, res, next) => {
     const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template} \n data: ${JSON.stringify(item.context)}`).join('\n');
     const systemInstruction = training(keyText);
 
-    const result = await chatAI(prompt, systemInstruction);
+    const result = await chatAI(prompt, systemInstruction, sessionId);
 
     res.status(200).json({
         status: 'success',
