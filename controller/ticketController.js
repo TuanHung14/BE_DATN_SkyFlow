@@ -758,7 +758,12 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
                 from: 'vouchers',
                 localField: 'voucherUseId.voucherId',
                 foreignField: '_id',
-                as: 'voucherUseId.voucherId'
+                as: 'voucherUseId.voucherId',
+                pipeline: [
+                    {
+                        $project: { voucherName: 1, discountValue: 1 }
+                    }
+                ]
             }
         },
         {
