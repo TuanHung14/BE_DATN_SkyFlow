@@ -12,6 +12,13 @@ const router = express.Router({ mergeParams: true });
  *     tags: [Movie Ratings]
  *     security:
  *       - bearer: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của phim cần đánh giá
  *     requestBody:
  *       required: true
  *       content:
