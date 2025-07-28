@@ -4,6 +4,7 @@ const movieRatingRouter = require("../routes/movieRatingRouter");
 const wishlistMovieRouter = require("../routes/wishlistMovieRouter");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
+const optionalAuth = require('../middleware/optionalAuthMiddleware');
 const { Resource } = require("../model/permissionModel");
 const { getRBACOnResorce } = require("../utils/helper");
 const permissions = getRBACOnResorce(Resource.Movie);
@@ -13,6 +14,7 @@ const router = express.Router();
 router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
 
 router.use("/:movieId/wish-list", auth, wishlistMovieRouter);
+
 router.use("/wish-list", auth, wishlistMovieRouter);
 
 
@@ -23,8 +25,27 @@ router.use("/wish-list", auth, wishlistMovieRouter);
  *     description: Quản lý phim (người dùng và admin)
  */
 
-
-router.get("/recommend-by-genre", auth, movieController.getMovieRecommend);
+/**
+ * @swagger
+ * /api/v1/movies/recommend-by-genre:
+ *   get:
+ *     tags:
+ *       - Movies
+ *     summary: Gợi ý phim dựa trên thể loại người dùng xem nhiều
+ *     operationId: getMovieRecommendByGenre
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách phim được gợi ý thành công
+ *       401:
+ *         description: Không được ủy quyền
+ *       404:
+ *         description: Không tìm thấy phim phù hợp
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+router.get("/recommend-by-genre", optionalAuth, movieController.getMovieRecommend);
 
 /**
  * @swagger
@@ -296,6 +317,8 @@ router.delete("/:id", auth, authorize(permissions['delete']), movieController.so
  *     tags: [Movies]
  *     summary: Lấy danh sách phim có lọc, sắp xếp, phân trang
  *     operationId: getAllMoviesUser
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: genresId[]
@@ -318,15 +341,14 @@ router.delete("/:id", auth, authorize(permissions['delete']), movieController.so
  *         description: Lọc theo nhiều diễn vien
  *         VD: ?castId[]=ID1&castId[]=ID2
  *       - in: query
- *         name: directorId[]
+ *         name: directorId
  *         schema:
- *           type: array
+ *           type: string
  *           items:
  *             type: string
  *         style: form
  *         explode: true
  *         description: Lọc theo nhiều đạo diễn
- *         VD: ?directorId[]=ID1&directorId[]=ID2
  *       - in: query
  *         name: search[name]
  *         schema:
@@ -366,7 +388,7 @@ router.delete("/:id", auth, authorize(permissions['delete']), movieController.so
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/", movieController.getAllMovies);
+router.get("/", optionalAuth,movieController.getAllMovies);
 
 /**
  * @swagger

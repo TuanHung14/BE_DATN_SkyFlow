@@ -7,27 +7,52 @@ const Movie = require("../model/movieModel");
 const { getChatHistory } = require("../utils/redis");
 
 const training = (keyText) => {
+    // return `
+    //     Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
+    //     ${keyText}
+    //     Đây là tổng hợp những dữ liệu trong web này hãy xem câu hỏi của khách hàng mà hãy trả lời theo
+    //      QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY HÃY LÀM THEO NHỮNG ĐIỀU SAU:
+    //     - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
+    //     - KHÔNG sử dụng markdown
+    //     - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
+    //     - KHÔNG giải thích code
+    //     - CHỈ trả về HTML content thuần túy
+    //     - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
+    //     - Đảm bảo HTML valid và well-formed
+    //     - CSS dùm siêu đẹp bằng inline, nhưng không sử dụng thẻ <style>
+    //
+    //     Ví dụ format trả về:
+    //     <div>
+    //         <h2>Thông tin khách hàng</h2>
+    //         <p><strong>Họ tên:</strong> Nguyễn Văn A</p>
+    //         <p><strong>Email:</strong> example.com</p>
+    //     </div>
+    //     CÒN KHÔNG HÃY TRẢ VỀ DẠNG TEXT NHƯ BÌNH THƯỜNG
+    // `;
+
     return `
-        Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
-        ${keyText}
-        Đây là tổng hợp những dữ liệu trong web này hãy xem câu hỏi của khách hàng mà hãy trả lời theo 
-         QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY HÃY LÀM THEO NHỮNG ĐIỀU SAU: 
-        - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
-        - KHÔNG sử dụng markdown
-        - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
-        - KHÔNG giải thích code
-        - CHỈ trả về HTML content thuần túy
-        - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
-        - Đảm bảo HTML valid và well-formed
-        
-        Ví dụ format trả về:
-        <div>
-            <h2>Thông tin khách hàng</h2>
-            <p><strong>Họ tên:</strong> Nguyễn Văn A</p>
-            <p><strong>Email:</strong> example@email.com</p>
-        </div>
-        CÒN KHÔNG HÃY TRẢ VỀ DẠNG TEXT NHƯ BÌNH THƯỜNG
-    `;
+    Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
+    ${keyText}
+    Đây là tổng hợp những dữ liệu trong web này, hãy xem câu hỏi của khách hàng và trả lời theo các yêu cầu sau:
+    QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY, HÃY LÀM THEO NHỮNG ĐIỀU SAU: 
+    - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
+    - KHÔNG sử dụng markdown
+    - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
+    - KHÔNG giải thích code
+    - CHỈ trả về HTML content thuần túy
+    - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
+    - Đảm bảo HTML valid và well-formed
+    - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
+    - Đảm bảo bố cục rõ ràng, dễ đọc, và chuyên nghiệp
+    
+    Ví dụ format trả về:
+    <div style="background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="color: #0057D8; font-size: 24px; margin-bottom: 15px;">Thông tin khách hàng</h2>
+        <p style="color: #333; font-size: 16px; margin-bottom: 10px;"><strong>Họ tên:</strong> Nguyễn Văn A</p>
+        <p style="color: #333; font-size: 16px;"><strong>Email:</strong> example@email.com</p>
+    </div>
+    CÒN KHÔNG HÃY TRẢ VỀ DẠNG TEXT NHƯ BÌNH THƯỜNG
+`;
 }
 
 const callFunctionByPrompt = async (functionToCall, template, userId) => {
@@ -59,12 +84,18 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
         return next(new AppError('Gợi ý không được tìm thấy vui lòng thử lại sau', 400));
     }
 
-    const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
+    const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req?.user?._id);
+
+
+    // const keyText = `
+    //     systemInstruction: ${prompt.systemInstruction}
+    //     template: ${template}
+    //     data: ${JSON.stringify(context)}
+    // `;
 
 
     const keyText = `
         systemInstruction: ${prompt.systemInstruction}
-        template: ${template}
         data: ${JSON.stringify(context)}
     `;
 
@@ -103,7 +134,9 @@ exports.chatAI = catchAsync(async (req, res, next) => {
         rendered.push(obj);
     }
 
-    const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template} \n data: ${JSON.stringify(item.context)}`).join('\n');
+    // const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template} \n data: ${JSON.stringify(item.context)}`).join('\n');
+    const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n data: ${JSON.stringify(item.context)}`).join('\n');
+
     const systemInstruction = training(keyText);
 
     const result = await chatAI(prompt, systemInstruction, sessionId);

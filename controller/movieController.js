@@ -5,6 +5,10 @@ const catchAsync = require("../utils/catchAsync");
 const Factory = require("./handleFactory");
 const {filterObj} = require("../utils/helper");
 const {updateMovieStatusLogic} = require("../services/movieService");
+const searchDB = require("../utils/searchDB");
+const APIAggregate = require("../utils/apiAggregate");
+const mongoose = require("mongoose");
+
 
 // CREATE MOVIE
 exports.createMovie = catchAsync(async (req, res, next) => {
@@ -116,7 +120,14 @@ exports.getMovieBySlug = catchAsync(async (req, res, next) => {
 });
 
 exports.getMovieRecommend = catchAsync(async (req, res, next) => {
-    const userId = req.user._id;
+    const userId = req.user?._id;
+
+    if(!userId) {
+        return res.status(200).json({
+            status: "success",
+            data: [],
+        });
+    }
 
     const movies = await Ticket.aggregate([
         {
@@ -171,7 +182,10 @@ exports.getMovieRecommend = catchAsync(async (req, res, next) => {
     ]);
 
     if (movies.length === 0) {
-        return next(new AppError("Không tìm thấy thể loại nào", 404));
+        return res.status(200).json({
+            status: "success",
+            data: [],
+        });
     }
 
     const genresIds = movies.map(item => item._id);
@@ -192,10 +206,121 @@ exports.getMovieRecommend = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getAllMovies = (req, res, next) => {
-    req.query.publishStatus = "PUBLISHED";
-    return Factory.getAll(Movie, "castId genresId directorId")(req, res, next);
-};
+exports.getAllMovies = catchAsync(async (req, res, next) => {
+    const user = req.user;
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const { genresId, search, castId, directorId, status, sort } = req.query;
+    const filter = {
+        publishStatus: "PUBLISHED",
+        isDeleted: false,
+    };
+
+    // Viết hàm chuyển đổi string id trong [] thành mảng ObjectId
+    if (genresId) {
+        const genresIdArray = genresId.map(id => new mongoose.Types.ObjectId(id));
+        filter.genresId = { $in: genresIdArray };
+    }
+    if (castId) {
+        const castIdArray = castId.map(id => new mongoose.Types.ObjectId(id));
+        filter.castId = { $in: castIdArray };
+    }
+    if (directorId) {
+        filter.directorId = new mongoose.Types.ObjectId(directorId);
+    }
+    if (status) {
+        filter.status = status;
+    }
+
+    const pipeline = [{ $match: filter }];
+
+    if (search) {
+        pipeline.push({
+            $match: {
+                name: searchDB(search.name),
+            },
+        });
+    }
+
+    pipeline.push({
+        $lookup: {
+            from: "wishlistmovies",
+            localField: "_id",
+            foreignField: "movieId",
+            as: "wishlists",
+        },
+    });
+
+    pipeline.push({
+        $addFields: {
+            isWishlisted: user
+                ? {
+                    $in: [
+                        { $toObjectId: user._id },
+                        {
+                            $map: {
+                                input: "$wishlists",
+                                as: "wish",
+                                in: "$$wish.userId",
+                            },
+                        },
+                    ],
+                }
+                : false,
+        },
+    });
+
+    pipeline.push(
+        {
+            $lookup: {
+                from: "movieentities",
+                localField: "castId",
+                foreignField: "_id",
+                as: "castId",
+            },
+        },
+        {
+            $lookup: {
+                from: "movieentities",
+                localField: "genresId",
+                foreignField: "_id",
+                as: "genresId",
+            },
+        },
+        {
+            $lookup: {
+                from: "movieentities",
+                localField: "directorId",
+                foreignField: "_id",
+                as: "directorId",
+            },
+        },
+        { $unwind: { path: "$directorId", preserveNullAndEmptyArrays: true } } // Nếu cần
+    );
+
+    if (sort) {
+        const sortFields = sort.split(','); // ['name', '-releaseDate']
+        const sortObj = {};
+
+        sortFields.forEach(field => {
+            if (field.startsWith('-')) {
+                sortObj[field.substring(1)] = -1;
+            } else {
+                sortObj[field] = 1;
+            }
+        });
+
+        pipeline.push({ $sort: sortObj });
+    } else {
+        pipeline.push({ $sort: { createdAt: -1 } });
+    }
+
+    // pipeline.push({ $unset: ["wishlists"] });
+
+    const data = await APIAggregate(Movie, { limit, page }, pipeline);
+
+    res.status(200).json(data);
+});
 
 exports.getAllMoviesAdmin = Factory.getAll(Movie, "castId genresId directorId");
 
