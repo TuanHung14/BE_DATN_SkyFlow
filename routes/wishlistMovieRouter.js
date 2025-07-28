@@ -98,6 +98,20 @@ const router = express.Router({ mergeParams: true });
  */
 router.post("/", wishlistMovieController.toggeleWishlistMovie);
 
+/**
+ * @swagger
+ * /api/v1/movies/wish-list:
+ *   get:
+ *     tags:
+ *       - Wishlist
+ *     summary: Lấy danh sách phim trong danh sách yêu thích
+ *     operationId: getWishlistMovies
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách phim trong danh sách yêu thích
+ */
 router.get("/", wishlistMovieController.getWishlistMovies);
 
 module.exports = router;

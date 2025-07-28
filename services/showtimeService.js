@@ -25,10 +25,10 @@ async function getShowtimes() {
         {
             // Lọc theo ngày chiếu
             $match: {
-                // showDate: {
-                //     $gte: startOfDay,
-                //     $lte: endOfDay
-                // },
+                showDate: {
+                    $gte: startOfDay,
+                    $lte: endOfDay
+                },
                 status: "scheduled"
             }
         },

@@ -17,7 +17,7 @@ async function executeFunction(functionName, userId) {
         case 'getShowtimes':
             return await getShowtimes();
         case 'getCinemaList':
-            return await getCinemaList();
+            return await getCinemaList(userId);
         case 'getTicketPrices':
             return await getTicketPrices();
         default:

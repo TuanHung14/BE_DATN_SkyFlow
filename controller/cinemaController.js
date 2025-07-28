@@ -121,7 +121,7 @@ exports.getNearestCinemas = catchAsync(async (req, res, next) => {
     const multiplier = unit ==='mi'? 0.000621371 : 0.001;
     let cinemas;
 
-    if (!user) {
+    if (!user || user.location.coordinates[0] === 0 || user.location.coordinates[1] === 0) {
         cinemas = await Cinema.find(
             {
                 isDeleted: false
