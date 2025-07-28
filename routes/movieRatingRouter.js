@@ -10,6 +10,8 @@ const router = express.Router({ mergeParams: true });
  *     summary: Tạo đánh giá phim mới
  *     description: Tạo đánh giá mới cho một bộ phim
  *     tags: [Movie Ratings]
+ *     security:
+ *       - bearer: []
  *     requestBody:
  *       required: true
  *       content:
@@ -48,6 +50,8 @@ router.post("/", movieRatingController.createMovieRating);
  *     summary: Lấy tất cả đánh giá của một bộ phim
  *     description: Trả về danh sách các đánh giá (rating & review) cho bộ phim theo movieId
  *     tags: [Movie Ratings]
+ *     security:
+ *       - bearer: []
  *     parameters:
  *       - in: path
  *         name: movieId
