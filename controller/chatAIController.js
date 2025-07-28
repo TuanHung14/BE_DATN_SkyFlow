@@ -44,6 +44,7 @@ const training = (keyText) => {
     - Đảm bảo HTML valid và well-formed
     - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
     - Đảm bảo bố cục rõ ràng, dễ đọc, và chuyên nghiệp
+    - Lưu ý khung hình để hiện thị trên máy tính là width: 200px, height: 500px
     
     Ví dụ format trả về:
     <div style="background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
