@@ -34,7 +34,7 @@ router.use("/wish-list", auth, wishlistMovieRouter);
  *     summary: Gợi ý phim dựa trên thể loại người dùng xem nhiều
  *     operationId: getMovieRecommendByGenre
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     responses:
  *       200:
  *         description: Danh sách phim được gợi ý thành công
@@ -52,7 +52,7 @@ router.get("/recommend-by-genre", optionalAuth, movieController.getMovieRecommen
  * /api/v1/movies/admin:
  *   get:
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     tags: [Movies]
  *     summary: Lấy danh sách phim có lọc, sắp xếp, phân trang
  *     operationId: getAllMoviesAdmin
@@ -130,7 +130,7 @@ router.get("/admin", auth, authorize(permissions['read']) ,movieController.getAl
  * /api/v1/movies/{id}:
  *   get:
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     summary: Lấy chi tiết một phim
  *     tags: [Movies]
  *     parameters:
@@ -151,7 +151,7 @@ router.get("/:id", movieController.getMovie);
  * /api/v1/movies/:
  *   post:
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     summary: Tạo một phim mới
  *     tags: [Movies]
  *     requestBody:
@@ -225,7 +225,7 @@ router.post("/", auth, authorize(permissions['create']),movieController.createMo
  * /api/v1/movies/{id}:
  *   patch:
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     summary: Cập nhật thông tin phim
  *     tags: [Movies]
  *     parameters:
@@ -292,7 +292,7 @@ router.patch("/:id", auth, authorize(permissions['update']),movieController.upda
  * /api/v1/movies/{id}:
  *   delete:
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     summary: Xoá mềm một phim
  *     tags: [Movies]
  *     parameters:
@@ -318,7 +318,7 @@ router.delete("/:id", auth, authorize(permissions['delete']), movieController.so
  *     summary: Lấy danh sách phim có lọc, sắp xếp, phân trang
  *     operationId: getAllMoviesUser
  *     security:
- *       - bearerAuth: []
+ *       - bearer: []
  *     parameters:
  *       - in: query
  *         name: genresId[]
