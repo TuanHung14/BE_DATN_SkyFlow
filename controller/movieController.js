@@ -7,7 +7,7 @@ const { filterObj } = require("../utils/helper");
 const { updateMovieStatusLogic } = require("../services/movieService");
 const searchDB = require("../utils/searchDB");
 const APIAggregate = require("../utils/apiAggregate");
-const Showtime = require("../model/showtimeModel");
+// const Showtime = require("../model/showtimeModel");
 const mongoose = require("mongoose");
 
 // CREATE MOVIE
