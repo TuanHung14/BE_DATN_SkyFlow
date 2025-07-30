@@ -11,7 +11,7 @@ const permissions = getRBACOnResorce(Resource.Movie);
 
 const router = express.Router();
 
-router.use("/:movieId/movie-ratings", auth, movieRatingRouter);
+router.use("/:movieId/movie-ratings", movieRatingRouter);
 
 router.use("/:movieId/wish-list", auth, wishlistMovieRouter);
 
