@@ -1,5 +1,6 @@
 const express = require('express');
 const movieRatingController = require('../controller/movieRatingController');
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router({ mergeParams: true });
 
@@ -48,7 +49,7 @@ const router = express.Router({ mergeParams: true });
  *       500:
  *         description: Lỗi máy chủ
  */
-router.post("/", movieRatingController.createMovieRating);
+router.post("/", auth, movieRatingController.createMovieRating);
 
 /**
  * @swagger

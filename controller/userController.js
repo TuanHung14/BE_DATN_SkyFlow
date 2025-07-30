@@ -27,7 +27,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
 
     //Sử dụng filterObj để chỉ lấy ra các field cần thiết
-    const filteredBody = filterObj(req.body, 'name', 'email', 'photo', 'phone', 'dateOfBirth');
+    const filteredBody = filterObj(req.body, 'name', 'email', 'photo', 'phone', 'dateOfBirth', 'address', 'location');
 
     const updatedUser = await userService.updateOne(req.user._id, filteredBody, true);
 
