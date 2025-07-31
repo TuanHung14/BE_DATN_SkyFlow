@@ -69,6 +69,10 @@ module.exports = class Email {
     async sendContactMail() {
         await this.send('sendContactMail', 'Gửi mail thành công');
     }
+
+    async sendNextLevel() {
+        await this.send('nextLevel', 'Chúc mừng bạn đã đạt cấp độ mới');
+    }
 }
 
 

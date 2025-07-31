@@ -2,6 +2,8 @@ const cron = require("node-cron");
 const { updateMovieStatusLogic } = require("../services/movieService");
 const Showtime = require("../model/showtimeModel");
 const Ticket = require("../model/ticketModel");
+const User = require("../model/userModel");
+const Level = require("../model/levelModel");
 const { queryMomoPayment, queryZaloPayPayment, queryVnPayPayment } = require("../controller/paymentController");
 
 module.exports = () => {
@@ -112,6 +114,22 @@ module.exports = () => {
             console.log(`Updated ${now} showtimes to 'ongoing' status`);
         }catch (error) {
             console.error("❌ Showtime status update cronjob finished error:", error);
+        }
+    });
+
+    // Cron job chạy 1 năm 1 lần
+    cron.schedule("0 0 1 1 *", async () => {
+        try {
+            const defaultLevel = await Level.findOne({ isDefault: true, active: true });
+
+            await User.updateMany(
+                { points: { $gt: 0 } },
+                { $set: { memberShipPoints: 0, totalEarnedPoints: 0, spinCount: 0, level: defaultLevel._id } }
+            );
+
+            console.log(`✅ Reset points for users`);
+        } catch (error) {
+            console.error("❌ Error resetting points:", error);
         }
     });
 };
