@@ -6,7 +6,9 @@ const router = express.Router();
 
 router.get('/', rewardsController.getFieldGetClient, rewardsController.getAllRewards);
 
-router.use(router);
+router.use(auth);
+
+router.get('/spin', rewardsController.spinReward);
 
 router.route('/admin')
     .get(rewardsController.getAllRewards)

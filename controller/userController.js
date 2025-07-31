@@ -66,12 +66,20 @@ exports.getAllUsers = Factory.getAll(User, 'role');
 exports.createUser = Factory.createOne(User);
 
 exports.getUser = Factory.getOne(User, {
-    path: 'role',
-    select: 'name displayName isActive permissions',
-    populate: {
-        path: 'permissions',
-        select: 'name'
-    }
+    path: [
+        {
+            path: 'role',
+            select: 'name displayName isActive permissions',
+            populate: {
+                path: 'permissions',
+                select: 'name'
+            }
+        },
+        {
+            path: 'level',
+            select: 'name icon'
+        }
+    ]
 });
 
 exports.updateUser = Factory.updateOne(User);
