@@ -94,7 +94,9 @@ const updateTicketStatus = async (orderId, status) => {
                 const level = await Level.find(
                     {
                         active: true,
-                    }
+                    },
+                    null,
+                    { session }
                 ).sort({ pointMultiplier: -1 });
 
                 // Lấy level cao hơn level hiện tại của người dùng
@@ -108,10 +110,10 @@ const updateTicketStatus = async (orderId, status) => {
                             { userId: user._id, voucherId: nextLevel.voucherId },
                             { $inc: { usageLimit: 1 } },
                             { new: true, upsert: true }
-                        );
+                        ).session(session);
                     }
 
-                    const voucher = await Voucher.findById(nextLevel.voucherId).session(session);
+                    const voucher = nextLevel.voucherId ? await Voucher.findById(nextLevel.voucherId).session(session) : null;
 
                     const emailContent = {
                         userName: user.name,
