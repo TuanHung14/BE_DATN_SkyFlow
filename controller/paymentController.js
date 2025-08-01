@@ -22,6 +22,7 @@ const Booking = require("../model/bookingModel");
 const User = require("../model/userModel");
 const PaymentMethod = require("../model/paymentMethodModel");
 const VoucherUse = require("../model/voucherUseModel");
+const Voucher = require("../model/voucherModel");
 const Level = require("../model/levelModel");
 const Factory = require("./handleFactory");
 const Email = require("../utils/email");
@@ -103,6 +104,7 @@ const updateTicketStatus = async (orderId, status) => {
                 const nextLevel = level.find(l => l.minXp <= user.totalEarnedPoints);
 
                 if (nextLevel && user.level._id.toString() !== nextLevel._id.toString()) {
+                    const currentLevel = user.level.name;
                     user.level = nextLevel._id;
 
                     if (nextLevel.voucherId) {
@@ -117,7 +119,7 @@ const updateTicketStatus = async (orderId, status) => {
 
                     const emailContent = {
                         userName: user.name,
-                        currentLevel: user.level.name,
+                        currentLevel: currentLevel,
                         nextLevel: nextLevel.name,
                         icon: nextLevel.icon,
                         voucherCode: voucher ? voucher.voucherCode : 'Không có voucher',

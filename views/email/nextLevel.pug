@@ -1,65 +1,58 @@
 extends baseEmail
 
 block content
-    .email-content
-        p.greeting Xin chào #{firstName},
-        p.welcome-text Chúc mừng! Bạn đã thăng cấp thành công
+    p.greeting Xin chào #{firstName},
+    p.welcome-text Chúc mừng! Bạn đã thăng cấp thành công
 
-        .description-box
-            p Thông báo thăng cấp thành viên
+    .description-box
+        p Thông báo thăng cấp thành viên
 
-        p Chúc mừng bạn đã đạt được cấp độ mới tại SkyFlow Cinema! Bạn đã chính thức được thăng cấp và nhận được những đặc quyền mới.
+    p Chúc mừng bạn đã đạt được cấp độ mới tại SkyFlow Cinema! Bạn đã chính thức được thăng cấp và nhận được những đặc quyền mới.
 
-        .upgrade-section
-            .upgrade-info
-                .level-container
-                    .level-label Cấp độ cũ
-                    .level-value #{emailContent.currentLevel}
-                .arrow-container →
-                .level-container
-                    .level-label Cấp độ mới
-                    .level-value.new-level
-                        if emailContent.icon
-                            .level-icon
-                                img(src=emailContent.icon alt="Level Icon")
-                        | #{emailContent.nextLevel}
+    .upgrade-section
+        .upgrade-info
+            .level-container
+                .level-label Cấp độ cũ
+                .level-value #{emailContent.currentLevel}
+            .arrow-container →
+            .level-container
+                .level-label Cấp độ mới
+                .level-value.new-level
+                    if emailContent.icon
+                        .level-icon
+                            img(src=emailContent.icon alt="Level Icon")
+                    | #{emailContent.nextLevel}
 
-        if emailContent.voucherCode !== 'Không có voucher'
-            .voucher-section
-                .voucher-header
-                    strong 🎁 Phần thưởng đặc biệt cho bạn:
+    if emailContent.voucherCode !== 'Không có voucher'
+        .voucher-section
+            .voucher-header
+                strong 🎁 Phần thưởng đặc biệt cho bạn:
 
-                .voucher-container
-                    if emailContent.imageUrl
-                        .voucher-image
-                            img(src=emailContent.imageUrl alt=emailContent.voucherName)
-                    .voucher-details
-                        .voucher-name #{emailContent.voucherName}
-                        .voucher-code
-                            .code-label Mã giảm giá:
-                            .code-value #{emailContent.voucherCode}
-                        .voucher-discount
-                            | Giá trị:
-                            strong #{emailContent.discountValue}
+            .voucher-container
+                if emailContent.imageUrl
+                    .voucher-image
+                        img(src=emailContent.imageUrl alt=emailContent.voucherName)
+                .voucher-details
+                    .voucher-name #{emailContent.voucherName}
+                    .voucher-code
+                        .code-label Mã giảm giá:
+                        .code-value #{emailContent.voucherCode}
+                    .voucher-discount
+                        | Giá trị:
+                        strong #{emailContent.discountValue}
 
-        .benefits-section
+    .benefits-section
+        p
+            strong Đặc quyền mới của bạn:
+        ul
+            li Giảm giá qua voucher cho các suất chiếu
+            li Tích điểm nhanh hơn cho lần mua tiếp theo
+
+    .congratulations-section
+        p Cảm ơn bạn đã tin tưởng và đồng hành cùng SkyFlow Cinema. Chúng tôi hy vọng bạn sẽ tiếp tục có những trải nghiệm tuyệt vời tại rạp của chúng tôi.
+
+    if emailContent.voucherCode !== 'Không có voucher'
+        .usage-note
             p
-                strong Đặc quyền mới của bạn:
-            ul
-                li Giảm giá qua voucher cho các suất chiếu
-                li Tích điểm nhanh hơn cho lần mua tiếp theo
-
-        .congratulations-section
-            p Cảm ơn bạn đã tin tưởng và đồng hành cùng SkyFlow Cinema. Chúng tôi hy vọng bạn sẽ tiếp tục có những trải nghiệm tuyệt vời tại rạp của chúng tôi.
-
-        if emailContent.voucherCode !== 'Không có voucher'
-            .usage-note
-                p
-                    strong Lưu ý:
-                    | Vui lòng sử dụng mã giảm giá trong những lần đặt vé tiếp theo để nhận ưu đãi.
-
-    .email-footer
-        .signature
-            | Trân trọng,
-            br
-            strong Đội ngũ SkyFlow Cinema
+                strong Lưu ý:
+                | Vui lòng sử dụng mã giảm giá trong những lần đặt vé tiếp theo để nhận ưu đãi.

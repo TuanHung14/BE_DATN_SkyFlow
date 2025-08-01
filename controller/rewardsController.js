@@ -57,9 +57,9 @@ exports.getAllRewards = catchAsync(async (req, res, next) => {
         .sort()
         .limitFields();
 
-    const totalProbability = await rewards.query.clone().reduce((sum, r) => sum + r.probability, 0);
-
     const rewardsList = await rewards.query;
+    const totalProbability = rewardsList.reduce((sum, r) => sum + r.probability, 0);
+
 
     res.status(200).json({
         status: 'success',

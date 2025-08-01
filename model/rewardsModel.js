@@ -19,7 +19,7 @@ const rewardsSchema = new mongoose.Schema({
         min: [0, 'Giá trị phần thưởng phải lớn hơn hoặc bằng 0']
     },
     voucherId: {
-        type: moongose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Voucher",
         required: [function() {
             return this.type === 'voucher';
