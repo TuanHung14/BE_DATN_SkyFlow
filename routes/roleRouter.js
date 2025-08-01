@@ -10,6 +10,8 @@ const router = express.Router();
 
 router.use(auth)
 
+router.put("/toogle/:id", authorize(permissions['update']), roleController.toggleIsDefault);
+
 /**
  * @swagger
  * /api/v1/roles:

@@ -13,34 +13,26 @@ const router = express.Router();
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Location:
- *       type: object
- *       required:
- *         - type
- *         - coordinates
- *       properties:
- *         type:
+ * /api/v1/cinemas/distances/{unit}:
+ *   get:
+ *     summary: Get nearest cinemas by distance
+ *     description: Trả về danh sách rạp chiếu phim gần nhất theo vị trí người dùng.
+ *     tags:
+ *       - Cinemas
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: path
+ *         name: unit
+ *         required: true
+ *         schema:
  *           type: string
- *           enum: [Point]
- *         coordinates:
- *           type: array
- *           items:
- *             type: number
- *           description: [lng, lat]
- *     AddressObject:
- *       type: object
- *       required:
- *         - label
- *         - value
- *       properties:
- *         label:
- *           type: string
- *         value:
- *           type: string
+ *           enum: [km, mi]
+ *         description: Đơn vị tính khoảng cách (km hoặc mi)
+ *     responses:
+ *       200:
+ *         description: Danh sách rạp gần nhất
  */
-
 router.get("/distances/:unit", optionalAuth, cinemaController.getNearestCinemas)
 
 /**

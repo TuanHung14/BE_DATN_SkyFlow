@@ -77,6 +77,3 @@ levelSchema.pre("save", async function (next) {
 const Level = mongoose.model('Level', levelSchema);
 
 module.exports = Level;
-
-
-// Thêm biến point tạm để lưu trữ điểm của người dùng

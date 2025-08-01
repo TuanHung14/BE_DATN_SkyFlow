@@ -132,7 +132,8 @@ exports.getNearestCinemas = catchAsync(async (req, res, next) => {
                 district: 1,
                 ward: 1,
                 address: 1,
-                phone: 1
+                phone: 1,
+                location: 1,
         })
             .sort({ createdAt: -1 })
             .limit(4);
@@ -170,6 +171,7 @@ exports.getNearestCinemas = catchAsync(async (req, res, next) => {
                 ward: 1,
                 address: 1,
                 phone: 1,
+                location: 1,
                 distance: 1
             }
         }
