@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: {
       type: Date,
     },
+    lastBirthdayReward: {
+      type: Date,
+      default: null
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
