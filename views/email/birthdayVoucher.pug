@@ -1,0 +1,55 @@
+//- Email template chúc mừng sinh nhật
+//- Adapted from SkyFlow email template
+
+extends baseEmail
+
+block content
+    p.greeting Xin chào #{emailContent.userName},
+    p.welcome-text 🎉 Chúc mừng sinh nhật! 🎂
+
+    .description-box
+        p Món quà sinh nhật đặc biệt từ SkyFlow Cinema
+
+    .birthday-header
+        .birthday-animation
+            .birthday-emoji 🎈🎁🎊
+        h2.birthday-title Chúc Mừng Sinh Nhật!
+        p.birthday-message SkyFlow Cinema gửi lời chúc mừng sinh nhật ấm áp nhất đến bạn. Hy vọng bạn sẽ có một ngày sinh nhật thật vui vẻ và ý nghĩa!
+
+    if emailContent.oucherCode !== 'Không có voucher'
+        .birthday-gift-section
+            .gift-header
+                strong 🎁 Món quà sinh nhật đặc biệt dành riêng cho bạn:
+
+            .voucher-container
+                if emailContent.imageUrl
+                    .voucher-image
+                        img(src=emailContent.imageUrl alt=emailContent.voucherName)
+                .voucher-details
+                    .voucher-name #{emailContent.voucherName}
+                    .voucher-code
+                        .code-label Mã quà tặng:
+                        .code-value #{emailContent.voucherCode}
+                    .voucher-discount
+                        | Giá trị:
+                        strong #{emailContent.discountValue}
+
+    .birthday-wishes
+        .wish-box
+            p
+                | 🌟
+                strong Lời chúc từ đội ngũ SkyFlow:
+            p "Chúc bạn tuổi mới tràn đầy niềm vui, hạnh phúc và thành công! Hy vọng rằng mỗi bộ phim bạn xem tại SkyFlow sẽ mang lại những khoảnh khắc đáng nhớ và thú vị."
+
+    .birthday-invitation
+        p Hãy đến SkyFlow Cinema và tận hưởng những bộ phim tuyệt vời cùng với người thân yêu trong ngày sinh nhật đặc biệt này nhé!
+
+
+    if emailContent.voucherCode !== 'Không có voucher'
+        .usage-note
+            p
+                strong 🎯 Hướng dẫn sử dụng:
+                | Vui lòng sử dụng mã quà tặng trong thời hạn quy định. Mã chỉ áp dụng cho tài khoản của bạn và không thể chuyển nhượng.
+
+    .birthday-closing
+        p Một lần nữa, chúc bạn sinh nhật vui vẻ! Cảm ơn bạn đã luôn đồng hành cùng SkyFlow Cinema.
