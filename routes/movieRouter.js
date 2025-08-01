@@ -4,7 +4,7 @@ const movieRatingRouter = require("../routes/movieRatingRouter");
 const wishlistMovieRouter = require("../routes/wishlistMovieRouter");
 const auth = require("../middleware/authMiddleware");
 const authorize = require("../middleware/authorizeMiddleware");
-const optionalAuth = require('../middleware/optionalAuthMiddleware');
+const optionalAuth = require("../middleware/optionalAuthMiddleware");
 const { Resource } = require("../model/permissionModel");
 const { getRBACOnResorce } = require("../utils/helper");
 const permissions = getRBACOnResorce(Resource.Movie);
@@ -16,7 +16,6 @@ router.use("/:movieId/movie-ratings", movieRatingRouter);
 router.use("/:movieId/wish-list", auth, wishlistMovieRouter);
 
 router.use("/wish-list", auth, wishlistMovieRouter);
-
 
 /**
  * @swagger
@@ -45,7 +44,11 @@ router.use("/wish-list", auth, wishlistMovieRouter);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/recommend-by-genre", optionalAuth, movieController.getMovieRecommend);
+router.get(
+  "/recommend-by-genre",
+  optionalAuth,
+  movieController.getMovieRecommend
+);
 
 /**
  * @swagger
@@ -123,7 +126,12 @@ router.get("/recommend-by-genre", optionalAuth, movieController.getMovieRecommen
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/admin", auth, authorize(permissions['read']) ,movieController.getAllMoviesAdmin);
+router.get(
+  "/admin",
+  auth,
+  authorize(permissions["read"]),
+  movieController.getAllMoviesAdmin
+);
 
 /**
  * @swagger
@@ -218,7 +226,12 @@ router.get("/:id", movieController.getMovie);
  *       400:
  *         description: Dữ liệu gửi lên không hợp lệ
  */
-router.post("/", auth, authorize(permissions['create']),movieController.createMovie);
+router.post(
+  "/",
+  auth,
+  authorize(permissions["create"]),
+  movieController.createMovie
+);
 
 /**
  * @swagger
@@ -285,7 +298,12 @@ router.post("/", auth, authorize(permissions['create']),movieController.createMo
  *       404:
  *         description: Không tìm thấy phim
  */
-router.patch("/:id", auth, authorize(permissions['update']),movieController.updateMovie);
+router.patch(
+  "/:id",
+  auth,
+  authorize(permissions["update"]),
+  movieController.updateMovie
+);
 
 /**
  * @swagger
@@ -308,7 +326,12 @@ router.patch("/:id", auth, authorize(permissions['update']),movieController.upda
  *       404:
  *         description: Không tìm thấy phim
  */
-router.delete("/:id", auth, authorize(permissions['delete']), movieController.softDeleteMovie);
+router.delete(
+  "/:id",
+  auth,
+  authorize(permissions["delete"]),
+  movieController.softDeleteMovie
+);
 
 /**
  * @swagger
@@ -388,7 +411,7 @@ router.delete("/:id", auth, authorize(permissions['delete']), movieController.so
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get("/", optionalAuth,movieController.getAllMovies);
+router.get("/", optionalAuth, movieController.getAllMovies);
 
 /**
  * @swagger
@@ -410,6 +433,5 @@ router.get("/", optionalAuth,movieController.getAllMovies);
  *         description: Không tìm thấy phim
  */
 router.get("/slug/:slug", movieController.getMovieBySlug);
-
 
 module.exports = router;
