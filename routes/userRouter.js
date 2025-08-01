@@ -102,6 +102,23 @@ router.post("/", authorize(permissions['create']),userController.fieldCreate, us
  *                 type: string
  *                 format: date
  *                 description: Ngày sinh của người dùng
+ *               location:
+ *                 type: object
+ *                 description: Vị trí người dùng
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [Point]
+ *                     default: Point
+ *                   coordinates:
+ *                     type: array
+ *                     items:
+ *                       type: number
+ *                     description: Tọa độ [kinh độ, vĩ độ]
+ *                     default: [0, 0]
+ *               address:
+ *                 type: string
+ *                 description: Địa chỉ người dùng
  *     responses:
  *       200:
  *         description: Cập nhật thông tin thành công

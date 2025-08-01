@@ -43,6 +43,7 @@ const training = (keyText) => {
     - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
     - Đảm bảo HTML valid và well-formed
     - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
+    - Nếu có sử dụng flexbox hay grid, thì cho width là 100% để đảm bảo responsive
     - Đảm bảo bố cục rõ ràng, dễ đọc, và chuyên nghiệp
     - Lưu ý khung hình để hiện thị trên máy tính là width: 200px
     

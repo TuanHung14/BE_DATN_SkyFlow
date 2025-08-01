@@ -240,3 +240,56 @@ exports.getShowtimesByCinemaByDate = catchAsync(async (req, res, next) => {
     },
   });
 });
+exports.getShowtimesByCinemaDateAndMovie = catchAsync(
+  async (req, res, next) => {
+    const { cinemaId, date, movieId } = req.query;
+
+    // Validate
+    if (!cinemaId || !date || !movieId) {
+      return next(
+        new AppError("Vui lòng cung cấp đầy đủ cinemaId, date và movieId", 400)
+      );
+    }
+
+    const targetDate = new Date(date);
+    if (isNaN(targetDate.getTime())) {
+      return next(
+        new AppError("Ngày không hợp lệ. Định dạng đúng: YYYY-MM-DD", 400)
+      );
+    }
+
+    // Setup time range for the day
+    const start = new Date(targetDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(targetDate);
+    end.setHours(23, 59, 59, 999);
+
+    // Get roomIds of cinema
+    const rooms = await Room.find({ cinemaId, isDeleted: false }).select("_id");
+    const roomIds = rooms.map((r) => r._id);
+
+    if (roomIds.length === 0) {
+      return res.status(200).json({
+        status: "success",
+        results: 0,
+        data: [],
+      });
+    }
+
+    // Get showtimes that match
+    const showtimes = await Showtime.find({
+      roomId: { $in: roomIds },
+      movieId,
+      isDeleted: false,
+      showDate: { $gte: start, $lte: end },
+    })
+      .populate("movieId")
+      .populate("roomId");
+
+    res.status(200).json({
+      status: "success",
+      results: showtimes.length,
+      data: showtimes,
+    });
+  }
+);

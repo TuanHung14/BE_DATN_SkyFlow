@@ -13,32 +13,25 @@ const router = express.Router();
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Location:
- *       type: object
- *       required:
- *         - type
- *         - coordinates
- *       properties:
- *         type:
+ * /api/v1/cinemas/distances/{unit}:
+ *   get:
+ *     summary: Get nearest cinemas by distance
+ *     description: Trả về danh sách rạp chiếu phim gần nhất theo vị trí người dùng.
+ *     tags:
+ *       - Cinemas
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: path
+ *         name: unit
+ *         required: true
+ *         schema:
  *           type: string
- *           enum: [Point]
- *         coordinates:
- *           type: array
- *           items:
- *             type: number
- *           description: [lng, lat]
- *     AddressObject:
- *       type: object
- *       required:
- *         - label
- *         - value
- *       properties:
- *         label:
- *           type: string
- *         value:
- *           type: string
+ *           enum: [km, mi]
+ *         description: Đơn vị tính khoảng cách (km hoặc mi)
+ *     responses:
+ *       200:
+ *         description: Danh sách rạp gần nhất
  */
 
 router.get(
@@ -171,7 +164,73 @@ router.get(
   authorize(permissions["read"]),
   cinemaController.getAllCinemas
 );
-
+/**
+ * @swagger
+ * /api/v1/cinemas/showtimes/filter:
+ *   get:
+ *     tags:
+ *       - Cinemas
+ *     summary: Lấy danh sách suất chiếu theo rạp, ngày và phim
+ *     operationId: getShowtimesByCinemaDateAndMovie
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: cinemaId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của rạp chiếu phim
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Ngày chiếu (định dạng YYYY-MM-DD)
+ *       - in: query
+ *         name: movieId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của phim
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       roomId:
+ *                         type: object
+ *                       movieId:
+ *                         type: object
+ *                       showDate:
+ *                         type: string
+ *                         format: date-time
+ *                       startTime:
+ *                         type: string
+ *       400:
+ *         description: Thiếu tham số hoặc sai định dạng
+ *       500:
+ *         description: Lỗi server
+ */
+router.get(
+  "/showtimes/filter",
+  cinemaController.getShowtimesByCinemaDateAndMovie
+);
 /**
  * @swagger
  * /api/v1/cinemas:
