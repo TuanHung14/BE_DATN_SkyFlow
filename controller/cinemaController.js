@@ -2,6 +2,7 @@ const Cinema = require('../model/cinemaModel');
 const Factory = require('./handleFactory');
 const catchAsync = require('../utils/catchAsync');
 const { ObjectId } = require('mongoose').Types;
+const { getCinemasNearby } = require('../services/cineamsService');
 
 exports.createCinema = Factory.createOne(Cinema);
 
@@ -117,11 +118,16 @@ exports.getFilteredCinemas = catchAsync(async (req, res, next) => {
 exports.getNearestCinemas = catchAsync(async (req, res, next) => {
     const user = req.user;
     const { unit } = req.params;
+    let { latitude, longitude } = req.query;
+    console.log(latitude, longitude);
     // unit có thể là 'mi' (dặm) hoặc 'km' (kilomet)
     const multiplier = unit ==='mi'? 0.000621371 : 0.001;
     let cinemas;
 
-    if (!user || user.location.coordinates[0] === 0 || user.location.coordinates[1] === 0) {
+    if (latitude && longitude) {
+        cinemas = await getCinemasNearby(latitude, longitude, multiplier);
+    } else if (!user || user.location.coordinates[0] === 0 || user.location.coordinates[1] === 0)
+    {
         cinemas = await Cinema.find(
             {
                 isDeleted: false
@@ -137,45 +143,10 @@ exports.getNearestCinemas = catchAsync(async (req, res, next) => {
         })
             .sort({ createdAt: -1 })
             .limit(4);
-
-        return res.status(200).json({
-            status: 'success',
-            data: {
-                cinemas
-            }
-        });
+    } else {
+        [latitude, longitude] = user.location.coordinates;
+        cinemas = await getCinemasNearby(latitude, longitude, multiplier);
     }
-
-    const [latitude, longitude] = user.location.coordinates;
-
-    cinemas = await Cinema.aggregate([
-        {
-            $geoNear: {
-                near: {
-                    type: 'Point',
-                    coordinates: [latitude * 1, longitude * 1],
-                },
-                distanceField: 'distance',
-                distanceMultiplier: multiplier,
-                query: { isDeleted: false }
-            }
-        },
-        {
-            $limit: 4
-        },
-        {
-            $project: {
-                name: 1,
-                province: 1,
-                district: 1,
-                ward: 1,
-                address: 1,
-                phone: 1,
-                location: 1,
-                distance: 1
-            }
-        }
-    ]);
 
     res.status(200).json({
         status: 'success',

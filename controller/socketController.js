@@ -38,11 +38,6 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
             holds,
             bookings
         });
-        //Gửi riêng cho mình những ghế đã giữ
-        const myHolds = Object.keys(holds).filter(seatId => holds[seatId] === userId);
-        socket.emit('seats-hold-me', {
-            holds: myHolds
-        });
     });
 
     // Chọn Và Giữ ghế
