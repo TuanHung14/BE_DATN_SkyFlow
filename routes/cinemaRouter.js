@@ -29,11 +29,22 @@ const router = express.Router();
  *           type: string
  *           enum: [km, mi]
  *         description: Đơn vị tính khoảng cách (km hoặc mi)
+ *       - in: query
+ *         name: latitude
+ *         schema:
+ *           type: number
+ *           format: float
+ *         description: Vĩ độ của vị trí người dùng (tuỳ chọn). Nếu không có, hệ thống sẽ dùng vị trí đã lưu của người dùng.
+ *       - in: query
+ *         name: longitude
+ *         schema:
+ *           type: number
+ *           format: float
+ *         description: Kinh độ của vị trí người dùng (tuỳ chọn). Nếu không có, hệ thống sẽ dùng vị trí đã lưu của người dùng.
  *     responses:
  *       200:
  *         description: Danh sách rạp gần nhất
  */
-
 router.get(
   "/distances/:unit",
   optionalAuth,
