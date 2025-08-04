@@ -7,29 +7,6 @@ const Movie = require("../model/movieModel");
 const { getChatHistory } = require("../utils/redis");
 
 const training = (keyText) => {
-    // return `
-    //     Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
-    //     ${keyText}
-    //     Đây là tổng hợp những dữ liệu trong web này hãy xem câu hỏi của khách hàng mà hãy trả lời theo
-    //      QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY HÃY LÀM THEO NHỮNG ĐIỀU SAU:
-    //     - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
-    //     - KHÔNG sử dụng markdown
-    //     - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
-    //     - KHÔNG giải thích code
-    //     - CHỈ trả về HTML content thuần túy
-    //     - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
-    //     - Đảm bảo HTML valid và well-formed
-    //     - CSS dùm siêu đẹp bằng inline, nhưng không sử dụng thẻ <style>
-    //
-    //     Ví dụ format trả về:
-    //     <div>
-    //         <h2>Thông tin khách hàng</h2>
-    //         <p><strong>Họ tên:</strong> Nguyễn Văn A</p>
-    //         <p><strong>Email:</strong> example.com</p>
-    //     </div>
-    //     CÒN KHÔNG HÃY TRẢ VỀ DẠNG TEXT NHƯ BÌNH THƯỜNG
-    // `;
-
     return `
     Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
     ${keyText}
@@ -45,6 +22,7 @@ const training = (keyText) => {
     - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
     - Nếu có sử dụng flexbox hay grid, thì cho width là 100% để đảm bảo responsive
     - Đảm bảo bố cục rõ ràng, dễ đọc, và chuyên nghiệp
+    - Nếu yêu cầu hiện link thì sử dụng ${process.env.FE_CLIENT_HOST}/slug (slug trong dữ liệu) để hiện thị link
     - Lưu ý khung hình để hiện thị trên máy tính là width: 200px
     
     Ví dụ format trả về:
@@ -57,7 +35,7 @@ const training = (keyText) => {
 `;
 }
 
-const callFunctionByPrompt = async (functionToCall, template, userId) => {
+const callFunctionByPrompt = async (functionToCall, userId) => {
     const data = await executeFunction(functionToCall, userId);
     if (data.error) throw new AppError(data.error, 500);
 
@@ -69,7 +47,7 @@ const callFunctionByPrompt = async (functionToCall, template, userId) => {
         context = data.toObject?.() || data;
     }
 
-    return { template, context };
+    return { context };
 }
 
 exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
@@ -86,15 +64,7 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
         return next(new AppError('Gợi ý không được tìm thấy vui lòng thử lại sau', 400));
     }
 
-    const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req?.user?._id);
-
-
-    // const keyText = `
-    //     systemInstruction: ${prompt.systemInstruction}
-    //     template: ${template}
-    //     data: ${JSON.stringify(context)}
-    // `;
-
+    const { context } = await callFunctionByPrompt(prompt.functionToCall, req?.user?._id);
 
     const keyText = `
         systemInstruction: ${prompt.systemInstruction}
@@ -102,7 +72,6 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
     `;
 
     const systemInstruction = training(keyText);
-
 
     const result = await chatAI(prompt.description, systemInstruction, sessionId);
 
@@ -129,14 +98,12 @@ exports.chatAI = catchAsync(async (req, res, next) => {
     const rendered = [];
     for (let prompt of fullPrompt) {
         const obj = {};
-        const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req?.user?._id);
-        obj.template = template;
+        const { context } = await callFunctionByPrompt(prompt.functionToCall, req?.user?._id);
         obj.systemInstruction = prompt.systemInstruction;
         obj.context = context;
         rendered.push(obj);
     }
 
-    // const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template} \n data: ${JSON.stringify(item.context)}`).join('\n');
     const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n data: ${JSON.stringify(item.context)}`).join('\n');
 
     const systemInstruction = training(keyText);

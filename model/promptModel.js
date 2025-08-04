@@ -21,10 +21,6 @@ const promptSchema = new mongoose.Schema({
         type: String,
         default: 'none'
     },
-    template: {
-        type: String,
-        trim: true
-    },
     status: {
         type: String,
         enum: ['active', 'inactive', 'testing'],

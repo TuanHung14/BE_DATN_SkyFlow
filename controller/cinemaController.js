@@ -4,6 +4,7 @@ const catchAsync = require("../utils/catchAsync");
 const Room = require("../model/roomModel");
 const Showtime = require("../model/showtimeModel");
 const { ObjectId } = require("mongoose").Types;
+const { getCinemasNearby } = require('../services/cineamsService');
 
 exports.createCinema = Factory.createOne(Cinema);
 
@@ -115,70 +116,36 @@ exports.getFilteredCinemas = catchAsync(async (req, res, next) => {
 });
 
 exports.getNearestCinemas = catchAsync(async (req, res, next) => {
-  const user = req.user;
-  const { unit } = req.params;
-  // unit có thể là 'mi' (dặm) hoặc 'km' (kilomet)
-  const multiplier = unit === "mi" ? 0.000621371 : 0.001;
-  let cinemas;
+    const user = req.user;
+    const { unit } = req.params;
+    let { latitude, longitude } = req.query;
+    // unit có thể là 'mi' (dặm) hoặc 'km' (kilomet)
+    const multiplier = unit ==='mi'? 0.000621371 : 0.001;
+    let cinemas;
 
-  if (
-    !user ||
-    user.location.coordinates[0] === 0 ||
-    user.location.coordinates[1] === 0
-  ) {
-    cinemas = await Cinema.find(
-      {
-        isDeleted: false,
-      },
-      {
-        name: 1,
-        province: 1,
-        district: 1,
-        ward: 1,
-        address: 1,
-        phone: 1,
-      }
-    )
-      .sort({ createdAt: -1 })
-      .limit(4);
-
-    return res.status(200).json({
-      status: "success",
-      data: {
-        cinemas,
-      },
-    });
-  }
-
-  const [latitude, longitude] = user.location.coordinates;
-
-  cinemas = await Cinema.aggregate([
+    if (latitude && longitude) {
+        cinemas = await getCinemasNearby(latitude, longitude, multiplier);
+    } else if (!user || user.location.coordinates[0] === 0 || user.location.coordinates[1] === 0)
     {
-      $geoNear: {
-        near: {
-          type: "Point",
-          coordinates: [latitude * 1, longitude * 1],
-        },
-        distanceField: "distance",
-        distanceMultiplier: multiplier,
-        query: { isDeleted: false },
-      },
-    },
-    {
-      $limit: 4,
-    },
-    {
-      $project: {
-        name: 1,
-        province: 1,
-        district: 1,
-        ward: 1,
-        address: 1,
-        phone: 1,
-        distance: 1,
-      },
-    },
-  ]);
+        cinemas = await Cinema.find(
+            {
+                isDeleted: false
+            },
+            {
+                name: 1,
+                province: 1,
+                district: 1,
+                ward: 1,
+                address: 1,
+                phone: 1,
+                location: 1,
+        })
+            .sort({ createdAt: -1 })
+            .limit(4);
+    } else {
+        [latitude, longitude] = user.location.coordinates;
+        cinemas = await getCinemasNearby(latitude, longitude, multiplier);
+    }
 
   res.status(200).json({
     status: "success",
@@ -187,6 +154,7 @@ exports.getNearestCinemas = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 exports.getShowtimesByCinemaByDate = catchAsync(async (req, res, next) => {
   const { cinemaId, date } = req.query;
 
@@ -240,6 +208,7 @@ exports.getShowtimesByCinemaByDate = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 exports.getShowtimesByCinemaDateAndMovie = catchAsync(
   async (req, res, next) => {
     const { cinemaId, date, movieId } = req.query;

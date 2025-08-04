@@ -1,10 +1,29 @@
 [
   {
+    "name": "Thông tin người dùng",
+    "description": "Lấy thông tin chi tiết của người dùng hiện tại.",
+    "systemInstruction": "Đây là thông tin của người dùng",
+    "functionToCall": "getUserInfo",
+    "status": "active",
+    "createdAt": "2025-07-25T09:46:16.989+00:00",
+    "updatedAt": "2025-07-25T09:46:16.989+00:00",
+    "__v": 0
+  },
+  {
+    "name": "Những bộ phim đang có ở web",
+    "description": "Lấy thống kê các bộ phim",
+    "systemInstruction": "Đây là những phim đang chiếu và sắp chiếu.(HIỆN TỐI ĐA 3 BỘ PHIM)",
+    "functionToCall": "getMovies",
+    "status": "active",
+    "createdAt": "2025-07-25T09:46:16.989+00:00",
+    "updatedAt": "2025-07-25T09:46:16.989+00:00",
+    "__v": 0
+  },
+  {
     "name": "Lịch chiếu hôm nay",
     "description": "Hiển thị lịch chiếu phim của các rạp trong ngày hôm nay",
-    "systemInstruction": "Đây là thông tin lịch chiếu phim hôm nay lấy tầm 2 cinema thôi",
+    "systemInstruction": "Đây là thông tin lịch chiếu phim hôm nay lấy tầm (HIỆN TỐI ĐA 2 BỘ Cinema)",
     "functionToCall": "getShowtimes",
-    "template": "<div class=\"showtimes-container\">\n    <h3>Lịch chiếu hôm nay</h3>\n    {{#each this}}\n    <div class=\"cinema-item\">\n        <h4>{{cinemaName}}</h4>\n        <div class=\"time-slots\">\n            {{#each showtimes}}\n            <button class=\"time-slot\"\n                    data-cinema=\"{{../cinemaName}}\"\n                    data-time=\"{{startTime}}\">\n                <span class=\"time\">{{startTime}}</span>\n            </button>\n            {{/each}}\n        </div>\n    </div>\n    {{/each}}\n</div>",
     "status": "active",
     "createdAt": "2025-07-25T09:46:16.989+00:00",
     "updatedAt": "2025-07-25T09:46:16.989+00:00",
@@ -15,7 +34,6 @@
     "description": "Hiển thị danh sách các rạp chiếu phim",
     "systemInstruction": "Đây là danh sách các rạp chiếu phim lấy tầm 3 rạp thôi",
     "functionToCall": "getCinemaList",
-    "template": "<div class=\"cinema-container\">\n    <h3>Danh sách rạp chiếu</h3>\n    <table>\n        <thead>\n            <tr>\n                <th>Rạp</th>\n                <th>Địa chỉ</th>\n                <th>Số điện thoại</th>\n            </tr>\n        </thead>\n        <tbody>\n            {{#each cinemas}}\n            <tr>\n                <td>{{name}}</td>\n                <td>{{address}}</td>\n                <td>{{phone}}</td>\n            </tr>\n            {{/each}}\n        </tbody>\n    </table>\n</div>\n",
     "status": "active",
     "createdAt": "2025-07-25T09:46:16.989+00:00",
     "updatedAt": "2025-07-25T09:46:16.989+00:00",
@@ -26,10 +44,39 @@
     "description": "Hiển thị bảng giá vé cho các loại ghế khác nhau tại rạp chiếu phim",
     "systemInstruction": "Đây là thông tin giá vé xem phim",
     "functionToCall": "getTicketPrices",
-    "template": "<div class=\"price-container\">\n    <h3>\uD83D\uDCB0 Giá vé:</h3>\n    {{#each priceRule}}\n    <div class=\"format-group\">\n        <h4>Định dạng: {{formatName}}</h4>\n        <ul>\n            {{#each prices}}\n            <li>\n                {{#if (seatType)}}\n                    {{#if (seatTypeIsNormal seatType)}}Ghế thường{{/if}}\n                    {{#if (seatTypeIsVip seatType)}}Ghế VIP{{/if}}\n                    {{#if (seatTypeIsCouple seatType)}}Ghế đôi{{/if}}\n                {{/if}}: {{price}} VNĐ\n            </li>\n            {{/each}}\n        </ul>\n    </div>\n    {{/each}}\n</div>\n",
     "status": "active",
     "createdAt": "2025-07-25T09:46:16.989+00:00",
     "updatedAt": "2025-07-25T09:46:16.989+00:00",
     "__v": 0
+  },
+  {
+      "name": "Lịch chiếu tất cả phim",
+      "description": "Hiển thị lịch chiếu của tất cả các bộ phim tại các rạp",
+      "systemInstruction": "Đây là lịch chiếu của tất cả các bộ phim tại các rạp",
+      "functionToCall": "getAllShowtimes",
+      "status": "active",
+      "createdAt": "2025-07-25T09:46:16.989+00:00",
+      "updatedAt": "2025-07-25T09:46:16.989+00:00",
+      "__v": 0
+  },
+  {
+      "name": "Danh sách đồ ăn",
+      "description": "Hiển thị danh sách các loại đồ ăn có sẵn tại rạp chiếu phim",
+      "systemInstruction": "Đây là danh sách các loại đồ ăn có sẵn tại rạp chiếu phim",
+      "functionToCall": "getFoodList",
+      "status": "active",
+      "createdAt": "2025-07-25T09:46:16.989+00:00",
+      "updatedAt": "2025-07-25T09:46:16.989+00:00",
+      "__v": 0
+  },
+  {
+      "name": "Danh sách bài viết",
+      "description": "Hiển thị danh sách các bài viết mới nhất",
+      "systemInstruction": "Đây là danh sách các bài viết mới nhất",
+      "functionToCall": "getPosts",
+      "status": "active",
+      "createdAt": "2025-07-25T09:46:16.989+00:00",
+      "updatedAt": "2025-07-25T09:46:16.989+00:00",
+      "__v": 0
   }
 ]

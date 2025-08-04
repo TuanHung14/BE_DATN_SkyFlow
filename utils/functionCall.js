@@ -1,8 +1,10 @@
 const { getUserInfo } = require("../services/userService");
 const { getMovies } =require("../services/movieService");
-const { getShowtimes } = require("../services/showtimeService");
+const { getShowtimes, getAllShowtimes } = require("../services/showtimeService");
 const { getCinemaList } = require("../services/cineamsService");
 const { getTicketPrices } = require("../services/priceRuleService");
+const { getFoodList } = require("../services/foodService");
+const {getPosts} = require("../services/postService");
 
 
 async function executeFunction(functionName, userId) {
@@ -20,6 +22,12 @@ async function executeFunction(functionName, userId) {
             return await getCinemaList(userId);
         case 'getTicketPrices':
             return await getTicketPrices();
+        case 'getAllShowtimes':
+            return await getAllShowtimes();
+        case 'getFoodList':
+            return await getFoodList();
+        case 'getPosts':
+            return await getPosts();
         default:
             return { error: `Chat AI đang lỗi vui lòng thử lại sau!` };
     }

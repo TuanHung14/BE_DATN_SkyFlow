@@ -1,6 +1,37 @@
 const Cinema = require("../model/cinemaModel");
 const User = require("../model/userModel");
 
+const getCinemasNearby = async (latitude, longitude, multiplier) => {
+    const cinemas =  await Cinema.aggregate([
+        {
+            $geoNear: {
+                near: {
+                    type: 'Point',
+                    coordinates: [latitude * 1, longitude * 1],
+                },
+                distanceField: 'distance',
+                distanceMultiplier: multiplier,
+                query: { isDeleted: false }
+            }
+        },
+        { $limit: 4 },
+        {
+            $project: {
+                name: 1,
+                province: 1,
+                district: 1,
+                ward: 1,
+                address: 1,
+                phone: 1,
+                location: 1,
+                distance: 1
+            }
+        }
+    ]);
+    return cinemas;
+};
+
+
 const getCinemaList = async (userId) => {
     try {
         const user = userId ? await User.findById(userId, 'location') : null;
@@ -23,33 +54,7 @@ const getCinemaList = async (userId) => {
                 .limit(4);
         } else {
             const [latitude, longitude] = user.location.coordinates;
-            cinemas = await Cinema.aggregate([
-                {
-                    $geoNear: {
-                        near: {
-                            type: 'Point',
-                            coordinates: [latitude * 1, longitude * 1],
-                        },
-                        distanceField: 'distance',
-                        distanceMultiplier: multiplier,
-                        query: { isDeleted: false }
-                    }
-                },
-                {
-                    $limit: 4
-                },
-                {
-                    $project: {
-                        name: 1,
-                        province: 1,
-                        district: 1,
-                        ward: 1,
-                        address: 1,
-                        phone: 1,
-                        distance: 1
-                    }
-                }
-            ]);
+            cinemas = await getCinemasNearby(latitude, longitude, multiplier);
         }
 
         const mapCinema = cinemas.map(cinema => {
@@ -67,5 +72,6 @@ const getCinemaList = async (userId) => {
 }
 
 module.exports = {
-    getCinemaList
+    getCinemaList,
+    getCinemasNearby
 }
