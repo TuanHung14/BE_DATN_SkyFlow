@@ -2,7 +2,12 @@ const cron = require("node-cron");
 const { updateMovieStatusLogic } = require("../services/movieService");
 const Showtime = require("../model/showtimeModel");
 const Ticket = require("../model/ticketModel");
+const User = require("../model/userModel");
+const Level = require("../model/levelModel");
 const { queryMomoPayment, queryZaloPayPayment, queryVnPayPayment } = require("../controller/paymentController");
+const VoucherUse = require("../model/voucherUseModel");
+const Voucher = require("../model/voucherModel");
+const Email = require("../utils/email");
 
 module.exports = () => {
     // Cron job chạy hàng ngày lúc 00:00
@@ -14,7 +19,7 @@ module.exports = () => {
             const daysToKeep = 2;
             const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
 
-            const result = await Showtime.updateMany(
+            await Showtime.updateMany(
                 {
                     showDate: {$lt: cutoffDate},
                     isDeleted: { $ne: true }
@@ -25,6 +30,54 @@ module.exports = () => {
                     }
                 }
             );
+
+            // Check sinh nhật cua người dùng
+            const today = new Date();
+
+            const usersWithBirthday = await User.find({
+                $expr: {
+                    $and: [
+                        { $eq: [{ $dayOfMonth: '$dateOfBirth' }, today.getDate()] },
+                        { $eq: [{ $month: '$dateOfBirth' }, today.getMonth() + 1] }
+                    ]
+                }
+            }).populate("level");
+
+            if (usersWithBirthday.length > 0) {
+                for (const user of usersWithBirthday) {
+                    // Kiểm tra xem người dùng đã nhận quà sinh nhật trong năm nay chưa
+                    const alreadyReceived = user?.lastBirthdayReward
+                        ? new Date(user.lastBirthdayReward).getFullYear() === today.getFullYear()
+                        : false;
+
+                    // Nếu chưa nhận quà sinh nhật trong năm nay, thì gửi voucher
+                    if (user?.level?.voucherId && !alreadyReceived) {
+                        await VoucherUse.findOneAndUpdate(
+                            { userId: user._id, voucherId: user.level.voucherId },
+                            { $inc: { usageLimit: 1 } },
+                            { new: true, upsert: true }
+                        );
+                        // Cập nhật ngày nhận quà sinh nhật
+                        await User.updateOne(
+                            { _id: user._id },
+                            { $set: { lastBirthdayReward: today } }
+                        );
+                        // Gửi email thông báo
+                        const voucher = user.level.voucherId ? await Voucher.findById(user.level.voucherId) : null;
+
+                        const emailContent = {
+                            userName: user.name,
+                            voucherCode: voucher ? voucher.voucherCode : 'Không có voucher',
+                            voucherName: voucher ? voucher.voucherName : 'Không có voucher',
+                            discountValue: voucher ? voucher.discountValue : 'Không có voucher',
+                            imageUrl: voucher ? voucher.imageUrl : '',
+                        };
+
+                        // Gửi email thông báo nâng cấp cấp độ
+                        await new Email(user, emailContent).sendBirthdayVoucher()
+                    }
+                }
+            }
 
         } catch (error) {
             console.error("Cronjob error:", error);
@@ -112,6 +165,22 @@ module.exports = () => {
             console.log(`Updated ${now} showtimes to 'ongoing' status`);
         }catch (error) {
             console.error("❌ Showtime status update cronjob finished error:", error);
+        }
+    });
+
+    // Cron job chạy 1 năm 1 lần
+    cron.schedule("0 0 1 1 *", async () => {
+        try {
+            const defaultLevel = await Level.findOne({ isDefault: true, active: true });
+
+            await User.updateMany(
+                { points: { $gt: 0 } },
+                { $set: { memberShipPoints: 0, totalEarnedPoints: 0, spinCount: 0, level: defaultLevel._id } }
+            );
+
+            console.log(`✅ Reset points for users`);
+        } catch (error) {
+            console.error("❌ Error resetting points:", error);
         }
     });
 };

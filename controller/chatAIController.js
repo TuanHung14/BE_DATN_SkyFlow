@@ -8,29 +8,34 @@ const { getChatHistory } = require("../utils/redis");
 
 const training = (keyText) => {
     return `
-        Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
-        ${keyText}
-        Đây là tổng hợp những dữ liệu trong web này hãy xem câu hỏi của khách hàng mà hãy trả lời theo 
-         QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY HÃY LÀM THEO NHỮNG ĐIỀU SAU: 
-        - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
-        - KHÔNG sử dụng markdown
-        - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
-        - KHÔNG giải thích code
-        - CHỈ trả về HTML content thuần túy
-        - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
-        - Đảm bảo HTML valid và well-formed
-        
-        Ví dụ format trả về:
-        <div>
-            <h2>Thông tin khách hàng</h2>
-            <p><strong>Họ tên:</strong> Nguyễn Văn A</p>
-            <p><strong>Email:</strong> example@email.com</p>
-        </div>
-        CÒN KHÔNG HÃY TRẢ VỀ DẠNG TEXT NHƯ BÌNH THƯỜNG
-    `;
+    Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
+    ${keyText}
+    Đây là tổng hợp những dữ liệu trong web này, hãy xem câu hỏi của khách hàng và trả lời theo các yêu cầu sau:
+    QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY, HÃY LÀM THEO NHỮNG ĐIỀU SAU: 
+    - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
+    - KHÔNG sử dụng markdown
+    - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
+    - KHÔNG giải thích code
+    - CHỈ trả về HTML content thuần túy
+    - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
+    - Đảm bảo HTML valid và well-formed
+    - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
+    - Nếu có sử dụng flexbox hay grid, thì cho width là 100% để đảm bảo responsive
+    - Đảm bảo bố cục rõ ràng, dễ đọc, và chuyên nghiệp
+    - Nếu yêu cầu hiện link thì sử dụng ${process.env.FE_CLIENT_HOST}/slug (slug trong dữ liệu) để hiện thị link
+    - Lưu ý khung hình để hiện thị trên máy tính là width: 200px
+    
+    Ví dụ format trả về:
+    <div style="background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="color: #0057D8; font-size: 24px; margin-bottom: 15px;">Thông tin khách hàng</h2>
+        <p style="color: #333; font-size: 16px; margin-bottom: 10px;"><strong>Họ tên:</strong> Nguyễn Văn A</p>
+        <p style="color: #333; font-size: 16px;"><strong>Email:</strong> example@email.com</p>
+    </div>
+    CÒN KHÔNG HÃY TRẢ VỀ DẠNG TEXT NHƯ BÌNH THƯỜNG
+`;
 }
 
-const callFunctionByPrompt = async (functionToCall, template, userId) => {
+const callFunctionByPrompt = async (functionToCall, userId) => {
     const data = await executeFunction(functionToCall, userId);
     if (data.error) throw new AppError(data.error, 500);
 
@@ -42,7 +47,7 @@ const callFunctionByPrompt = async (functionToCall, template, userId) => {
         context = data.toObject?.() || data;
     }
 
-    return { template, context };
+    return { context };
 }
 
 exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
@@ -59,23 +64,21 @@ exports.chatAIByPrompt = catchAsync(async (req, res, next) => {
         return next(new AppError('Gợi ý không được tìm thấy vui lòng thử lại sau', 400));
     }
 
-    const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req.user?._id);
-
+    const { context } = await callFunctionByPrompt(prompt.functionToCall, req?.user?._id);
 
     const keyText = `
         systemInstruction: ${prompt.systemInstruction}
-        template: ${template}
         data: ${JSON.stringify(context)}
     `;
 
     const systemInstruction = training(keyText);
 
-
-    const result = await chatAI('Trả lời theo systemInstruction và dữ liệu là template', systemInstruction, sessionId);
+    const result = await chatAI(prompt.description, systemInstruction, sessionId);
 
     res.status(200).json({
         status: 'success',
         data: {
+            question: prompt.description,
             content: result
         }
     });
@@ -95,14 +98,14 @@ exports.chatAI = catchAsync(async (req, res, next) => {
     const rendered = [];
     for (let prompt of fullPrompt) {
         const obj = {};
-        const { template, context } = await callFunctionByPrompt(prompt.functionToCall, prompt.template, req?.user?._id);
-        obj.template = template;
+        const { context } = await callFunctionByPrompt(prompt.functionToCall, req?.user?._id);
         obj.systemInstruction = prompt.systemInstruction;
         obj.context = context;
         rendered.push(obj);
     }
 
-    const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n  template: ${item.template} \n data: ${JSON.stringify(item.context)}`).join('\n');
+    const keyText = rendered.map((item) => `systemInstruction: ${item.systemInstruction} \n data: ${JSON.stringify(item.context)}`).join('\n');
+
     const systemInstruction = training(keyText);
 
     const result = await chatAI(prompt, systemInstruction, sessionId);

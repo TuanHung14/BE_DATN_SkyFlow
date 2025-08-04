@@ -1,6 +1,7 @@
 const express = require('express');
 const chatAIController = require('../controller/chatAIController')
 const auth = require('../middleware/authMiddleware');
+const optionalAuth = require('../middleware/optionalAuthMiddleware');
 const router = express.Router();
 
 /**
@@ -11,6 +12,8 @@ const router = express.Router();
  *       - Chat AI
  *     summary: Gửi câu hỏi đến AI và nhận phản hồi
  *     operationId: chatWithAI
+ *     security:
+ *       - bearer: []
  *     requestBody:
  *       required: true
  *       content:
@@ -36,7 +39,7 @@ const router = express.Router();
  *       500:
  *         description: Lỗi từ server hoặc AI
  */
-router.post("/", chatAIController.chatAI);
+router.post("/", optionalAuth, chatAIController.chatAI);
 
 /**
  * @swagger
@@ -70,6 +73,8 @@ router.get("/history/:sessionId", chatAIController.getChatHistory);
  *       - Chat AI
  *     summary: Gửi prompt có sẵn theo ID để nhận phản hồi từ AI
  *     operationId: chatWithAIByPromptId
+ *     security:
+ *       - bearer: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -91,8 +96,40 @@ router.get("/history/:sessionId", chatAIController.getChatHistory);
  *       500:
  *         description: Lỗi từ server hoặc AI
  */
-router.get("/:id/:sessionId", chatAIController.chatAIByPrompt);
+router.get("/:id/:sessionId", optionalAuth, chatAIController.chatAIByPrompt);
 
+/**
+ * @swagger
+ * /api/v1/chatAI/generate-review:
+ *   post:
+ *     tags:
+ *       - Chat AI
+ *     summary: Tạo review phim dựa trên rating và movieId
+ *     security:
+ *       - bearer: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               movieId:
+ *                 type: string
+ *                 example: "64e77f..."
+ *               rating:
+ *                 type: number
+ *                 example: 4.5
+ *     responses:
+ *       200:
+ *         description: Thành công - nhận được phản hồi từ AI
+ *       400:
+ *         description: Dữ liệu gửi lên không hợp lệ
+ *       401:
+ *         description: Không được xác thực
+ *       500:
+ *         description: Lỗi server
+ */
 router.post("/generate-review", auth, chatAIController.generateReview);
 
 module.exports = router;

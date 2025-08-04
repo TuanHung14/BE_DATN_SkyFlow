@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const AppError = require("../utils/appError");
 
 const userSchema = new mongoose.Schema(
   {
@@ -32,6 +33,10 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: {
       type: Date,
     },
+    lastBirthdayReward: {
+      type: Date,
+      default: null
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
@@ -45,6 +50,21 @@ const userSchema = new mongoose.Schema(
     memberShipPoints: {
       type: Number,
       default: 0,
+    },
+    totalEarnedPoints: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    level: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Level",
+        default: null,
+    },
+    spinCount: {
+        type: Number,
+        default: 0,
+        min: [0, "Số lượt quay không được nhỏ hơn 0"],
     },
     location: {
       type: {
@@ -166,6 +186,18 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
+
+userSchema.pre("save", async function (next) {
+    if (this.level) return next();
+
+    const levelDoc = await mongoose.model("Level").findOne({ isDefault: true, active: true });
+    if (levelDoc) {
+        this.level = levelDoc._id;
+    } else {
+        next(new AppError("Hệ thống tạo user đang lỗi vui lòng quay lại sau!", 404));
+    }
+    next();
+})
 
 userSchema.methods.correctPassword = async function (
   cadidatePassword,
