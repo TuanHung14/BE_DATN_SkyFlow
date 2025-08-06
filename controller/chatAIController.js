@@ -22,7 +22,8 @@ const training = (keyText) => {
     - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
     - Nếu có sử dụng flexbox hay grid, thì cho width là 100% để đảm bảo responsive
     - Đảm bảo bố cục rõ ràng, dễ đọc, và chuyên nghiệp
-    - Nếu yêu cầu hiện link thì sử dụng ${process.env.FE_CLIENT_HOST}/slug (slug trong dữ liệu) để hiện thị link
+    - Nếu yêu cầu hiện link thì sử dụng ${process.env.FE_CLIENT_HOST}/(if là movie thì là chitietsanpham else if là post thì là chi-tiet-binh-luan else if thì là cinema)/slug(slug trong dữ liệu) để hiện thị link
+    - Liên quan đến thời gian thì sử dụng định dạng ngày tháng năm theo kiểu dd/mm/yyyy và +7 giờ theo múi giờ Việt Nam
     - Lưu ý khung hình để hiện thị trên máy tính là width: 200px
     
     Ví dụ format trả về:

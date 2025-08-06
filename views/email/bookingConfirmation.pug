@@ -55,15 +55,15 @@ block content
                                 td.value.strong #{emailContent.totalFoodAmount}
 
         .movie-poster
-        if emailContent.moviePoster
-            img(src=emailContent.moviePoster, alt=emailContent.movieTitle, style='max-width: 200px; height: auto; border-radius: 8px;')
+            if emailContent.moviePoster
+                img(src=emailContent.moviePoster, alt=emailContent.movieTitle, style='max-width: 200px; height: auto; border-radius: 8px;')
 
     .important-info
         h2 ⚠️ Lưu ý quan trọng
         ul
             li Vui lòng có mặt tại rạp trước giờ chiếu ít nhất 15 phút
             li Mang theo mã QR hoặc mã đặt vé #{emailContent.bookingCode} để đổi vé
-                li Đồ ăn & thức uống sẽ được giao tại quầy rạp khi bạn đến xem phim
+            li Đồ ăn & thức uống sẽ được giao tại quầy rạp khi bạn đến xem phim
             li Vui lòng mang theo mã QR hoặc mã đặt vé #{emailContent.bookingCode} để nhận đồ ăn
             li Không được mang đồ ăn, thức uống từ bên ngoài vào rạp
             li Tắt điện thoại hoặc chuyển sang chế độ im lặng trong suốt buổi chiếu
@@ -75,22 +75,11 @@ block content
             p Quét mã QR này tại rạp để nhận vé:
             img(src=emailContent.qrCode, alt='QR Code', style='max-width: 150px; height: auto; margin: 10px 0;')
 
-    .actions
-        table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
-            tbody
-                tr
-                    td(align='center')
-                        table(role='presentation', border='0', cellpadding='0', cellspacing='0')
-                            tbody
-                                tr
-                                    td
-                                        a(href=emailContent.downloadTicketUrl) Tải vé về máy
-
         p
             | Bạn cũng có thể
-            a(href='#{emailContent.manageBookingUrl}') quản lý đặt vé
+            a(href=emailContent.manageBookingUrl) quản lý đặt vé
             |  hoặc
-            a(href='#{emailContent.viewMovieInfoUrl}') xem thông tin phim
+            a(href=emailContent.viewMovieInfoUrl) xem thông tin phim
             |  chi tiết.
 
     .cinema-info

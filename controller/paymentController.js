@@ -250,9 +250,8 @@ const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {
         moviePoster: movie.posterUrl,
         qrCode: ticket.qrUrl,
         openingHours: '8:00 - 23:00',
-        downloadTicketUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/tickets/${ticket.ticketCode}/download`,
-        manageBookingUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/my-bookings`,
-        viewMovieInfoUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/chitietsanpham/${movie.slug}`,
+        manageBookingUrl: `${process.env.FE_CLIENT_HOST}/taikhoan/lich-su-giao-dich`,
+        viewMovieInfoUrl: `${process.env.FE_CLIENT_HOST}/chitietsanpham/${movie.slug}`,
         foods: foodDetails,
         totalFoodAmount: foodDetails.reduce((sum, food) => sum + food.total, 0).toLocaleString('vi-VN') + ' VNĐ',
         ticketAmount: (ticket.totalAmount - foodDetails.reduce((sum, food) => sum + food.total, 0)).toLocaleString('vi-VN') + ' VNĐ'
