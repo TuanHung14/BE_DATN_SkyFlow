@@ -7,6 +7,12 @@ const levelSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
+    nameEn: {
+        type: String,
+        required: [true, 'Tên cấp độ English không được để trống!'],
+        unique: true,
+        trim: true
+    },
     icon: {
         type: String,
         required: [true, 'Biểu tượng cấp độ không được để trống!'],
