@@ -7,6 +7,8 @@ const Level = require("../model/levelModel");
 const { queryMomoPayment, queryZaloPayPayment, queryVnPayPayment } = require("../controller/paymentController");
 const VoucherUse = require("../model/voucherUseModel");
 const Voucher = require("../model/voucherModel");
+const Otp = require("../model/otpModel");
+const ResetPassword = require("../model/resetPasswordModel");
 const Email = require("../utils/email");
 
 module.exports = () => {
@@ -73,18 +75,18 @@ module.exports = () => {
                             imageUrl: voucher ? voucher.imageUrl : '',
                         };
 
-                        // Gửi email thông báo nâng cấp cấp độ
+                        // Gửi email thông báo
                         await new Email(user, emailContent).sendBirthdayVoucher()
                     }
                 }
             }
-
+            console.log(`✅ Cronjob every day at 00:00 executed successfully.`);
         } catch (error) {
             console.error("Cronjob error:", error);
         }
     });
 
-    // Cron job kiểm tra payment status mỗi 5 phút
+    // Cron job mỗi 5 phút
     cron.schedule("*/5 * * * *", async () => {
        try{
            const now = Date.now();
@@ -118,7 +120,7 @@ module.exports = () => {
        }
     });
 
-    // Cron job: Cập nhật trạng thái showtime khi sắp đến giờ chiếu (5 phút trước)
+    // Cron job mỗi 1 phút
     cron.schedule("* * * * *", async () => {
         try{
             const now = new Date();
@@ -147,7 +149,7 @@ module.exports = () => {
         }
     })
 
-    // Cron job để đánh dấu showtime đã kết thúc sau 10p
+    // Cron job 10 phút
     cron.schedule("*/10 * * * *", async () => {
         try{
             const now = new Date();
@@ -181,6 +183,17 @@ module.exports = () => {
             console.log(`✅ Reset points for users`);
         } catch (error) {
             console.error("❌ Error resetting points:", error);
+        }
+    });
+
+    // Cron job chạy 1 tuần 1 lần
+    cron.schedule("0 0 * * 0", async () => {
+        try {
+            const today = new Date();
+            await Otp.deleteMany({ expired: { $lt: today } });
+            await ResetPassword.deleteMany({ expired: { $lt: today } });
+        } catch (error) {
+            console.error("❌ Error cleaning up expired:", error);
         }
     });
 };
