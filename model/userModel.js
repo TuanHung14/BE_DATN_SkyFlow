@@ -138,31 +138,6 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-userSchema.pre("save", async function (next) {
-  if (!this.role) return next();
-
-  const roleDoc = await mongoose.model("Role").findById(this.role);
-  if (!roleDoc) return next();
-
-  this.isAdmin = roleDoc.name !== "user"; // Nếu role là 'user' thì isAdmin = false
-  next();
-});
-
-userSchema.pre("findOneAndUpdate", async function (next) {
-    const update = this.getUpdate();
-
-    if (!update || !update.role) return next();
-
-    const roleDoc = await mongoose.model("Role").findById(this.role);
-
-    if (!roleDoc) return next();
-    update.isAdmin = roleDoc.name !== "user";
-
-    this.setUpdate(update);
-
-    next();
-})
-
 userSchema.pre("save", function (next) {
   if (this.googleId && !this.password) {
     this.isUpdatePassword = false;
@@ -179,13 +154,40 @@ userSchema.pre("save", function (next) {
 
 userSchema.pre("save", async function (next) {
   if (!this.role) {
-    const userRole = await mongoose.model("Role").findOne({ name: "user" });
+    const userRole = await mongoose.model("Role").findOne({ isDefault: true, isActive: true });
     if (userRole) {
       this.role = userRole._id;
+    }else{
+        return next(new AppError("Hệ thống tạo user đang lỗi vui lòng quay lại sau!", 404));
     }
   }
   next();
 });
+
+userSchema.pre("save", async function (next) {
+    if (!this.role) return next();
+
+    const roleDoc = await mongoose.model("Role").findById(this.role);
+    if (!roleDoc) return next();
+
+    this.isAdmin = roleDoc.name !== "user"; // Nếu role là 'user' thì isAdmin = false
+    next();
+});
+
+userSchema.pre("findOneAndUpdate", async function (next) {
+    const update = this.getUpdate();
+
+    if (!update || !update.role) return next();
+
+    const roleDoc = await mongoose.model("Role").findById(this.role);
+
+    if (!roleDoc) return next();
+    update.isAdmin = roleDoc.name !== "user";
+
+    this.setUpdate(update);
+
+    next();
+})
 
 userSchema.pre("save", async function (next) {
     if (this.level) return next();

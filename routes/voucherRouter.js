@@ -45,6 +45,9 @@ const router = express.Router();
  *               discountValue:
  *                 type: number
  *                 example: 200000
+ *               minimumOrderAmount:
+ *                 type: number
+ *                 example: 300000
  *               points:
  *                 type: number
  *                 example: 1000
@@ -75,6 +78,14 @@ router.use(auth);
  *     security:
  *       - bearer: []
  *     operationId: getOwnedVouchers
+ *     parameters:
+ *       - in: query
+ *         name: price
+ *         schema:
+ *           type: number
+ *           example: 150000
+ *         required: true
+ *         description: Giá trị đơn hàng hiện tại để lọc các voucher đủ điều kiện sử dụng (dựa trên minimumOrderAmount).
  *     responses:
  *       200:
  *         description: Danh sách voucher đã mua
@@ -168,6 +179,9 @@ router.post("/buy", voucherUseController.buyVoucher);
  *               discountValue:
  *                 type: number
  *                 example: 200000
+ *               minimumOrderAmount:
+ *                 type: number
+ *                 example: 300000
  *               points:
  *                 type: number
  *                 example: 1000
