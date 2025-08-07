@@ -44,10 +44,19 @@ exports.buyVoucher = catchAsync(async (req, res, next) => {
 
 exports.getVoucherUsage = catchAsync(async (req, res, next) => {
     const userId = req.user._id;
+    const price = Number(req.query.price);
 
-    // Lấy tất cả voucher đã sử dụng của người dùng
+    if (isNaN(price)) {
+        return next(new AppError("Giá trị đơn hàng không hợp lệ", 400));
+    }
+
+    // Lấy tất cả voucher sử dụng của người dùng
     const voucherUsages = await VoucherUse.find({ userId: userId, $expr: { $lt: ["$usageCount", "$usageLimit"] } })
-        .populate('voucherId', 'voucherCode voucherName discountValue description imageUrl')
+        .populate({
+            path: 'voucherId',
+            select: 'voucherCode voucherName discountValue description imageUrl minimumOrderAmount',
+            match: { minimumOrderAmount: { $lte: price } },
+        });
 
     res.status(200).json({
         status: 'success',
