@@ -4,7 +4,7 @@ const catchAsync = require("../utils/catchAsync");
 const Room = require("../model/roomModel");
 const Showtime = require("../model/showtimeModel");
 const { ObjectId } = require("mongoose").Types;
-const { getCinemasNearby } = require('../services/cineamsService');
+const { getCinemasNearby } = require("../services/cineamsService");
 
 exports.createCinema = Factory.createOne(Cinema);
 
@@ -116,36 +116,40 @@ exports.getFilteredCinemas = catchAsync(async (req, res, next) => {
 });
 
 exports.getNearestCinemas = catchAsync(async (req, res, next) => {
-    const user = req.user;
-    const { unit } = req.params;
-    let { latitude, longitude } = req.query;
-    // unit có thể là 'mi' (dặm) hoặc 'km' (kilomet)
-    const multiplier = unit ==='mi'? 0.000621371 : 0.001;
-    let cinemas;
+  const user = req.user;
+  const { unit } = req.params;
+  let { latitude, longitude } = req.query;
+  // unit có thể là 'mi' (dặm) hoặc 'km' (kilomet)
+  const multiplier = unit === "mi" ? 0.000621371 : 0.001;
+  let cinemas;
 
-    if (latitude && longitude) {
-        cinemas = await getCinemasNearby(latitude, longitude, multiplier);
-    } else if (!user || user.location.coordinates[0] === 0 || user.location.coordinates[1] === 0)
-    {
-        cinemas = await Cinema.find(
-            {
-                isDeleted: false
-            },
-            {
-                name: 1,
-                province: 1,
-                district: 1,
-                ward: 1,
-                address: 1,
-                phone: 1,
-                location: 1,
-        })
-            .sort({ createdAt: -1 })
-            .limit(4);
-    } else {
-        [latitude, longitude] = user.location.coordinates;
-        cinemas = await getCinemasNearby(latitude, longitude, multiplier);
-    }
+  if (latitude && longitude) {
+    cinemas = await getCinemasNearby(latitude, longitude, multiplier);
+  } else if (
+    !user ||
+    user.location.coordinates[0] === 0 ||
+    user.location.coordinates[1] === 0
+  ) {
+    cinemas = await Cinema.find(
+      {
+        isDeleted: false,
+      },
+      {
+        name: 1,
+        province: 1,
+        district: 1,
+        ward: 1,
+        address: 1,
+        phone: 1,
+        location: 1,
+      }
+    )
+      .sort({ createdAt: -1 })
+      .limit(4);
+  } else {
+    [latitude, longitude] = user.location.coordinates;
+    cinemas = await getCinemasNearby(latitude, longitude, multiplier);
+  }
 
   res.status(200).json({
     status: "success",
@@ -169,30 +173,33 @@ exports.getShowtimesByCinemaByDate = catchAsync(async (req, res, next) => {
     );
   }
 
-  // Thiết lập khoảng thời gian trong ngày đó
-  const start = new Date(targetDate);
-  start.setHours(0, 0, 0, 0);
+  const now = new Date();
 
-  const end = new Date(targetDate);
+  // Thiết lập khoảng thời gian trong ngày đó
+  let start = new Date(targetDate);
+  let end = new Date(targetDate);
+  start.setHours(0, 0, 0, 0);
   end.setHours(23, 59, 59, 999);
+
+  // Nếu ngày được chọn là hôm nay -> start = thời điểm hiện tại
+  if (start.getTime() === new Date(now).setHours(0, 0, 0, 0)) {
+    start = now;
+  }
 
   // Lấy các phòng chiếu thuộc rạp
   const rooms = await Room.find({ cinemaId, isDeleted: false }).select("_id");
   const roomIds = rooms.map((room) => room._id);
 
-  // Lấy các suất chiếu trong ngày được chọn
+  // Lấy các suất chiếu chưa chiếu
   const showtimes = await Showtime.find({
     roomId: { $in: roomIds },
+    status: { $ne: "finished" },
     isDeleted: false,
-    showDate: {
-      $gte: start,
-      $lte: end,
-    },
+    showDate: { $gte: start, $lte: end },
   }).populate("movieId");
 
-  // Gom các phim chiếu trong ngày
+  // Gom phim
   const movieMap = new Map();
-
   showtimes.forEach((showtime) => {
     const movie = showtime.movieId;
     if (movie && !movieMap.has(movie._id.toString())) {
@@ -213,7 +220,6 @@ exports.getShowtimesByCinemaDateAndMovie = catchAsync(
   async (req, res, next) => {
     const { cinemaId, date, movieId } = req.query;
 
-    // Validate
     if (!cinemaId || !date || !movieId) {
       return next(
         new AppError("Vui lòng cung cấp đầy đủ cinemaId, date và movieId", 400)
@@ -227,13 +233,18 @@ exports.getShowtimesByCinemaDateAndMovie = catchAsync(
       );
     }
 
-    // Setup time range for the day
-    const start = new Date(targetDate);
+    const now = new Date();
+
+    let start = new Date(targetDate);
+    let end = new Date(targetDate);
     start.setHours(0, 0, 0, 0);
-    const end = new Date(targetDate);
     end.setHours(23, 59, 59, 999);
 
-    // Get roomIds of cinema
+    // Nếu là hôm nay thì chỉ lấy từ hiện tại trở đi
+    if (start.getTime() === new Date(now).setHours(0, 0, 0, 0)) {
+      start = now;
+    }
+
     const rooms = await Room.find({ cinemaId, isDeleted: false }).select("_id");
     const roomIds = rooms.map((r) => r._id);
 
@@ -245,10 +256,10 @@ exports.getShowtimesByCinemaDateAndMovie = catchAsync(
       });
     }
 
-    // Get showtimes that match
     const showtimes = await Showtime.find({
       roomId: { $in: roomIds },
       movieId,
+      status: { $ne: "finished" },
       isDeleted: false,
       showDate: { $gte: start, $lte: end },
     })
