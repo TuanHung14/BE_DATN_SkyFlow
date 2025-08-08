@@ -47,21 +47,35 @@ const voucherSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
-voucherSchema.pre("save", function (next){
-  if((this.minimumOrderAmount + 10000) < this.discountValue){
-    return next(new AppError("Giá trị giảm giá không được lớn hơn tổng giá trị đơn hàng tối thiểu", 400));
+voucherSchema.pre("save", function (next) {
+  if (this.minimumOrderAmount + 10000 < this.discountValue) {
+    return next(
+      new AppError(
+        "Giá trị giảm giá không được lớn hơn tổng giá trị đơn hàng tối thiểu",
+        400
+      )
+    );
   }
   next();
 });
 
 voucherSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate();
-  if ((update.minimumOrderAmount + 10000) < update.discountValue) {
-    return next(new AppError("Giá trị giảm giá không được lớn hơn tổng giá trị đơn hàng tối thiểu", 400));
+  if (update.minimumOrderAmount + 10000 < update.discountValue) {
+    return next(
+      new AppError(
+        "Giá trị giảm giá không được lớn hơn tổng giá trị đơn hàng tối thiểu",
+        400
+      )
+    );
   }
   next();
 });
