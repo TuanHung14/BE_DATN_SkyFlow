@@ -35,7 +35,6 @@ exports.createZaloPayPayment = async (paymentData) => {
     }
 
     const appTransId = `${moment().format('YYMMDD')}_${orderId}`;
-
     const order = {
         app_id: process.env.ZALOPAY_APP_ID,
         app_trans_id: appTransId,

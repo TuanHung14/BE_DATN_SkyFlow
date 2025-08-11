@@ -91,12 +91,12 @@ module.exports = () => {
        try{
            const now = Date.now();
            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
-           const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000);
+           // const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000);
            const pendingTickets = await Ticket.find({
                paymentStatus: "Pending",
                createdAt: {
                    $gte: oneDayAgo,
-                   $lte: fifteenMinutesAgo
+                   // $lte: fifteenMinutesAgo
                },
            }).populate("paymentMethodId");
 

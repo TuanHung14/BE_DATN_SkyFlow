@@ -1,6 +1,4 @@
 const Voucher = require("../model/voucherModel");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
 
 exports.createVoucher = Factory.createOne(Voucher);

@@ -373,9 +373,13 @@ exports.queryMomoPayment = async (orderId) => {
     const response = await axios(options);
     const data  = response.data;
 
-    if (data.resultCode === 0) {
+    if (data.resultCode === 0 || data.resultCode === 9000) {
       await updateTicketStatus(orderId, "Paid");
-    }else{
+    }
+    else if([7000, 7002, 1000].includes(data.resultCode)){
+        console.log(`[MoMo] Giao dịch ${orderId} đang pending (${data.resultCode})`);
+    }
+    else{
         // Cập nhật trạng thái thanh toán không thành công
         await updateTicketStatus(orderId, "Failed");
     }
@@ -464,9 +468,21 @@ exports.queryVnPayPayment = async (orderId, transDate) => {
 
         const result = response.data;
 
-        if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus === "00") {
-            await updateTicketStatus(orderId, "Paid");
-        } else if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus !== "00") {
+        // if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus === "00") {
+        //     await updateTicketStatus(orderId, "Paid");
+        // } else if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus !== "00") {
+        //     await updateTicketStatus(orderId, "Failed");
+        // }
+
+        if (result.vnp_ResponseCode === "00") {
+            if (result.vnp_TransactionStatus === "00") {
+                await updateTicketStatus(orderId, "Paid");
+            } else if (["01"].includes(result.vnp_TransactionStatus)) {
+                console.log(`[VNPAY] Giao dịch ${orderId} đang xử lý (${result.vnp_TransactionStatus})`);
+            } else {
+                await updateTicketStatus(orderId, "Failed");
+            }
+        } else {
             await updateTicketStatus(orderId, "Failed");
         }
     } catch (error) {

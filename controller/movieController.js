@@ -129,6 +129,32 @@ exports.getMovieRecommend = catchAsync(async (req, res, next) => {
     });
   }
 
+  const watchedMovieIdsRaw = await Ticket.aggregate([
+    {
+      $match: {
+        userId: userId,
+        paymentStatus: "Paid",
+      },
+    },
+    {
+      $lookup: {
+        from: "showtimes",
+        localField: "showtimeId",
+        foreignField: "_id",
+        as: "showtime",
+      },
+    },
+    { $unwind: "$showtime" },
+    {
+      $group: {
+        _id: null,
+        movieIds: { $addToSet: "$showtime.movieId" },
+      },
+    },
+  ]);
+
+  const watchedMovieIds = watchedMovieIdsRaw[0]?.movieIds || [];
+
   const movies = await Ticket.aggregate([
     {
       $match: {
@@ -177,8 +203,8 @@ exports.getMovieRecommend = catchAsync(async (req, res, next) => {
     // Bước 6: Sắp xếp thể loại nhiều lượt xem nhất
     { $sort: { count: -1 } },
 
-    // Bước 7: Lấy 1-2 thể loại xem nhiều nhất
-    { $limit: 2 },
+    // Bước 7: Lấy 1-3 thể loại xem nhiều nhất
+    { $limit: 3 },
   ]);
 
   if (movies.length === 0) {
@@ -192,6 +218,7 @@ exports.getMovieRecommend = catchAsync(async (req, res, next) => {
 
   const recommendedMovies = await Movie.find({
     genresId: { $in: genresIds },
+    _id: { $nin: watchedMovieIds },
     isDeleted: false,
     publishStatus: "PUBLISHED",
   })
