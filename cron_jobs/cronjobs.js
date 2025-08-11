@@ -2,7 +2,14 @@ const cron = require("node-cron");
 const { updateMovieStatusLogic } = require("../services/movieService");
 const Showtime = require("../model/showtimeModel");
 const Ticket = require("../model/ticketModel");
+const User = require("../model/userModel");
+const Level = require("../model/levelModel");
 const { queryMomoPayment, queryZaloPayPayment, queryVnPayPayment } = require("../controller/paymentController");
+const VoucherUse = require("../model/voucherUseModel");
+const Voucher = require("../model/voucherModel");
+const Otp = require("../model/otpModel");
+const ResetPassword = require("../model/resetPasswordModel");
+const Email = require("../utils/email");
 
 module.exports = () => {
     // Cron job chạy hàng ngày lúc 00:00
@@ -14,7 +21,7 @@ module.exports = () => {
             const daysToKeep = 2;
             const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
 
-            const result = await Showtime.updateMany(
+            await Showtime.updateMany(
                 {
                     showDate: {$lt: cutoffDate},
                     isDeleted: { $ne: true }
@@ -26,22 +33,70 @@ module.exports = () => {
                 }
             );
 
+            // Check sinh nhật cua người dùng
+            const today = new Date();
+
+            const usersWithBirthday = await User.find({
+                $expr: {
+                    $and: [
+                        { $eq: [{ $dayOfMonth: '$dateOfBirth' }, today.getDate()] },
+                        { $eq: [{ $month: '$dateOfBirth' }, today.getMonth() + 1] }
+                    ]
+                }
+            }).populate("level");
+
+            if (usersWithBirthday.length > 0) {
+                for (const user of usersWithBirthday) {
+                    // Kiểm tra xem người dùng đã nhận quà sinh nhật trong năm nay chưa
+                    const alreadyReceived = user?.lastBirthdayReward
+                        ? new Date(user.lastBirthdayReward).getFullYear() === today.getFullYear()
+                        : false;
+
+                    // Nếu chưa nhận quà sinh nhật trong năm nay, thì gửi voucher
+                    if (user?.level?.voucherId && !alreadyReceived) {
+                        await VoucherUse.findOneAndUpdate(
+                            { userId: user._id, voucherId: user.level.voucherId },
+                            { $inc: { usageLimit: 1 } },
+                            { new: true, upsert: true }
+                        );
+                        // Cập nhật ngày nhận quà sinh nhật
+                        await User.updateOne(
+                            { _id: user._id },
+                            { $set: { lastBirthdayReward: today } }
+                        );
+                        // Gửi email thông báo
+                        const voucher = user.level.voucherId ? await Voucher.findById(user.level.voucherId) : null;
+
+                        const emailContent = {
+                            userName: user.name,
+                            voucherCode: voucher ? voucher.voucherCode : 'Không có voucher',
+                            voucherName: voucher ? voucher.voucherName : 'Không có voucher',
+                            discountValue: voucher ? voucher.discountValue : 'Không có voucher',
+                            imageUrl: voucher ? voucher.imageUrl : '',
+                        };
+
+                        // Gửi email thông báo
+                        await new Email(user, emailContent).sendBirthdayVoucher()
+                    }
+                }
+            }
+            console.log(`✅ Cronjob every day at 00:00 executed successfully.`);
         } catch (error) {
             console.error("Cronjob error:", error);
         }
     });
 
-    // Cron job kiểm tra payment status mỗi 5 phút
+    // Cron job mỗi 5 phút
     cron.schedule("*/5 * * * *", async () => {
        try{
            const now = Date.now();
            const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
-           const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000);
+           // const fifteenMinutesAgo = new Date(now - 15 * 60 * 1000);
            const pendingTickets = await Ticket.find({
                paymentStatus: "Pending",
                createdAt: {
                    $gte: oneDayAgo,
-                   $lte: fifteenMinutesAgo
+                   // $lte: fifteenMinutesAgo
                },
            }).populate("paymentMethodId");
 
@@ -65,7 +120,7 @@ module.exports = () => {
        }
     });
 
-    // Cron job: Cập nhật trạng thái showtime khi sắp đến giờ chiếu (5 phút trước)
+    // Cron job mỗi 1 phút
     cron.schedule("* * * * *", async () => {
         try{
             const now = new Date();
@@ -94,7 +149,7 @@ module.exports = () => {
         }
     })
 
-    // Cron job để đánh dấu showtime đã kết thúc sau 10p
+    // Cron job 10 phút
     cron.schedule("*/10 * * * *", async () => {
         try{
             const now = new Date();
@@ -112,6 +167,33 @@ module.exports = () => {
             console.log(`Updated ${now} showtimes to 'ongoing' status`);
         }catch (error) {
             console.error("❌ Showtime status update cronjob finished error:", error);
+        }
+    });
+
+    // Cron job chạy 1 năm 1 lần
+    cron.schedule("0 0 1 1 *", async () => {
+        try {
+            const defaultLevel = await Level.findOne({ isDefault: true, active: true });
+
+            await User.updateMany(
+                { points: { $gt: 0 } },
+                { $set: { memberShipPoints: 0, totalEarnedPoints: 0, spinCount: 0, level: defaultLevel._id } }
+            );
+
+            console.log(`✅ Reset points for users`);
+        } catch (error) {
+            console.error("❌ Error resetting points:", error);
+        }
+    });
+
+    // Cron job chạy 1 tuần 1 lần
+    cron.schedule("0 0 * * 0", async () => {
+        try {
+            const today = new Date();
+            await Otp.deleteMany({ expired: { $lt: today } });
+            await ResetPassword.deleteMany({ expired: { $lt: today } });
+        } catch (error) {
+            console.error("❌ Error cleaning up expired:", error);
         }
     });
 };

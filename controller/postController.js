@@ -137,6 +137,13 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
     },
   });
 
+  // ✅ Ép kiểu createdAt sang Date để đảm bảo sort đúng
+  pipeline.push({
+    $addFields: {
+      createdAt: { $toDate: "$createdAt" },
+    },
+  });
+
   // Sort
   if (sort) {
     const sortOption = {};
@@ -149,6 +156,9 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
 
   // Bỏ trường likes nếu không cần
   pipeline.push({ $unset: ["likes"] });
+
+  // Optional: Log để debug pipeline
+  // console.log(JSON.stringify(pipeline, null, 2));
 
   // Gọi aggregate với limit/page đã ép kiểu
   const data = await APIAggregate(Post, { limit, page }, pipeline);

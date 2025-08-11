@@ -1,7 +1,11 @@
 const Factory = require("./handleFactory");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
 const Food = require("../model/foodModel");
+
+exports.getFieldGetClient = (req, res, next) => {
+    req.query.status = 'active';
+    next();
+}
+
 exports.getAllFoods = Factory.getAll(Food);
 exports.getFoodById = Factory.getOne(Food);
 exports.createFood = Factory.createOne(Food);

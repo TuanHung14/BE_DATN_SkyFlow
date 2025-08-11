@@ -22,6 +22,8 @@ const Booking = require("../model/bookingModel");
 const User = require("../model/userModel");
 const PaymentMethod = require("../model/paymentMethodModel");
 const VoucherUse = require("../model/voucherUseModel");
+const Voucher = require("../model/voucherModel");
+const Level = require("../model/levelModel");
 const Factory = require("./handleFactory");
 const Email = require("../utils/email");
 const mongoose = require("mongoose");
@@ -81,11 +83,56 @@ const updateTicketStatus = async (orderId, status) => {
                 { session }
             );
 
-            await User.updateOne(
-                { _id: ticket.userId },
-                { $inc: { memberShipPoints: ticket.totalAmount } },
-                { session }
-            );
+            const user = await User.findById(ticket.userId, null, { session }).populate('level').select('+name +email +spinCount +totalEarnedPoints +memberShipPoints +level');
+
+            // Cập nhật người dùng
+            if (user) {
+                const earnedPoints = Math.floor(ticket.totalAmount * user.level.pointMultiplier);
+                user.totalEarnedPoints += earnedPoints;
+                user.memberShipPoints += earnedPoints;
+                user.spinCount += 1;
+                // Check xem người dùng có đủ điểm để nâng cấp cấp độ không
+                const level = await Level.find(
+                    {
+                        active: true,
+                    },
+                    null,
+                    { session }
+                ).sort({ pointMultiplier: -1 });
+
+                // Lấy level cao hơn level hiện tại của người dùng
+                const nextLevel = level.find(l => l.minXp <= user.totalEarnedPoints);
+
+                if (nextLevel && user.level._id.toString() !== nextLevel._id.toString()) {
+                    const currentLevel = user.level.name;
+                    user.level = nextLevel._id;
+
+                    if (nextLevel.voucherId) {
+                        await VoucherUse.findOneAndUpdate(
+                            { userId: user._id, voucherId: nextLevel.voucherId },
+                            { $inc: { usageLimit: 1 } },
+                            { new: true, upsert: true }
+                        ).session(session);
+                    }
+
+                    const voucher = nextLevel.voucherId ? await Voucher.findById(nextLevel.voucherId).session(session) : null;
+
+                    const emailContent = {
+                        userName: user.name,
+                        currentLevel: currentLevel,
+                        nextLevel: nextLevel.name,
+                        icon: nextLevel.icon,
+                        voucherCode: voucher ? voucher.voucherCode : 'Không có voucher',
+                        voucherName: voucher ? voucher.voucherName : 'Không có voucher',
+                        discountValue: voucher ? voucher.discountValue : 'Không có voucher',
+                        imageUrl: voucher ? voucher.imageUrl : '',
+                    };
+
+                    // Gửi email thông báo nâng cấp cấp độ
+                    await new Email(user, emailContent).sendNextLevel()
+                }
+                await user.save({ session });
+            }
 
             const realTicket = await Ticket.findById(ticket._id).session(session);
             realTicket.qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ticket.ticketCode}`;
@@ -203,9 +250,8 @@ const sendBookingConfirmationEmail = async (ticket, seatIds, ticketFoods) => {
         moviePoster: movie.posterUrl,
         qrCode: ticket.qrUrl,
         openingHours: '8:00 - 23:00',
-        downloadTicketUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/tickets/${ticket.ticketCode}/download`,
-        manageBookingUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/my-bookings`,
-        viewMovieInfoUrl: `${process.env.FE_ADMIN_CLIENT_HOST}/chitietsanpham/${movie.slug}`,
+        manageBookingUrl: `${process.env.FE_CLIENT_HOST}/taikhoan/lich-su-giao-dich`,
+        viewMovieInfoUrl: `${process.env.FE_CLIENT_HOST}/chitietsanpham/${movie.slug}`,
         foods: foodDetails,
         totalFoodAmount: foodDetails.reduce((sum, food) => sum + food.total, 0).toLocaleString('vi-VN') + ' VNĐ',
         ticketAmount: (ticket.totalAmount - foodDetails.reduce((sum, food) => sum + food.total, 0)).toLocaleString('vi-VN') + ' VNĐ'
@@ -327,9 +373,13 @@ exports.queryMomoPayment = async (orderId) => {
     const response = await axios(options);
     const data  = response.data;
 
-    if (data.resultCode === 0) {
+    if (data.resultCode === 0 || data.resultCode === 9000) {
       await updateTicketStatus(orderId, "Paid");
-    }else{
+    }
+    else if([7000, 7002, 1000].includes(data.resultCode)){
+        console.log(`[MoMo] Giao dịch ${orderId} đang pending (${data.resultCode})`);
+    }
+    else{
         // Cập nhật trạng thái thanh toán không thành công
         await updateTicketStatus(orderId, "Failed");
     }
@@ -418,9 +468,21 @@ exports.queryVnPayPayment = async (orderId, transDate) => {
 
         const result = response.data;
 
-        if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus === "00") {
-            await updateTicketStatus(orderId, "Paid");
-        } else if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus !== "00") {
+        // if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus === "00") {
+        //     await updateTicketStatus(orderId, "Paid");
+        // } else if (result.vnp_ResponseCode === "00" && result.vnp_TransactionStatus !== "00") {
+        //     await updateTicketStatus(orderId, "Failed");
+        // }
+
+        if (result.vnp_ResponseCode === "00") {
+            if (result.vnp_TransactionStatus === "00") {
+                await updateTicketStatus(orderId, "Paid");
+            } else if (["01"].includes(result.vnp_TransactionStatus)) {
+                console.log(`[VNPAY] Giao dịch ${orderId} đang xử lý (${result.vnp_TransactionStatus})`);
+            } else {
+                await updateTicketStatus(orderId, "Failed");
+            }
+        } else {
             await updateTicketStatus(orderId, "Failed");
         }
     } catch (error) {

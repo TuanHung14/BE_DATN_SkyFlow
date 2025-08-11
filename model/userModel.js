@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const AppError = require("../utils/appError");
 
 const userSchema = new mongoose.Schema(
   {
@@ -32,6 +33,10 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: {
       type: Date,
     },
+    lastBirthdayReward: {
+      type: Date,
+      default: null
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
@@ -45,6 +50,37 @@ const userSchema = new mongoose.Schema(
     memberShipPoints: {
       type: Number,
       default: 0,
+    },
+    totalEarnedPoints: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    level: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Level",
+        default: null,
+    },
+    spinCount: {
+        type: Number,
+        default: 0,
+        min: [0, "Số lượt quay không được nhỏ hơn 0"],
+    },
+    location: {
+      type: {
+          type: String,
+          enum: ["Point"],
+          default: "Point",
+      },
+      coordinates: {
+          type: [Number], // [longitude, latitude]
+          default: [0, 0],
+      },
+    },
+    address: {
+        type: String,
+        trim: true,
+        default: null,
     },
     passwordChangedAt: Date,
     isAdmin: {
@@ -81,6 +117,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Tạo chỉ mục địa lý cho trường location
+userSchema.index({ location: "2dsphere" });
+
 // document middleware
 // save chỉ có tác dụng với .save hay .create
 // Mã hóa Password
@@ -99,14 +138,40 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-userSchema.pre("save", async function (next) {
-  if (!this.role) return next();
-
-  const roleDoc = await mongoose.model("Role").findById(this.role);
-  if (!roleDoc) return next();
-
-  this.isAdmin = roleDoc.name !== "user"; // Nếu role là 'user' thì isAdmin = false
+userSchema.pre("save", function (next) {
+  if (this.googleId && !this.password) {
+    this.isUpdatePassword = false;
+  }
   next();
+});
+
+userSchema.pre("save", function (next) {
+  if (!this.name) {
+    this.name = `user-${Date.now()}`;
+  }
+  next();
+});
+
+userSchema.pre("save", async function (next) {
+  if (!this.role) {
+    const userRole = await mongoose.model("Role").findOne({ isDefault: true, isActive: true });
+    if (userRole) {
+      this.role = userRole._id;
+    }else{
+        return next(new AppError("Hệ thống tạo user đang lỗi vui lòng quay lại sau!", 404));
+    }
+  }
+  next();
+});
+
+userSchema.pre("save", async function (next) {
+    if (!this.role) return next();
+
+    const roleDoc = await mongoose.model("Role").findById(this.role);
+    if (!roleDoc) return next();
+
+    this.isAdmin = roleDoc.name !== "user"; // Nếu role là 'user' thì isAdmin = false
+    next();
 });
 
 userSchema.pre("findOneAndUpdate", async function (next) {
@@ -124,29 +189,17 @@ userSchema.pre("findOneAndUpdate", async function (next) {
     next();
 })
 
-userSchema.pre("save", function (next) {
-  if (this.googleId && !this.password) {
-    this.isUpdatePassword = false;
-  }
-  next();
-});
-
-userSchema.pre("save", function (next) {
-  if (!this.name) {
-    this.name = `user-${Date.now()}`;
-  }
-  next();
-});
-
 userSchema.pre("save", async function (next) {
-  if (!this.role) {
-    const userRole = await mongoose.model("Role").findOne({ name: "user" });
-    if (userRole) {
-      this.role = userRole._id;
+    if (this.level) return next();
+
+    const levelDoc = await mongoose.model("Level").findOne({ isDefault: true, active: true });
+    if (levelDoc) {
+        this.level = levelDoc._id;
+    } else {
+        next(new AppError("Hệ thống tạo user đang lỗi vui lòng quay lại sau!", 404));
     }
-  }
-  next();
-});
+    next();
+})
 
 userSchema.methods.correctPassword = async function (
   cadidatePassword,
