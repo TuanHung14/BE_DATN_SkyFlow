@@ -306,6 +306,18 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
             }
         },
         {
+            $group: {
+                _id: '$_id',
+                userId: { $first: '$userId' },
+                showtimeId: { $first: '$showtimeId' },
+                paymentMethodId: { $first: '$paymentMethodId' },
+                ticketSeats: { $first: '$ticketSeats' },
+                ticketFoods: { $push: '$ticketFoods' },
+                bookingDate: { $first: '$bookingDate' },
+                paymentStatus: { $first: '$paymentStatus' }
+            }
+        },
+        {
             $lookup: {
                 from: 'movieratings',
                 let: { ticketId: '$_id' },
