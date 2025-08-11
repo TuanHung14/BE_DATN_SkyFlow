@@ -422,6 +422,11 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
         }
     );
 
+    // $project lai nhung fiel can thiet
+    // pipeline.push({
+    //     $project: {}
+    // })
+
     const tickets = await APIAggregate(Ticket, { limit, page }, pipeline);
 
     pipeline.push({
