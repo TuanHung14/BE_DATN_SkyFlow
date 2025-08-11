@@ -64,6 +64,10 @@ const cinemaSchema = new mongoose.Schema(
         default: [0, 0],
       },
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -74,14 +78,14 @@ const cinemaSchema = new mongoose.Schema(
 
 // Tạo slug trước khi save
 cinemaSchema.pre("save", function (next) {
-  if (this.isModified("name")) {
-    this.slug = slugify(this.name, { lower: true, strict: true });
-  }
-  next();
+    if (this.isModified("name")) {
+        this.slug = slugify(this.name, {lower: true, strict: true});
+    }
+    next();
 });
 
 // Tạo index cho location
-cinemaSchema.index({ location: "2dsphere" });
+cinemaSchema.index({location: "2dsphere"});
 
 const Cinema = mongoose.model("Cinema", cinemaSchema);
 module.exports = Cinema;
