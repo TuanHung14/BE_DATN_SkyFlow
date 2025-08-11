@@ -306,31 +306,6 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
             }
         },
         {
-            $group: {
-                _id: '$_id',
-                ticket: { $first: '$ROOT' },
-                ticketFoods: {
-                    $push: {
-                        $cond: [
-                            { $ifNull: ['$ticketFoods._id', false] },
-                            '$ticketFoods',
-                            '$REMOVE'
-                        ]
-                    }
-                }
-            }
-        },
-        {
-            $replaceRoot: {
-                newRoot: {
-                    $mergeObjects: [
-                        '$ticket',
-                        { ticketFoods: '$ticketFoods' }
-                    ]
-                }
-            }
-        },
-        {
             $lookup: {
                 from: 'movieratings',
                 let: { ticketId: '$_id' },
