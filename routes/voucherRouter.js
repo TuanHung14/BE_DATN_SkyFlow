@@ -64,9 +64,26 @@ const router = express.Router();
  *         description: Dữ liệu không hợp lệ
  */
 router.route("/")
-    .get(voucherController.getAllVouchers)
+    .get(voucherController.getFieldGetClient, voucherController.getAllVouchers)
     .post(auth, authorize(permissions['create']),voucherController.createVoucher);
+
 router.use(auth);
+
+/**
+ * @swagger
+ * /api/v1/vouchers/admin:
+ *   get:
+ *     tags:
+ *       - Voucher
+ *     summary: Lấy danh sách tất cả voucher
+ *     operationId: getAllVouchers
+ *     responses:
+ *       200:
+ *         description: Danh sách voucher admin
+ */
+router.route("/admin")
+    .get(authorize(permissions['read']), voucherController.getAllVouchers)
+
 /**
  * @swagger
  * /api/v1/vouchers/owned:

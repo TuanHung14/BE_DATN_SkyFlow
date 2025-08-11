@@ -9,8 +9,6 @@ const permissions = getRBACOnResorce(Resource.Cinema);
 
 const router = express.Router();
 
-// router.use(auth);
-
 /**
  * @swagger
  * /api/v1/cinemas/distances/{unit}:
@@ -82,6 +80,7 @@ router.get(
  *         description: Lỗi server
  */
 router.get("/show-times", cinemaController.getFilteredCinemas);
+
 /**
  * @swagger
  * /api/v1/cinemas/getShowtimesByCinemaByDate:
@@ -138,43 +137,6 @@ router.get(
   cinemaController.getShowtimesByCinemaByDate
 );
 
-/**
- * @swagger
- * /api/v1/cinemas/admin:
- *   get:
- *     tags:
- *       - Cinemas
- *     summary: Lấy danh sách rạp (admin)
- *     operationId: getAllCinemasAdmin
- *     security:
- *       - bearer: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *       - in: query
- *         name: search[name]
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Thành công
- *       500:
- *         description: Lỗi server
- */
-router.get(
-  "/admin",
-  auth,
-  authorize(permissions["read"]),
-  cinemaController.getAllCinemas
-);
 /**
  * @swagger
  * /api/v1/cinemas/showtimes/filter:
@@ -242,6 +204,7 @@ router.get(
   "/showtimes/filter",
   cinemaController.getShowtimesByCinemaDateAndMovie
 );
+
 /**
  * @swagger
  * /api/v1/cinemas:
@@ -317,8 +280,47 @@ router.get(
  */
 router
   .route("/")
-  .get(cinemaController.getAllCinemas)
+  .get(cinemaController.getFieldGetClient, cinemaController.getAllCinemas)
   .post(auth, authorize(permissions["create"]), cinemaController.createCinema);
+
+
+/**
+ * @swagger
+ * /api/v1/cinemas/admin:
+ *   get:
+ *     tags:
+ *       - Cinemas
+ *     summary: Lấy danh sách rạp (admin)
+ *     operationId: getAllCinemasAdmin
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: search[name]
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *       500:
+ *         description: Lỗi server
+ */
+router.get(
+    "/admin",
+    auth,
+    authorize(permissions["read"]),
+    cinemaController.getAllCinemas
+);
 
 /**
  * @swagger
