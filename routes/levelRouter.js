@@ -1,6 +1,6 @@
-const express = require('express');
-const levelController = require('../controller/levelController');
-const auth = require('../middleware/authMiddleware');
+const express = require("express");
+const levelController = require("../controller/levelController");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -18,7 +18,11 @@ const router = express.Router();
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/', levelController.getFieldGetClient, levelController.getAllLevels)
+router.get(
+  "/",
+  levelController.getFieldGetClient,
+  levelController.getAllLevels
+);
 
 router.use(auth);
 
@@ -47,7 +51,7 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.put('/toggle/:id', levelController.toggleIsDefault);
+router.put("/toggle/:id", levelController.toggleIsDefault);
 
 /**
  * @swagger
@@ -118,11 +122,27 @@ router.put('/toggle/:id', levelController.toggleIsDefault);
  *         description: Lỗi máy chủ
  */
 
-
-router.route('/admin')
-    .get(levelController.getAllLevels)
-    .post(levelController.createLevel);
-
+router
+  .route("/admin")
+  .get(levelController.getAllLevelsAdmin)
+  .post(levelController.createLevel);
+/**
+ * @swagger
+ * /api/v1/levels:
+ *  get:
+ *  tags:
+ *  - Levels
+ *  summary: Lấy danh sách cấp độ
+ *  operationId: getAllLevels
+ *  security:
+ *  - bearer: []
+ *  responses:
+ *  200:
+ *    description: Trả về danh sách cấp độ
+ *  500:
+ *    description: Lỗi máy chủ
+ */
+router.get("/", levelController.getAllLevels);
 /**
  * @swagger
  * /api/v1/levels/{id}:
@@ -205,10 +225,9 @@ router.route('/admin')
  *         description: Lỗi máy chủ
  */
 
-
-router.route('/:id')
-    .get(levelController.getLevelById)
-    .patch(levelController.updateLevel)
+router
+  .route("/:id")
+  .get(levelController.getLevelById)
+  .patch(levelController.updateLevel);
 
 module.exports = router;
-

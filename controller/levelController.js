@@ -39,8 +39,14 @@ exports.toggleIsDefault = catchAsync(async (req, res, next) => {
 });
 
 exports.createLevel = Factory.createOne(Level);
-
-exports.getAllLevels = Factory.getAll(Level, {
+exports.getAllLevels = catchAsync(async (req, res, next) => {
+  req.query.active = true; // ép query filter
+  return Factory.getAll(Level, {
+    path: "voucherId",
+    select: "voucherName points",
+  })(req, res, next);
+});
+exports.getAllLevelsAdmin = Factory.getAll(Level, {
   path: "voucherId",
   select: "voucherName points",
 });
