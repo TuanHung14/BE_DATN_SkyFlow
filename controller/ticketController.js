@@ -308,13 +308,29 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
         {
             $group: {
                 _id: '$_id',
-                userId: { $first: '$userId' },
-                showtimeId: { $first: '$showtimeId' },
-                paymentMethodId: { $first: '$paymentMethodId' },
-                ticketSeats: { $first: '$ticketSeats' },
-                ticketFoods: { $push: '$ticketFoods' },
-                bookingDate: { $first: '$bookingDate' },
-                paymentStatus: { $first: '$paymentStatus' }
+                ticket: { $first: '$$ROOT' },
+                ticketFoods: {
+                    $push: {
+                        _id: '$ticketFoods._id',
+                        ticketId: '$ticketFoods.ticketId',
+                        foodId: '$ticketFoods.foodId',
+                        quantity: '$ticketFoods.quantity',
+                        priceAtPurchase: '$ticketFoods.priceAtPurchase',
+                        createdAt: '$ticketFoods.createdAt',
+                        updatedAt: '$ticketFoods.updatedAt',
+                        food: '$ticketFoods.food'
+                    }
+                }
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: {
+                    $mergeObjects: [
+                        '$ticket',
+                        { ticketFoods: '$ticketFoods' }
+                    ]
+                }
             }
         },
         {
