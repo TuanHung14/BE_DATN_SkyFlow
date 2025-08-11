@@ -23,7 +23,7 @@ exports.createReward = catchAsync(async (req, res, next) => {
     if(reward.length > 0) {
         const probabilitySystem = reward.reduce((acc, cur) => acc + cur.probability, 0);
 
-        if((1 - probabilitySystem) < probability) {
+        if((1 - probabilitySystem) <= probability) {
             return next(new AppError('Xác suất phần thưởng vượt quá giới hạn cho phép', 400));
         }
     }
@@ -57,7 +57,7 @@ exports.getAllRewards = catchAsync(async (req, res, next) => {
         .sort()
         .limitFields();
 
-    const rewardsList = await rewards.query;
+    const rewardsList = await rewards.query.populate('voucherId');
     const totalProbability = rewardsList.reduce((sum, r) => sum + r.probability, 0);
 
 

@@ -306,6 +306,31 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
             }
         },
         {
+            $group: {
+                _id: '$_id',
+                ticket: { $first: '$ROOT' },
+                ticketFoods: {
+                    $push: {
+                        $cond: [
+                            { $ifNull: ['$ticketFoods._id', false] },
+                            '$ticketFoods',
+                            '$REMOVE'
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: {
+                    $mergeObjects: [
+                        '$ticket',
+                        { ticketFoods: '$ticketFoods' }
+                    ]
+                }
+            }
+        },
+        {
             $lookup: {
                 from: 'movieratings',
                 let: { ticketId: '$_id' },
@@ -697,7 +722,11 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
         },
         {
             $addFields: {
-                cinemaName: '$showtimeId.roomId.cinema.name'
+                cinemaName: '$showtimeId.roomId.cinema.name',
+                cinemaAddress: '$showtimeId.roomId.cinema.address',
+                cinemaProvince: '$showtimeId.roomId.cinema.province.label',
+                cinemaDistrict: '$showtimeId.roomId.cinema.district.label',
+                cinemaWard: '$showtimeId.roomId.cinema.ward.label',
             }
         },
         {
@@ -724,7 +753,7 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
                 as: 'users',
                 pipeline: [
                     {
-                        $project: { name: 1, email: 1},
+                        $project: { name: 1, email: 1, phone: 1},
                     },
                 ],
             }
@@ -732,6 +761,53 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
         {
             $unwind: {
                 path: '$users',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'voucheruses',
+                localField: 'voucherUseId',
+                foreignField: '_id',
+                as: 'voucherUseId'
+            }
+        },
+        {
+            $unwind: {
+                path: '$voucherUseId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: 'vouchers',
+                localField: 'voucherUseId.voucherId',
+                foreignField: '_id',
+                as: 'voucherUseId.voucherId',
+                pipeline: [
+                    {
+                        $project: { voucherName: 1, discountValue: 1 }
+                    }
+                ]
+            }
+        },
+        {
+            $unwind: {
+                path: '$voucherUseId.voucherId',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+          $lookup: {
+              from: 'paymentmethods',
+              localField: 'paymentMethodId',
+              foreignField: '_id',
+              as: 'paymentMethodId'
+          }
+        },
+        {
+            $unwind: {
+                path: '$paymentMethodId',
                 preserveNullAndEmptyArrays: true
             }
         },

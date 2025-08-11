@@ -12,7 +12,7 @@ router.use(auth)
 
 /**
  * @swagger
- * /api/v1/roles/toogle/{id}:
+ * /api/v1/roles/toggle/{id}:
  *   put:
  *     tags:
  *       - Role
@@ -37,7 +37,7 @@ router.use(auth)
  *       500:
  *         description: Lỗi máy chủ
  */
-router.put("/toogle/:id", authorize(permissions['update']), roleController.toggleIsDefault);
+router.put("/toggle/:id", authorize(permissions['update']), roleController.toggleIsDefault);
 
 /**
  * @swagger
