@@ -6,6 +6,11 @@ const Showtime = require("../model/showtimeModel");
 const { ObjectId } = require("mongoose").Types;
 const { getCinemasNearby } = require('../services/cineamsService');
 
+exports.getFieldGetClient = (req, res, next) => {
+    req.query.isActive = true;
+    next();
+}
+
 exports.createCinema = Factory.createOne(Cinema);
 
 exports.getAllCinemas = Factory.getAll(Cinema);
