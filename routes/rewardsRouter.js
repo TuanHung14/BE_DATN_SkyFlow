@@ -21,12 +21,19 @@ router.use(auth);
 
 /**
  * @swagger
- * /api/v1/rewards/spin:
+ * /api/v1/rewards/spin/{id}:
  *   post:
  *     summary: Quay phần thưởng (vòng quay may mắn)
  *     tags: [Rewards]
  *     security:
  *       - bearer: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID phần thưởng
  *     responses:
  *       200:
  *         description: Quay phần thưởng thành công
@@ -35,7 +42,7 @@ router.use(auth);
  *       401:
  *         description: Không xác thực
  */
-router.get('/spin', rewardsController.spinReward);
+router.post('/spin/:id', rewardsController.spinReward);
 
 /**
  * @swagger

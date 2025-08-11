@@ -1,7 +1,6 @@
 const Factory = require("./handleFactory");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
 const Food = require("../model/foodModel");
+
 exports.getAllFoods = Factory.getAll(Food);
 exports.getFoodById = Factory.getOne(Food);
 exports.createFood = Factory.createOne(Food);
