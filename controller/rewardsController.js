@@ -113,11 +113,12 @@ exports.updateReward = catchAsync(async (req, res, next) => {
 });
 
 exports.spinReward = catchAsync(async (req, res, next) => {
+    const id = req.params.id;
     const session = await mongoose.startSession();
     try {
         session.startTransaction();
 
-        const user = await User.findById(req.user._id).populate('level').session(session);
+        const user = await User.findById(req.user._id).select('+totalEarnedPoints').populate('level').session(session);
 
         if(!user) {
             return next(new AppError('Người dùng không tồn tại', 404));
@@ -127,38 +128,15 @@ exports.spinReward = catchAsync(async (req, res, next) => {
             return next(new AppError('Bạn không còn lượt quay nào', 400));
         }
 
-        const rewards = await Rewards.find({ active: true }).populate('voucherId').session(session);
+        const reward = await Rewards.findOne({ _id: id, active: true }).populate({ path: 'voucherId', options: { session } }).session(session);
 
-        if(rewards.length === 0) {
+        if(!reward) {
             return next(new AppError('Không có phần thưởng nào khả dụng', 404));
         }
 
-        const totalProbability = rewards.reduce((sum, r) => sum + r.probability, 0);
-        if (totalProbability < 1) {
-            return next(new AppError('Phần thưởng chưa đủ điều kiện để chơi. Vui lòng đợi hệ thống cập nhập lại!', 400));
-        }
-
-        const randomValue = Math.random();
-        let cumulativeProbability = 0;
-        let selectedReward = null;
-
-        rewards.sort(() => Math.random() - 0.5);
-
-        for (const reward of rewards) {
-            cumulativeProbability += reward.probability;
-            if (randomValue <= cumulativeProbability) {
-                selectedReward = reward;
-                break;
-            }
-        }
-
-        if (!selectedReward) {
-            return next(new AppError('Vòng quay đang bị lỗi vui lòng thử lại sau', 500));
-        }
-
-        if( selectedReward.type === 'point') {
-            user.memberShipPoints += selectedReward.value;
-            user.totalEarnedPoints += selectedReward.value;
+        if( reward.type === 'point') {
+            user.memberShipPoints += reward.value;
+            user.totalEarnedPoints += reward.value;
 
             const level = await Level.find(
                 {
@@ -171,6 +149,7 @@ exports.spinReward = catchAsync(async (req, res, next) => {
             const nextLevel = level.find(l => l.minXp <= user.totalEarnedPoints);
 
             if (nextLevel && user.level._id.toString() !== nextLevel._id.toString()) {
+                const currentLevel = user.level.name;
                 user.level = nextLevel._id;
 
                 if (nextLevel.voucherId) {
@@ -185,7 +164,7 @@ exports.spinReward = catchAsync(async (req, res, next) => {
 
                 const emailContent = {
                     userName: user.name,
-                    currentLevel: user.level.name,
+                    currentLevel: currentLevel,
                     nextLevel: nextLevel.name,
                     icon: nextLevel.icon,
                     voucherCode: voucher ? voucher.voucherCode : 'Không có voucher',
@@ -197,9 +176,9 @@ exports.spinReward = catchAsync(async (req, res, next) => {
                 // Gửi email thông báo nâng cấp cấp độ
                 await new Email(user, emailContent).sendNextLevel()
             }
-        } else if (selectedReward.type === 'voucher') {
+        } else if (reward.type === 'voucher') {
             await VoucherUse.findOneAndUpdate(
-                { userId: user._id, voucherId: selectedReward.voucherId._id },
+                { userId: user._id, voucherId: reward.voucherId._id },
                 { $inc: { usageLimit: 1 } },
                 { new: true, upsert: true }
             ).session(session);
@@ -214,7 +193,7 @@ exports.spinReward = catchAsync(async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             data: {
-                reward: selectedReward
+                reward: reward
             }
         })
     }catch (error) {

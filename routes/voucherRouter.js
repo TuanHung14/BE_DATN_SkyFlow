@@ -84,7 +84,6 @@ router.use(auth);
  *         schema:
  *           type: number
  *           example: 150000
- *         required: true
  *         description: Giá trị đơn hàng hiện tại để lọc các voucher đủ điều kiện sử dụng (dựa trên minimumOrderAmount).
  *     responses:
  *       200:
