@@ -16,7 +16,7 @@ const roomSchema = new mongoose.Schema({
             validator: function(v) {
                 return /^room (10|[1-9])$/.test(v);
             },
-            message: props => `${props.value} không đúng định dạng`
+            message: props => `${props.value} không đúng định dạng, định dạng (room {số})`
         }
     },
     capacity: {

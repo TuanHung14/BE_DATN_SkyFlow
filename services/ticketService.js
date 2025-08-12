@@ -43,13 +43,13 @@ async function getRevenueByTime(type) {
         createdAt: {}
     };
 
-    let groupStage, projectStage, sortStage;
+    let groupStage, projectStage, sortStage, startDate, endDate;
 
     if (type === 'month') {
         // lấy tháng cách đây 11 tháng 1 là ngày đầu tiên của tháng đó
-        const startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+        startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
         // Ngày cuối cùng của tháng hiện tại. VD: new Date(2025, 8, 0) → ra ngày 31/07/2025 (ngày cuối tháng 7).
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
         matchStage.createdAt = { $gte: startDate, $lte: endDate };
 
@@ -63,7 +63,7 @@ async function getRevenueByTime(type) {
 
         projectStage = {
             _id: 0,
-            month: {
+            date: {
                 $concat: [
                     { $cond: [{ $lt: ["$_id.month", 10] }, { $concat: ["0", { $toString: "$_id.month" }] }, { $toString: "$_id.month" }] },
                     "/",
@@ -73,15 +73,16 @@ async function getRevenueByTime(type) {
             totalRevenue: 1
         };
 
-        sortStage = { month: 1 };
+        sortStage = { date: 1 };
     }
 
     if (type === 'week') {
-        const startOfWeek = new Date();
-        startOfWeek.setDate(now.getDate() - 6);
-        startOfWeek.setHours(0, 0, 0, 0);
+        startDate = new Date();
+        startDate.setDate(now.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = now;
 
-        matchStage.createdAt = { $gte: startOfWeek, $lte: now };
+        matchStage.createdAt = { $gte: startDate, $lte: now };
 
         groupStage = {
             _id: {
@@ -116,7 +117,25 @@ async function getRevenueByTime(type) {
         { $sort: sortStage }
     ]);
 
-    return revenueData;
+    const allDates = [];
+    const current = new Date(startDate);
+    while (current <= endDate) {
+        allDates.push(
+            type === 'month'
+                ? `${String(current.getMonth() + 1).padStart(2, '0')}/${current.getFullYear()}`
+                : `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()}`
+        );
+        type === 'month'
+            ? current.setMonth(current.getMonth() + 1)
+            : current.setDate(current.getDate() + 1);
+    }
+
+    const filledData = allDates.map(dateStr => {
+        const found = revenueData.find(r => r.date === dateStr);
+        return { date: dateStr, totalRevenue: found ? found.totalRevenue : 0 };
+    });
+
+    return filledData;
 }
 
 // Lấy những bộ phim được mua vé nhiều nhất
