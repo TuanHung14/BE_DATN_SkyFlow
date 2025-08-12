@@ -423,9 +423,41 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
     );
 
     // $project lai nhung fiel can thiet
-    // pipeline.push({
-    //     $project: {}
-    // })
+    pipeline.push({
+        $project: {
+            _id: 1,
+            ticketCode: 1,
+            bookingDate: 1,
+            totalAmount: 1,
+            isRated: 1,
+            movieTitle: "$showtimeId.movieId.name",
+            moviePoster: "$showtimeId.movieId.posterUrl",
+            showDate: "$showtimeId.showDate",
+            startTime: "$showtimeId.startTime",
+            status: "$showtimeId.status",
+            seats: {
+                $map: {
+                    input: "$ticketSeats",
+                    as: "seat",
+                    in: {
+                        seatRow: {$arrayElemAt: ["$$seat.seat.seatRow", 0]},
+                        seatNumber: {$arrayElemAt: ["$$seat.seat.seatNumber", 0]}
+                    }
+                }
+            },
+            foods: {
+                $map: {
+                    input: "$ticketFoods",
+                    as: "food",
+                    in: {
+                        foodName: "$$food.name",
+                        quantity: "$$food.quantity",
+                        imageUrl: "$$food.imageUrl"
+                    }
+                }
+            }
+        }
+    })
 
     const tickets = await APIAggregate(Ticket, { limit, page }, pipeline);
 
