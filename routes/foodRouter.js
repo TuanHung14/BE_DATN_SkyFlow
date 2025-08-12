@@ -61,7 +61,53 @@ router.use(auth);
  *                   status:
  *                     type: string
  */
-router.get("/", foodController.getAllFoods);
+router.get("/", foodController.getFieldGetClient, foodController.getAllFoods);
+
+/**
+ * @swagger
+ * /api/v1/food/admin:
+ *   get:
+ *     summary: Lấy tất cả món ăn
+ *     tags: [Foods]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Trang hiện tại
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Số lượng mỗi trang
+ *     responses:
+ *       200:
+ *         description: Danh sách món ăn
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   price:
+ *                     type: number
+ *                   imageUrl:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ */
+router.get("/admin", authorize(permissions['read']), foodController.getAllFoods);
 
 /**
  * @swagger

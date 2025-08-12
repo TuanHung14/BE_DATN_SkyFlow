@@ -81,6 +81,19 @@ router.post('/', ticketController.createTicket);
  *     operationId: getMyTickets
  *     security:
  *       - bearer: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Số trang muốn lấy (bắt đầu từ 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Số lượng vé mỗi trang
  *     responses:
  *       200:
  *         description: Lấy danh sách vé thành công

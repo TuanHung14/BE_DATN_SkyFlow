@@ -11,6 +11,7 @@ const TicketFood = require('../model/ticketFoodModel');
 const TicketSeat = require('../model/ticketSeatModel');
 const Booking = require("../model/bookingModel");
 const APIFeatures = require('../utils/apiFeatures');
+const APIAggregate = require("../utils/apiAggregate");
 
 exports.createTicket = catchAsync(async (req, res, next) => {
     const { showtimeId, seatsId, foodsId, paymentMethodId, voucherUseId } = req.body;
@@ -201,10 +202,14 @@ exports.createTicket = catchAsync(async (req, res, next) => {
 });
 
 exports.getMyTickets = catchAsync(async (req, res, next) => {
-    const tickets = await Ticket.aggregate([
-        {
-            $match: { userId: new mongoose.Types.ObjectId(req.user.id), paymentStatus: { $ne: "Failed" } }
-        },
+    const filter = { userId: new mongoose.Types.ObjectId(req.user.id), paymentStatus: { $ne: "Failed" } };
+    const pipeline = [];
+    const limit = req.query.limit * 1 || 10;
+    const page = req.query.page * 1 || 1;
+
+    pipeline.push({ $match: filter });
+    // join ticket seat
+    pipeline.push(
         {
             $lookup: {
                 from: 'ticketseats',
@@ -212,15 +217,32 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 foreignField: 'ticketId',
                 as: 'ticketSeats'
             }
-        },
+        }
+    );
+    // Join ticket food
+    pipeline.push(
         {
             $lookup: {
                 from: 'ticketfoods',
                 localField: '_id',
                 foreignField: 'ticketId',
+                pipeline: [
+                    {
+                        $project: {
+                            quantity: 1,
+                            foodId: 1,
+                            priceAtPurchase: 1
+                        }
+                    }
+                ],
                 as: 'ticketFoods'
             }
         },
+        { $unwind: "$ticketFoods" },
+    );
+
+    // Join Showtime
+    pipeline.push(
         {
             $lookup: {
                 from: 'showtimes',
@@ -235,6 +257,10 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 preserveNullAndEmptyArrays: true
             }
         },
+    )
+
+    // Join movies
+    pipeline.push(
         {
             $lookup: {
                 from: "movies",
@@ -249,11 +275,23 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 preserveNullAndEmptyArrays: true
             }
         },
+    );
+
+    // Join formats
+    pipeline.push(
         {
             $lookup: {
                 from: 'formats',
                 localField: 'showtimeId.formatId',
                 foreignField: '_id',
+                pipeline: [
+                    {
+                        $project: {
+                            name: 1,
+                            _id: 0
+                        }
+                    }
+                ],
                 as: 'showtimeId.formatId'
             }
         },
@@ -263,11 +301,23 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 preserveNullAndEmptyArrays: true
             }
         },
+    );
+
+    // Join paymentmethods
+    pipeline.push(
         {
             $lookup: {
                 from: 'paymentmethods',
                 localField: 'paymentMethodId',
                 foreignField: '_id',
+                pipeline: [
+                    {
+                        $project: {
+                            type: 1,
+                            _id: 0
+                        }
+                    }
+                ],
                 as: 'paymentMethodId'
             }
         },
@@ -277,6 +327,10 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 preserveNullAndEmptyArrays: true
             }
         },
+    );
+
+    // Join seat
+    pipeline.push(
         {
             $lookup: {
                 from: 'seats',
@@ -285,54 +339,29 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 as: 'ticketSeats.seat'
             }
         },
-        {
-          $unwind: {
-              path: '$ticketFoods',
-              preserveNullAndEmptyArrays: true
-          }
-        },
+    )
+
+    // Join food và gán dô ticketFoods
+    pipeline.push(
         {
             $lookup: {
-                from: 'foods',
-                localField: 'ticketFoods.foodId',
-                foreignField: '_id',
-                as: 'ticketFoods.food'
+                from: "foods",
+                localField: "ticketFoods.foodId",
+                foreignField: "_id",
+                as: "foodInfo"
             }
         },
+        { $unwind: "$foodInfo" },
         {
-            $unwind: {
-                path: '$ticketFoods.food',
-                preserveNullAndEmptyArrays: true
+            $addFields: {
+                "ticketFoods.foodInfo": "$foodInfo"
             }
         },
-        {
-            $group: {
-                _id: '$_id',
-                ticket: { $first: '$$ROOT' },
-                ticketFoods: {
-                    $push: {
-                        _id: '$ticketFoods._id',
-                        ticketId: '$ticketFoods.ticketId',
-                        foodId: '$ticketFoods.foodId',
-                        quantity: '$ticketFoods.quantity',
-                        priceAtPurchase: '$ticketFoods.priceAtPurchase',
-                        createdAt: '$ticketFoods.createdAt',
-                        updatedAt: '$ticketFoods.updatedAt',
-                        food: '$ticketFoods.food'
-                    }
-                }
-            }
-        },
-        {
-            $replaceRoot: {
-                newRoot: {
-                    $mergeObjects: [
-                        '$ticket',
-                        { ticketFoods: '$ticketFoods' }
-                    ]
-                }
-            }
-        },
+    );
+
+
+    // Join movieratings để biết mình đánh giá hay chưa
+    pipeline.push(
         {
             $lookup: {
                 from: 'movieratings',
@@ -366,10 +395,43 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 ratingInfo: 0
             }
         },
+    )
+
+    //Group by vì mình unwind food
+    pipeline.push(
         {
-            $sort: { bookingDate: -1 }
+            $group: {
+                _id: "$_id",
+                ticketCode: { $first: "$ticketCode" },
+                bookingDate: { $first: "$bookingDate" },
+                appTransId: { $first: "$appTransId" },
+                transDate: { $first: "$transDate" },
+                totalAmount: { $first: "$totalAmount" },
+                qrUrl: { $first: "$qrUrl" },
+                paymentStatus: { $first: "$paymentStatus" },
+                bookingStatus: { $first: "$bookingStatus" },
+                showtimeId: { $first: "$showtimeId" },
+                paymentMethodId: { $first: "$paymentMethodId" },
+                userId: { $first: "$userId" },
+                createdAt: { $first: "$createdAt" },
+                updatedAt: { $first: "$updatedAt" },
+                isRated: { $first: "$isRated" },
+                ticketSeats: { $first: "$ticketSeats" },
+                ticketFoods: { $push: "$ticketFoods" }
+            }
         }
-    ]);
+    );
+
+    // $project lai nhung fiel can thiet
+    // pipeline.push({
+    //     $project: {}
+    // })
+
+    const tickets = await APIAggregate(Ticket, { limit, page }, pipeline);
+
+    pipeline.push({
+        $sort: { bookingDate: -1 }
+    })
 
     res.status(200).json({
         status: 'success',
