@@ -132,7 +132,7 @@ async function getRevenueByTime(type) {
 
     const filledData = allDates.map(dateStr => {
         const found = revenueData.find(r => r.date === dateStr);
-        return { date: dateStr, totalRevenue: found ? found.totalRevenue : 0 };
+        return type === 'month' ? { month: dateStr, totalRevenue: found ? found.totalRevenue : 0 } : { date: dateStr, totalRevenue: found ? found.totalRevenue : 0 };
     });
 
     return filledData;
