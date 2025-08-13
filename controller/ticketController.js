@@ -423,41 +423,41 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
     );
 
     // $project lai nhung fiel can thiet
-    // pipeline.push({
-    //     $project: {
-    //         _id: 1,
-    //         ticketCode: 1,
-    //         bookingDate: 1,
-    //         totalAmount: 1,
-    //         isRated: 1,
-    //         movieTitle: "$showtimeId.movieId.name",
-    //         moviePoster: "$showtimeId.movieId.posterUrl",
-    //         showDate: "$showtimeId.showDate",
-    //         startTime: "$showtimeId.startTime",
-    //         status: "$showtimeId.status",
-    //         seats: {
-    //             $map: {
-    //                 input: "$ticketSeats",
-    //                 as: "seat",
-    //                 in: {
-    //                     seatRow: {$arrayElemAt: ["$$seat.seat.seatRow", 0]},
-    //                     seatNumber: {$arrayElemAt: ["$$seat.seat.seatNumber", 0]}
-    //                 }
-    //             }
-    //         },
-    //         foods: {
-    //             $map: {
-    //                 input: "$ticketFoods",
-    //                 as: "food",
-    //                 in: {
-    //                     foodName: "$$food.name",
-    //                     quantity: "$$food.quantity",
-    //                     imageUrl: "$$food.imageUrl"
-    //                 }
-    //             }
-    //         }
-    //     }
-    // })
+    pipeline.push({
+        $project: {
+            _id: 1,
+            bookingDate: 1,
+            totalAmount: 1,
+            isRated: 1,
+            movieTitle: "$showtimeId.movieId.name",
+            moviePoster: "$showtimeId.movieId.posterUrl",
+            showDate: "$showtimeId.showDate",
+            startTime: "$showtimeId.startTime",
+            status: "$showtimeId.status",
+            seats: {
+                $map: {
+                    input: "$ticketSeats.seat",
+                    as: "seat",
+                    in: {
+                        seatNumber: "$$seat.seatNumber",
+                        seatRow: "$$seat.seatRow",
+                    }
+                }
+            },
+            foods: {
+                $map: {
+                    input: "$ticketFoods",
+                    as: "food",
+                    in: {
+                        foodName: "$$food.foodInfo.name",
+                        quantity: "$$food.quantity",
+                        priceAtPurchase: "$$food.priceAtPurchase",
+                        totalPrice: { $multiply: ["$$food.quantity", "$$food.priceAtPurchase"] }
+                    }
+                }
+            }
+        }
+    });
 
     const tickets = await APIAggregate(Ticket, { limit, page }, pipeline);
 
@@ -608,7 +608,45 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                 from: 'foods',
                 localField: 'ticketFoods.foodId',
                 foreignField: '_id',
-                as: 'ticketFoods.food'
+                as: 'foodInfo'
+            }
+        },
+        {
+            $unwind: {
+                path: '$foodInfo',
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $addFields: {
+                ticketFoods: {
+                    $map: {
+                        input: '$ticketFoods',
+                        as: 'ticketFood',
+                        in: {
+                            $mergeObjects: [
+                                '$$ticketFood',
+                                {
+                                    foodInfo: {
+                                        $cond: {
+                                            if: { $eq: ['$$ticketFood.foodId', '$foodInfo._id'] },
+                                            then: '$foodInfo',
+                                            else: {}
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $lookup: {
+                from: 'paymentmethods',
+                localField: 'paymentMethodId',
+                foreignField: '_id',
+                as: 'paymentMethodId'
             }
         },
         {
@@ -634,6 +672,46 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                 as: 'ratingInfo'
             }
         },
+        {
+            $project: {
+                _id: 1,
+                ticketCode: 1,
+                totalAmount: 1,
+                movieTitle: "$showtimeId.movieId.name",
+                moviePoster: "$showtimeId.movieId.posterUrl",
+                movieFormat: "$showtimeId.movieId.format",
+                showDate: "$showtimeId.showDate",
+                startTime: "$showtimeId.startTime",
+                endTime: "$showtimeId.endTime",
+                status: "$showtimeId.status",
+                cinemaName: "$showtimeId.roomId.cinema.name",
+                roomName: "$showtimeId.roomId.roomName",
+                seats: {
+                    $map: {
+                        input: "$ticketSeats.seat",
+                        as: "seat",
+                        in: {
+                            seatNumber: "$$seat.seatNumber",
+                            seatRow: "$$seat.seatRow",
+                        }
+                    }
+                },
+                foods: {
+                    $map: {
+                        input: "$ticketFoods",
+                        as: "food",
+                        in: {
+                            foodName: "$$food.foodInfo.name",
+                            quantity: "$$food.quantity",
+                            priceAtPurchase: "$$food.priceAtPurchase",
+                            totalPrice: { $multiply: ["$$food.quantity", "$$food.priceAtPurchase"] }
+                        }
+                    }
+                },
+                voucher: "$voucherUseId.voucherId.discountValue",
+                paymentMethod: "$paymentMethodId.type",
+            }
+        }
     ]);
 
     if (!tickets || tickets.length === 0) {
