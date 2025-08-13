@@ -23,7 +23,9 @@ const Resource = {
     Seat: 'seat',
     Room: 'room',
     Cinema: 'cinema',
-    User: 'user'
+    User: 'user',
+    Level: 'level',
+    Rewards: 'rewards'
 }
 const permissionSchema = new mongoose.Schema({
     name: {
@@ -67,6 +69,8 @@ permissionSchema.on('init',  async (model) => {
         [Resource.Room]: 'Phòng',
         [Resource.Cinema]: 'Rạp Chiếu',
         [Resource.User]: 'Người Dùng',
+        [Resource.Level]: 'Cấp độ',
+        [Resource.Rewards]: 'Phần quà'
     }
 
     const permissionsToCreate = [];
