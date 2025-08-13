@@ -677,6 +677,7 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                 _id: 1,
                 ticketCode: 1,
                 totalAmount: 1,
+                qrUrl: 1,
                 movieTitle: "$showtimeId.movieId.name",
                 moviePoster: "$showtimeId.movieId.posterUrl",
                 movieFormat: "$showtimeId.movieId.format",
