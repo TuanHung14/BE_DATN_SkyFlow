@@ -1,8 +1,8 @@
-const express = require('express');
-const levelController = require('../controller/levelController');
-const auth = require('../middleware/authMiddleware');
-const {Resource} = require("../model/permissionModel");
-const {getRBACOnResorce} = require("../utils/helper")
+const express = require("express");
+const levelController = require("../controller/levelController");
+const auth = require("../middleware/authMiddleware");
+const { Resource } = require("../model/permissionModel");
+const { getRBACOnResorce } = require("../utils/helper");
 const authorize = require("../middleware/authorizeMiddleware");
 
 const permissions = getRBACOnResorce(Resource.Level);
@@ -23,7 +23,11 @@ const router = express.Router();
  *       500:
  *         description: Lỗi máy chủ
  */
-router.get('/', levelController.getFieldGetClient, levelController.getAllLevels)
+router.get(
+  "/",
+  levelController.getFieldGetClient,
+  levelController.getAllLevels
+);
 
 router.use(auth);
 
@@ -52,8 +56,41 @@ router.use(auth);
  *       500:
  *         description: Lỗi máy chủ
  */
-router.put('/toggle/:id', authorize(permissions['update']),levelController.toggleIsDefault);
-
+router.put(
+  "/toggle/:id",
+  authorize(permissions["update"]),
+  levelController.toggleIsDefault
+);
+/**
+ * @swagger
+ * /api/v1/levels/toggle-active/{id}:
+ *   put:
+ *     tags:
+ *       - Levels
+ *     summary: Bật/tắt trạng thái active của cấp độ
+ *     operationId: toggleActive
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của cấp độ
+ *     responses:
+ *       200:
+ *         description: Đã cập nhật trạng thái active thành công
+ *       404:
+ *         description: Không tìm thấy cấp độ
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+router.put(
+  "/toggle-active/:id",
+  authorize(permissions["update"]),
+  levelController.toggleActive
+);
 /**
  * @swagger
  * /api/v1/levels/admin:
@@ -123,10 +160,10 @@ router.put('/toggle/:id', authorize(permissions['update']),levelController.toggl
  *         description: Lỗi máy chủ
  */
 
-
-router.route('/admin')
-    .get(authorize(permissions['read']), levelController.getAllLevels)
-    .post(authorize(permissions['create']), levelController.createLevel);
+router
+  .route("/admin")
+  .get(authorize(permissions["read"]), levelController.getAllLevels)
+  .post(authorize(permissions["create"]), levelController.createLevel);
 
 /**
  * @swagger
@@ -210,10 +247,9 @@ router.route('/admin')
  *         description: Lỗi máy chủ
  */
 
-
-router.route('/:id')
-    .get(authorize(permissions['read']), levelController.getLevelById)
-    .patch(authorize(permissions['update']), levelController.updateLevel)
+router
+  .route("/:id")
+  .get(authorize(permissions["read"]), levelController.getLevelById)
+  .patch(authorize(permissions["update"]), levelController.updateLevel);
 
 module.exports = router;
-
