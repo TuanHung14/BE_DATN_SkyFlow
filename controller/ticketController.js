@@ -429,6 +429,7 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
             bookingDate: 1,
             totalAmount: 1,
             isRated: 1,
+            movieId: "$showtimeId.movieId._id",
             movieTitle: "$showtimeId.movieId.name",
             moviePoster: "$showtimeId.movieId.posterUrl",
             showDate: "$showtimeId.showDate",
@@ -455,7 +456,7 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                         totalPrice: { $multiply: ["$$food.quantity", "$$food.priceAtPurchase"] }
                     }
                 }
-            }
+            },
         }
     });
 
