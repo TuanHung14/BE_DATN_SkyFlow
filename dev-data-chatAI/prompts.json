@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Thông tin người dùng",
+    "description": "Lấy thông tin chi tiết của người dùng hiện tại.",
+    "systemInstruction": "Đây là thông tin của người dùng",
+    "functionToCall": "getUserInfo",
+    "status": "active",
+    "createdAt": "2025-07-25T09:46:16.989+00:00",
+    "updatedAt": "2025-07-25T09:46:16.989+00:00",
+    "__v": 0
+  },
+  {
+    "name": "Những bộ phim đang có ở web",
+    "description": "Lấy thống kê các bộ phim",
+    "systemInstruction": "Đây là những phim đang chiếu và sắp chiếu.(HIỆN TỐI ĐA 3 BỘ PHIM)",
+    "functionToCall": "getMovies",
+    "status": "active",
+    "createdAt": "2025-07-25T09:46:16.989+00:00",
+    "updatedAt": "2025-07-25T09:46:16.989+00:00",
+    "__v": 0
+  },
+  {
+    "name": "Lịch chiếu hôm nay",
+    "description": "Hiển thị lịch chiếu phim của các rạp trong ngày hôm nay",
+    "systemInstruction": "Đây là thông tin lịch chiếu phim hôm nay lấy tầm (HIỆN TỐI ĐA 2 BỘ Cinema)",
+    "functionToCall": "getShowtimes",
+    "status": "active",
+    "createdAt": "2025-07-25T09:46:16.989+00:00",
+    "updatedAt": "2025-07-25T09:46:16.989+00:00",
+    "__v": 0
+  },
+  {
+    "name": "Danh sách rạp chiếu",
+    "description": "Hiển thị danh sách các rạp chiếu phim",
+    "systemInstruction": "Đây là danh sách các rạp chiếu phim lấy tầm 3 rạp thôi",
+    "functionToCall": "getCinemaList",
+    "status": "active",
+    "createdAt": "2025-07-25T09:46:16.989+00:00",
+    "updatedAt": "2025-07-25T09:46:16.989+00:00",
+    "__v": 0
+  },
+  {
+    "name": "Bảng giá vé xem phim",
+    "description": "Hiển thị bảng giá vé cho các loại ghế khác nhau tại rạp chiếu phim",
+    "systemInstruction": "Đây là thông tin giá vé xem phim",
+    "functionToCall": "getTicketPrices",
+    "status": "active",
+    "createdAt": "2025-07-25T09:46:16.989+00:00",
+    "updatedAt": "2025-07-25T09:46:16.989+00:00",
+    "__v": 0
+  },
+  {
+      "name": "Lịch chiếu tất cả phim",
+      "description": "Hiển thị lịch chiếu của tất cả các bộ phim tại các rạp",
+      "systemInstruction": "Đây là lịch chiếu của tất cả các bộ phim tại các rạp",
+      "functionToCall": "getAllShowtimes",
+      "status": "active",
+      "createdAt": "2025-07-25T09:46:16.989+00:00",
+      "updatedAt": "2025-07-25T09:46:16.989+00:00",
+      "__v": 0
+  },
+  {
+      "name": "Danh sách đồ ăn",
+      "description": "Hiển thị danh sách các loại đồ ăn có sẵn tại rạp chiếu phim",
+      "systemInstruction": "Đây là danh sách các loại đồ ăn có sẵn tại rạp chiếu phim",
+      "functionToCall": "getFoodList",
+      "status": "active",
+      "createdAt": "2025-07-25T09:46:16.989+00:00",
+      "updatedAt": "2025-07-25T09:46:16.989+00:00",
+      "__v": 0
+  },
+  {
+      "name": "Danh sách bài viết",
+      "description": "Hiển thị danh sách các bài viết mới nhất",
+      "systemInstruction": "Đây là danh sách các bài viết mới nhất",
+      "functionToCall": "getPosts",
+      "status": "active",
+      "createdAt": "2025-07-25T09:46:16.989+00:00",
+      "updatedAt": "2025-07-25T09:46:16.989+00:00",
+      "__v": 0
+  }
+]

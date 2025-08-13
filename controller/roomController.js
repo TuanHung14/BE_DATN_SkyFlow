@@ -1,6 +1,5 @@
 const Room = require('../model/roomModel');
 const Factory = require("./handleFactory");
-const catchAsync = require('../utils/catchAsync');
 const { filterObj } = require('../utils/helper');
 
 exports.getFieldRoom = (req, res, next) => {

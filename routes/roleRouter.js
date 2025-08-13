@@ -12,6 +12,35 @@ router.use(auth)
 
 /**
  * @swagger
+ * /api/v1/roles/toggle/{id}:
+ *   put:
+ *     tags:
+ *       - Role
+ *     summary: Chuyển đổi trạng thái isDefault của vai trò
+ *     operationId: toggleRoleIsDefault
+ *     security:
+ *       - bearer: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của vai trò cần chuyển đổi
+ *     responses:
+ *       200:
+ *         description: Chuyển đổi isDefault thành công
+ *       400:
+ *         description: ID không hợp lệ hoặc vai trò không tồn tại
+ *       401:
+ *         description: Không được phép truy cập
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+router.put("/toggle/:id", authorize(permissions['update']), roleController.toggleIsDefault);
+
+/**
+ * @swagger
  * /api/v1/roles:
  *   get:
  *     tags:

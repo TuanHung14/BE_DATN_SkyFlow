@@ -184,7 +184,7 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
     const showtimeId = "abc123";
-    const userId = "user" + Math.random().toString(36).substr(2, 9); // Tạo userId ngẫu nhiên
+    const userId = "user" + Math.random(); // Tạo userId ngẫu nhiên
     const socket = io("http://localhost:3000");
 
     const seatContainer = document.getElementById('seat-container');
@@ -261,6 +261,13 @@
             }
         });
 
+        // Ghế ược giữ bởi mình
+        Object.keys(holds).forEach(seatId => {
+            if (seats[seatId] && holds[seatId] === userId) {
+                seats[seatId].classList.add('selected');
+            }
+        });
+
         // Ghế đã được đặt thành công
         Object.keys(bookings).forEach(seatId => {
             if (seats[seatId]) {
@@ -276,7 +283,7 @@
         holds.forEach(seatId => {
             if (seats[seatId]) {
                 seats[seatId].classList.remove('held');
-                seats[seatId].classList.add('selected');
+                seats[seatId].classList.add('held');
             }
         });
         updateUI();

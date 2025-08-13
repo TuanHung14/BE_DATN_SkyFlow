@@ -40,6 +40,9 @@ const bookingRouter = require("./routes/bookingRouter");
 const ticketRouter = require("./routes/ticketRouter");
 const priceRouter = require("./routes/priceRuleRouter");
 const statisticRouter = require("./routes/statisticRouter");
+const levelRouter = require("./routes/levelRouter");
+const rewardsRouter = require("./routes/rewardsRouter");
+const promptRouter = require("./routes/promptRouter");
 
 //Sử dụng engine Pug
 app.set("view engine", "pug");
@@ -79,7 +82,7 @@ app.use(helmet());
 //Được phép gửi 100 cái requests trong 15p
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 3000,
+  max: 500,
   message: "Too many requests from this IP, please try again in 15 minutes.",
 });
 app.use("/api", limiter);
@@ -131,6 +134,9 @@ app.use("/api/v1/bookings", bookingRouter);
 app.use("/api/v1/tickets", ticketRouter);
 app.use("/api/v1/price-rules", priceRouter);
 app.use("/api/v1/statistics", statisticRouter);
+app.use("/api/v1/levels", levelRouter);
+app.use("/api/v1/rewards", rewardsRouter);
+app.use("/api/v1/prompts", promptRouter);
 
 // Error handling middleware nếu kh có api n
 app.all("*", (req, res, next) => {

@@ -1,10 +1,17 @@
 const mongoose = require("mongoose");
+const slugify = require("slugify");
 
 const cinemaSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
       trim: true,
     },
     description: {
@@ -40,10 +47,10 @@ const cinemaSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
-      required: false, // hoặc true nếu bắt buộc nhập
+      required: false,
     },
     img: {
-      type: [String], // Mảng các URL hình ảnh
+      type: [String],
       default: [],
     },
     location: {
@@ -53,9 +60,13 @@ const cinemaSchema = new mongoose.Schema(
         default: "Point",
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number],
         default: [0, 0],
       },
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     isDeleted: {
       type: Boolean,
@@ -65,8 +76,16 @@ const cinemaSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-cinemaSchema.index({ location: "2dsphere" });
+// Tạo slug trước khi save
+cinemaSchema.pre("save", function (next) {
+    if (this.isModified("name")) {
+        this.slug = slugify(this.name, {lower: true, strict: true});
+    }
+    next();
+});
+
+// Tạo index cho location
+cinemaSchema.index({location: "2dsphere"});
 
 const Cinema = mongoose.model("Cinema", cinemaSchema);
-
 module.exports = Cinema;

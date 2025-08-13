@@ -1,7 +1,10 @@
 const Voucher = require("../model/voucherModel");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
+
+exports.getFieldGetClient = (req, res, next) => {
+    req.query.isActive = true;
+    next();
+}
 
 exports.createVoucher = Factory.createOne(Voucher);
 

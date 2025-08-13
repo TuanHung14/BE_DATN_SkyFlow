@@ -102,6 +102,23 @@ router.post("/", authorize(permissions['create']),userController.fieldCreate, us
  *                 type: string
  *                 format: date
  *                 description: Ngày sinh của người dùng
+ *               location:
+ *                 type: object
+ *                 description: Vị trí người dùng
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [Point]
+ *                     default: Point
+ *                   coordinates:
+ *                     type: array
+ *                     items:
+ *                       type: number
+ *                     description: Tọa độ [kinh độ, vĩ độ]
+ *                     default: [0, 0]
+ *               address:
+ *                 type: string
+ *                 description: Địa chỉ người dùng
  *     responses:
  *       200:
  *         description: Cập nhật thông tin thành công
@@ -242,6 +259,38 @@ router
   .get(userController.getUser)
   .patch(authorize(permissions['update']), userController.fieldUpdate, userController.updateUser);
 
+/**
+ * @swagger
+ * /api/v1/users/reset:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Yêu cầu đặt lại mật khẩu
+ *     operationId: resetPass
+ *     security:
+ *       - bearer: []
+ *     description: Gửi yêu cầu đặt lại mật khẩu, ví dụ như gửi email chứa liên kết đặt lại.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email của người dùng cần đặt lại mật khẩu
+ *             required:
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Yêu cầu đặt lại mật khẩu đã được xử lý thành công (có thể đã gửi email)
+ *       400:
+ *         description: Dữ liệu không hợp lệ hoặc email không tồn tại
+ *       500:
+ *         description: Lỗi máy chủ
+ */
 router.post("/reset", userController.resetPass);
 
 module.exports = router;
