@@ -37,7 +37,7 @@ const training = (keyText) => {
     - Nếu hỏi lịch chiếu hôm nay thì hôm nay là ngày ${fullDay} không có thì xin lỗi lịch sự và chuyên nghiệp.
     - Liên quan đến mảng dữ liệu hiện tối đa 3 dữ liệu thôi
     - Lưu ý thẻ <img> width: 100%; height: auto;
-    - Hãy cho max-width: 200px ở style cũng với font-family: Arial
+    - Khung hình để hiển thị chỉ có 200px hãy cho max-width: 200px ở style cũng với font-family: Arial
     
     Ví dụ format trả về:
     <div style="background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
