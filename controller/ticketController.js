@@ -452,6 +452,7 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                     in: {
                         foodName: "$$food.foodInfo.name",
                         quantity: "$$food.quantity",
+                        imageUrl: "$$food.foodInfo.imageUrl",
                         priceAtPurchase: "$$food.priceAtPurchase",
                         totalPrice: { $multiply: ["$$food.quantity", "$$food.priceAtPurchase"] }
                     }
