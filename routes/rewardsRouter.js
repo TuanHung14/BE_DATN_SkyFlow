@@ -1,6 +1,11 @@
 const express = require('express');
 const rewardsController = require('../controller/rewardsController');
 const auth = require('../middleware/authMiddleware');
+const {Resource} = require("../model/permissionModel");
+const {getRBACOnResorce} = require("../utils/helper")
+const authorize = require("../middleware/authorizeMiddleware");
+
+const permissions = getRBACOnResorce(Resource.Rewards);
 
 const router = express.Router();
 
@@ -105,8 +110,8 @@ router.post('/spin/:id', rewardsController.spinReward);
  *         description: Dữ liệu không hợp lệ
  */
 router.route('/admin')
-    .get(rewardsController.getAllRewards)
-    .post(rewardsController.createReward);
+    .get(authorize(permissions['read']), rewardsController.getAllRewards)
+    .post(authorize(permissions['create']), rewardsController.createReward);
 
 /**
  * @swagger
@@ -177,8 +182,8 @@ router.route('/admin')
  *         description: Không tìm thấy phần thưởng
  */
 router.route('/:id')
-    .get(rewardsController.getRewardById)
-    .patch(rewardsController.updateReward);
+    .get(authorize(permissions['read']), rewardsController.getRewardById)
+    .patch(authorize(permissions['update']), rewardsController.updateReward);
 
 
 module.exports = router;

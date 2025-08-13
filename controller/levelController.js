@@ -37,7 +37,21 @@ exports.toggleIsDefault = catchAsync(async (req, res, next) => {
     },
   });
 });
-
+exports.toggleActive = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const level = await Level.findById(id);
+  if (!level) {
+    return next(new AppError("Cấp độ không tồn tại!"), 404);
+  }
+  level.active = !level.active;
+  await level.save();
+  res.status(200).json({
+    status: "success",
+    data: {
+      level,
+    },
+  });
+});
 exports.createLevel = Factory.createOne(Level);
 exports.getAllLevels = catchAsync(async (req, res, next) => {
   req.query.active = true; // ép query filter
