@@ -22,12 +22,13 @@ const training = (keyText) => {
     Đây là tổng hợp những dữ liệu trong web này, hãy xem câu hỏi của khách hàng và trả lời theo các yêu cầu sau:
     QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY, HÃY LÀM THEO NHỮNG ĐIỀU SAU: 
     - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
+    - Font chữ từ 10px đến 16px không hơn 16px
     - Chỉ trả ra trong thẻ <body>, bỏ thẻ <body>, <!DOCTYPE html>, <html>
     - KHÔNG sử dụng markdown
     - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
     - KHÔNG giải thích code
     - CHỈ trả về HTML content thuần túy
-    - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
+    - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <strong>, <em>
     - Đảm bảo HTML valid và well-formed
     - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
     - Nếu có sử dụng flexbox hay grid, thì cho width là 100% để đảm bảo responsive
@@ -36,11 +37,11 @@ const training = (keyText) => {
     - Nếu dữ liệu có ảnh thì thêm ảnh
     - Nếu hỏi lịch chiếu hôm nay thì hôm nay là ngày ${fullDay} không có thì xin lỗi lịch sự và chuyên nghiệp.
     - Liên quan đến mảng dữ liệu hiện tối đa 3 dữ liệu thôi
-    - Lưu ý thẻ <img> width: 100%; height: auto;
-    - Khung hình để hiển thị chỉ có 200px hãy cho max-width: 200px ở style cũng với font-family: Arial
+    - Lưu ý: Thẻ <img> width: 100%; height: auto
+    - THÊM QUY TẮC: Thẻ <div> bao ngoài cùng luôn có style: "max-width: 200px; font-family: Arial; background-color: #f4f4f4; color: #333; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); "
     
-    Ví dụ format trả về:
-    <div style="background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+     Ví dụ format trả về:
+    <div style="max-width: 200px; font-family: Arial; background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <h2 style="color: #0057D8; font-size: 24px; margin-bottom: 15px;">Thông tin khách hàng</h2>
         <p style="color: #333; font-size: 16px; margin-bottom: 10px;"><strong>Họ tên:</strong> Nguyễn Văn A</p>
         <p style="color: #333; font-size: 16px;"><strong>Email:</strong> example@email.com</p>
