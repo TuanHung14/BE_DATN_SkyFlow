@@ -42,6 +42,10 @@ async function getShowtimes() {
             }
         },
         {
+            // Unwind các array từ lookup
+            $unwind: '$movie'
+        },
+        {
             // Join với collection rooms để lấy thông tin phòng chiếu
             $lookup: {
                 from: 'rooms',
@@ -49,6 +53,9 @@ async function getShowtimes() {
                 foreignField: '_id',
                 as: 'room'
             }
+        },
+        {
+            $unwind: '$room'
         },
         {
             // Join với collection cinemas để lấy thông tin rạp
@@ -60,14 +67,48 @@ async function getShowtimes() {
             }
         },
         {
-            // Unwind các array từ lookup
-            $unwind: '$movie'
-        },
-        {
-            $unwind: '$room'
-        },
-        {
             $unwind: '$cinema'
+        },
+        {
+            $lookup: {
+                from: 'bookings',
+                localField: '_id',
+                foreignField: 'showtimeId',
+                pipeline: [
+                    {
+                        $match: { status: "success" }
+                    }
+                ],
+                as: 'booking'
+            }
+        },
+        {
+            $addFields: {
+                remainingSeats: {
+                    $subtract: [  //$subtract trừ capacity cho số đã đặt.
+                        '$room.capacity',
+                        { $size: '$booking' } //đếm số document trong mảng booking.
+                    ]
+                }
+            }
+        },
+        {
+            $addFields: {
+                startTime: {
+                    $dateToString: {
+                        format: "%H:%M %d/%m/%Y",
+                        date: "$startTime",
+                        timezone: "Asia/Ho_Chi_Minh"
+                    }
+                },
+                showDate: {
+                    $dateToString: {
+                        format: "%d/%m/%Y",
+                        date: "$showDate",
+                        timezone: "Asia/Ho_Chi_Minh"
+                    }
+                }
+            }
         },
         {
             // Group theo cinema để tổ chức dữ liệu
@@ -75,6 +116,7 @@ async function getShowtimes() {
                 _id: '$cinema._id',
                 cinemaName: { $first: '$cinema.name' },
                 cinemaDescription: { $first: '$cinema.description' },
+                remainingSeats: { $first: '$remainingSeats' },
                 showtimes: {
                     $push: {
                         showtimeId: '$_id',
@@ -126,6 +168,10 @@ async function getAllShowtimes(){
             }
         },
         {
+            // Unwind các array từ lookup
+            $unwind: '$movie'
+        },
+        {
             // Join với collection rooms để lấy thông tin phòng chiếu
             $lookup: {
                 from: 'rooms',
@@ -133,6 +179,9 @@ async function getAllShowtimes(){
                 foreignField: '_id',
                 as: 'room'
             }
+        },
+        {
+            $unwind: '$room'
         },
         {
             // Join với collection cinemas để lấy thông tin rạp
@@ -144,14 +193,48 @@ async function getAllShowtimes(){
             }
         },
         {
-            // Unwind các array từ lookup
-            $unwind: '$movie'
-        },
-        {
-            $unwind: '$room'
-        },
-        {
             $unwind: '$cinema'
+        },
+        {
+            $lookup: {
+                from: 'bookings',
+                localField: '_id',
+                foreignField: 'showtimeId',
+                pipeline: [
+                    {
+                        $match: { status: "success" }
+                    }
+                ],
+                as: 'booking'
+            }
+        },
+        {
+            $addFields: {
+                remainingSeats: {
+                    $subtract: [  //$subtract trừ capacity cho số đã đặt.
+                        '$room.capacity',
+                        { $size: '$booking' } //đếm số document trong mảng booking.
+                    ]
+                }
+            }
+        },
+        {
+            $addFields: {
+                startTime: {
+                    $dateToString: {
+                        format: "%H:%M %d/%m/%Y",
+                        date: "$startTime",
+                        timezone: "Asia/Ho_Chi_Minh"
+                    }
+                },
+                showDate: {
+                    $dateToString: {
+                        format: "%d/%m/%Y",
+                        date: "$showDate",
+                        timezone: "Asia/Ho_Chi_Minh"
+                    }
+                }
+            }
         },
         {
             // Group theo cinema để tổ chức dữ liệu
@@ -162,6 +245,7 @@ async function getAllShowtimes(){
                 showtimes: {
                     $push: {
                         showtimeId: '$_id',
+                        remainingSeats: '$remainingSeats',
                         movieName: '$movie.name',
                         movieSlug: '$movie.slug',
                         roomName: '$room.room_name',

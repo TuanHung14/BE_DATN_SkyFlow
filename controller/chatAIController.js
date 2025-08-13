@@ -7,27 +7,41 @@ const Movie = require("../model/movieModel");
 const { getChatHistory } = require("../utils/redis");
 
 const training = (keyText) => {
+    const now = new Date();
+
+    const day = now.getDate();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const fullDay = `${day}/${month}/${year}`;
+
     return `
     Bạn là trợ lý AI của website bán vé xem phim Sky Flow. Hãy trả lời một cách lịch sự và chuyên nghiệp.
     ${keyText}
+    
     Đây là tổng hợp những dữ liệu trong web này, hãy xem câu hỏi của khách hàng và trả lời theo các yêu cầu sau:
     QUAN TRỌNG NẾU CÂU HỎI NẰM TRONG NHỮNG DỮ LIỆU NÀY, HÃY LÀM THEO NHỮNG ĐIỀU SAU: 
     - BẮT BUỘC trả về CHÍNH XÁC dưới dạng HTML thuần túy
+    - Font chữ từ 10px đến 16px không hơn 16px
+    - Chỉ trả ra trong thẻ <body>, bỏ thẻ <body>, <!DOCTYPE html>, <html>
     - KHÔNG sử dụng markdown
     - KHÔNG thêm \`\`\`html hoặc bất kỳ code block nào
     - KHÔNG giải thích code
     - CHỈ trả về HTML content thuần túy
-    - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <ul>, <li>, <strong>, <em>
+    - Sử dụng thẻ HTML semantic như <h1>, <h2>, <p>, <div>, <span>, <strong>, <em>
     - Đảm bảo HTML valid và well-formed
     - BẮT BUỘC sử dụng CSS inline để tạo giao diện đẹp, hiện đại, với các yếu tố như:
     - Nếu có sử dụng flexbox hay grid, thì cho width là 100% để đảm bảo responsive
     - Đảm bảo bố cục rõ ràng, dễ đọc, và chuyên nghiệp
     - Nếu yêu cầu hiện link thì sử dụng ${process.env.FE_CLIENT_HOST}/(if là movie thì là chitietsanpham else if là post thì là chi-tiet-binh-luan else if thì là cinema)/slug(slug trong dữ liệu) để hiện thị link
-    - Liên quan đến thời gian thì sử dụng định dạng ngày tháng năm theo kiểu dd/mm/yyyy và +7 giờ theo múi giờ Việt Nam
-    - Lưu ý khung hình để hiện thị trên máy tính là width: 200px
+    - Nếu dữ liệu có ảnh thì thêm ảnh
+    - Nếu hỏi lịch chiếu hôm nay thì hôm nay là ngày ${fullDay} không có thì xin lỗi lịch sự và chuyên nghiệp.
+    - Liên quan đến mảng dữ liệu hiện tối đa 3 dữ liệu thôi
+    - Lưu ý: Thẻ <img> width: 100%; height: auto
+    - THÊM QUY TẮC: Thẻ <div> bao ngoài cùng luôn có style: "max-width: 200px; font-family: Arial; background-color: #f4f4f4; color: #333; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); "
     
-    Ví dụ format trả về:
-    <div style="background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+     Ví dụ format trả về:
+    <div style="max-width: 200px; font-family: Arial; background-color: #FFF; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <h2 style="color: #0057D8; font-size: 24px; margin-bottom: 15px;">Thông tin khách hàng</h2>
         <p style="color: #333; font-size: 16px; margin-bottom: 10px;"><strong>Họ tên:</strong> Nguyễn Văn A</p>
         <p style="color: #333; font-size: 16px;"><strong>Email:</strong> example@email.com</p>
@@ -35,7 +49,7 @@ const training = (keyText) => {
     CÒN KHÔNG HÃY TRẢ VỀ DẠNG TEXT NHƯ BÌNH THƯỜNG
 `;
 }
-
+// - Liên quan đến thời gian thì sử dụng định dạng ngày tháng năm theo kiểu dd/mm/yyyy và +7 giờ theo múi giờ Việt Nam
 const callFunctionByPrompt = async (functionToCall, userId) => {
     const data = await executeFunction(functionToCall, userId);
     if (data.error) throw new AppError(data.error, 500);

@@ -52,7 +52,7 @@ const voucherSchema = new mongoose.Schema(
 );
 
 voucherSchema.pre("save", function (next){
-  if((this.minimumOrderAmount + 10000) < this.discountValue){
+  if(this.minimumOrderAmount < (this.discountValue+ 10000)){
     return next(new AppError("Giá trị giảm giá không được lớn hơn tổng giá trị đơn hàng tối thiểu", 400));
   }
   next();
@@ -60,7 +60,7 @@ voucherSchema.pre("save", function (next){
 
 voucherSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate();
-  if ((update.minimumOrderAmount + 10000) < update.discountValue) {
+  if (update.minimumOrderAmount < (update.discountValue + 10000)) {
     return next(new AppError("Giá trị giảm giá không được lớn hơn tổng giá trị đơn hàng tối thiểu", 400));
   }
   next();
