@@ -40,19 +40,19 @@ block content
                     td.label Tổng tiền:
                     td.value.price #{emailContent.totalAmount}
 
-            if emailContent.foods && emailContent.foods.length > 0
-                .food-details
-                    h2 🍿 Thông tin đồ ăn & thức uống
+        if emailContent.foods && emailContent.foods.length > 0
+            .food-details
+                h2 🍿 Thông tin đồ ăn & thức uống
 
-                    table.food-info(role='presentation', border='0', cellpadding='0', cellspacing='0')
-                        tbody
-                            each food in emailContent.foods
-                                tr
-                                    td.label #{food.name}:
-                                    td.value #{food.quantity}x #{food.price.toLocaleString('vi-VN')} VNĐ = #{food.total.toLocaleString('vi-VN')} VNĐ
-                            tr.total-row
-                                td.label.strong Tổng tiền đồ ăn:
-                                td.value.strong #{emailContent.totalFoodAmount}
+                table.food-info(role='presentation', border='0', cellpadding='0', cellspacing='0')
+                    tbody
+                        each food in emailContent.foods
+                            tr
+                                td.label #{food.name}:
+                                td.value #{food.quantity}x #{food.price.toLocaleString('vi-VN')} VNĐ = #{food.total.toLocaleString('vi-VN')} VNĐ
+                        tr.total-row
+                            td.label.strong Tổng tiền đồ ăn:
+                            td.value.strong #{emailContent.totalFoodAmount}
 
         .movie-poster
             if emailContent.moviePoster
