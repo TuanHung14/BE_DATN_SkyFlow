@@ -12,16 +12,6 @@ const mongoose = require("mongoose");
 
 // CREATE MOVIE
 exports.createMovie = catchAsync(async (req, res, next) => {
-  const { name } = req.body;
-
-  // Check trùng tên phim
-  const existingMovie = await Movie.findOne({ name });
-  if (existingMovie) {
-    return next(
-      new AppError("Tên phim đã tồn tại. Vui lòng chọn tên khác", 400)
-    );
-  }
-
   // Chỉ cho phép các trường được tạo
   const allowedFields = [
     "name",
@@ -353,9 +343,9 @@ exports.getAllMovies = catchAsync(async (req, res, next) => {
   res.status(200).json(data);
 });
 
-exports.getAllMoviesAdmin = Factory.getAll(Movie, "castId genresId directorId");
+exports.getAllMoviesAdmin = Factory.getAll(Movie, "castId genresId directorId format");
 
-exports.getMovie = Factory.getOne(Movie, "castId genresId directorId");
+exports.getMovie = Factory.getOne(Movie, "castId genresId directorId format");
 
 // SOFT DELETE
 exports.softDeleteMovie = Factory.softDeleteOne(Movie);

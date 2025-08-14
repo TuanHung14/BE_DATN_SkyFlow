@@ -27,6 +27,7 @@ const movieSchema = new mongoose.Schema(
             type: String,
             required: [true, "Phim phải có tên"],
             trim: true,
+            unique: [true, "Phim đã tồn tại"]
         },
         duration: {
             type: Number,
@@ -94,17 +95,13 @@ const movieSchema = new mongoose.Schema(
             required: [true, "Phim phải có quốc gia"],
             trim: true,
         },
-        format: {
-            type: [String],
-            enum: ["2D", "3D", "IMAX", "4DX"],
-            required: [true, "Phim phải có định dạng"],
-            default: "2D",
-        },
-        // format: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: "Format",
-        //     required: [true, "Phim phải có định dạng"],
-        // },
+        format: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Format",
+                required: [true, "Phim phải có định dạng"],
+            }
+        ]
     },
 
     {
