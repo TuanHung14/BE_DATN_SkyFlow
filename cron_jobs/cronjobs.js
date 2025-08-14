@@ -18,20 +18,20 @@ module.exports = () => {
             const count = await updateMovieStatusLogic();
 
             // Xóa các showtime có showDate trước 2 ngày
-            const daysToKeep = 2;
-            const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
-
-            await Showtime.updateMany(
-                {
-                    showDate: {$lt: cutoffDate},
-                    isDeleted: { $ne: true }
-                },
-                {
-                    $set: {
-                        isDeleted: true
-                    }
-                }
-            );
+            // const daysToKeep = 2;
+            // const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
+            //
+            // await Showtime.updateMany(
+            //     {
+            //         showDate: {$lt: cutoffDate},
+            //         isDeleted: { $ne: true }
+            //     },
+            //     {
+            //         $set: {
+            //             isDeleted: true
+            //         }
+            //     }
+            // );
 
             // Check sinh nhật cua người dùng
             const today = new Date();

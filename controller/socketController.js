@@ -6,6 +6,7 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
     //Tham gia phòng chiếu kèm theo xóa showtimeId cũ nếu có
     socket.on('join-room', async (data) => {
         const { showtimeId, userId } = data;
+        console.log(data);
         if (!showtimeId) {
             socket.emit('error', { message: 'Phòng chiếu không tồn tại!' });
             return;
@@ -42,6 +43,7 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
 
     // Chọn Và Giữ ghế
     socket.on('hold-seat', async ({ showtimeId, seatId }) => {
+        console.log(showtimeId, seatId);
         const userId = socket.userId;
 
         if (!showtimeId || !seatId || !userId) {
@@ -74,6 +76,7 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
 
     // Huỷ giữ ghế
     socket.on('release-seat', async ({ showtimeId, seatId }) => {
+        console.log(showtimeId, seatId);
         const userId = socket.userId;
         if (!showtimeId || !seatId) {
             socket.emit('error', { message: 'Phòng chiếu hoặc ghế không tồn tại!' });
@@ -99,6 +102,7 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
 
     // Đặt ghế đã giữ
     socket.on('book-seat', async ({ showtimeId }) => {
+        console.log(showtimeId);
         const userId = socket.userId;
         if (!showtimeId) {
             socket.emit('error', { message: 'Phòng chiếu không tồn tại!' });
