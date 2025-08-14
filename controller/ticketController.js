@@ -500,32 +500,32 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
             }
         },
         {
-          $lookup: {
-              from: "voucheruses",
-              localField: "voucherUseId",
-              foreignField: "_id",
-              as: "voucherUseId"
-          }
+            $lookup: {
+                from: 'voucheruses',
+                localField: 'voucherUseId',
+                foreignField: '_id',
+                as: 'voucherUseId'
+            }
         },
         {
-          $unwind: {
-              path: "$voucherUseId",
-              preserveNullAndEmptyArrays: true
-          }
+            $unwind: {
+                path: '$voucherUseId',
+                preserveNullAndEmptyArrays: true
+            }
         },
         {
-          $lookup: {
-              from: "vouchers",
-              localField: "voucherUseId.voucherId",
-              foreignField: "_id",
-              as: "voucherUseId.voucherId"
-          }
+            $lookup: {
+                from: 'vouchers',
+                localField: 'voucherUseId.voucherId',
+                foreignField: '_id',
+                as: 'voucherUseId.voucherId'
+            }
         },
         {
-          $unwind: {
-              path: "$voucherUseId.voucherId",
-              preserveNullAndEmptyArrays: true
-          }
+            $unwind: {
+                path: '$voucherUseId.voucherId',
+                preserveNullAndEmptyArrays: true
+            }
         },
         {
             $lookup: {
@@ -543,15 +543,15 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
         },
         {
             $lookup: {
-                from: "movies",
-                localField: "showtimeId.movieId",
-                foreignField: "_id",
-                as: "showtimeId.movieId"
+                from: 'movies',
+                localField: 'showtimeId.movieId',
+                foreignField: '_id',
+                as: 'showtimeId.movieId'
             }
         },
         {
             $unwind: {
-                path: "$showtimeId.movieId",
+                path: '$showtimeId.movieId',
                 preserveNullAndEmptyArrays: true
             }
         },
@@ -614,12 +614,6 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
             }
         },
         {
-            $unwind: {
-                path: '$foodInfo',
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        {
             $addFields: {
                 ticketFoods: {
                     $map: {
@@ -630,11 +624,16 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                                 '$$ticketFood',
                                 {
                                     foodInfo: {
-                                        $cond: {
-                                            if: { $eq: ['$$ticketFood.foodId', '$foodInfo._id'] },
-                                            then: '$foodInfo',
-                                            else: {}
-                                        }
+                                        $arrayElemAt: [
+                                            {
+                                                $filter: {
+                                                    input: '$foodInfo',
+                                                    as: 'food',
+                                                    cond: { $eq: ['$$food._id', '$$ticketFood.foodId'] }
+                                                }
+                                            },
+                                            0
+                                        ]
                                     }
                                 }
                             ]
@@ -680,39 +679,39 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                 ticketCode: 1,
                 totalAmount: 1,
                 qrUrl: 1,
-                movieTitle: "$showtimeId.movieId.name",
-                moviePoster: "$showtimeId.movieId.posterUrl",
-                movieFormat: "$showtimeId.movieId.format",
-                showDate: "$showtimeId.showDate",
-                startTime: "$showtimeId.startTime",
-                endTime: "$showtimeId.endTime",
-                status: "$showtimeId.status",
-                cinemaName: "$showtimeId.roomId.cinema.name",
-                roomName: "$showtimeId.roomId.roomName",
+                movieTitle: '$showtimeId.movieId.name',
+                moviePoster: '$showtimeId.movieId.posterUrl',
+                movieFormat: '$showtimeId.movieId.format',
+                showDate: '$showtimeId.showDate',
+                startTime: '$showtimeId.startTime',
+                endTime: '$showtimeId.endTime',
+                status: '$showtimeId.status',
+                cinemaName: '$showtimeId.roomId.cinema.name',
+                roomName: '$showtimeId.roomId.roomName',
                 seats: {
                     $map: {
-                        input: "$ticketSeats.seat",
-                        as: "seat",
+                        input: '$ticketSeats.seat',
+                        as: 'seat',
                         in: {
-                            seatNumber: "$$seat.seatNumber",
-                            seatRow: "$$seat.seatRow",
+                            seatNumber: '$$seat.seatNumber',
+                            seatRow: '$$seat.seatRow'
                         }
                     }
                 },
                 foods: {
                     $map: {
-                        input: "$ticketFoods",
-                        as: "food",
+                        input: '$ticketFoods',
+                        as: 'food',
                         in: {
-                            foodName: "$$food.foodInfo.name",
-                            quantity: "$$food.quantity",
-                            priceAtPurchase: "$$food.priceAtPurchase",
-                            totalPrice: { $multiply: ["$$food.quantity", "$$food.priceAtPurchase"] }
+                            foodName: '$$food.foodInfo.name',
+                            quantity: '$$food.quantity',
+                            priceAtPurchase: '$$food.priceAtPurchase',
+                            totalPrice: { $multiply: ['$$food.quantity', '$$food.priceAtPurchase'] }
                         }
                     }
                 },
-                voucher: "$voucherUseId.voucherId.discountValue",
-                paymentMethod: "$paymentMethodId.type",
+                voucher: '$voucherUseId.voucherId.discountValue',
+                paymentMethod: '$paymentMethodId.type'
             }
         }
     ]);
