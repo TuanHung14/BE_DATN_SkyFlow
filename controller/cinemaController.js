@@ -124,6 +124,7 @@ exports.getNearestCinemas = catchAsync(async (req, res, next) => {
     const user = req.user;
     const { unit } = req.params;
     let { latitude, longitude } = req.query;
+    console.log(latitude, longitude);
     // unit có thể là 'mi' (dặm) hoặc 'km' (kilomet)
     const multiplier = unit ==='mi'? 0.000621371 : 0.001;
     let cinemas;
