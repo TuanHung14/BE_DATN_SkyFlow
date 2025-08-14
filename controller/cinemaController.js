@@ -258,7 +258,8 @@ exports.getShowtimesByCinemaDateAndMovie = catchAsync(
       showDate: { $gte: start, $lte: end },
     })
       .populate("movieId")
-      .populate("roomId");
+      .populate("roomId")
+      .populate("formatId");
 
     res.status(200).json({
       status: "success",
