@@ -100,6 +100,11 @@ const movieSchema = new mongoose.Schema(
             required: [true, "Phim phải có định dạng"],
             default: "2D",
         },
+        // format: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "Format",
+        //     required: [true, "Phim phải có định dạng"],
+        // },
     },
 
     {
