@@ -694,7 +694,8 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                         as: 'seat',
                         in: {
                             seatNumber: '$$seat.seatNumber',
-                            seatRow: '$$seat.seatRow'
+                            seatRow: '$$seat.seatRow',
+                            seatType: '$$seat.seatType'
                         }
                     }
                 },
