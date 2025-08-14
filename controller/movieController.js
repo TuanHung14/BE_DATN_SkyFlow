@@ -36,6 +36,7 @@ exports.createMovie = catchAsync(async (req, res, next) => {
     "directorId",
     "genresId",
     "castId",
+    "format"
   ];
   const data = filterObj(req.body, ...allowedFields);
 
@@ -67,6 +68,7 @@ exports.updateMovie = catchAsync(async (req, res, next) => {
     "directorId",
     "genresId",
     "castId",
+    "format",
     "publishStatus",
   ];
   const data = filterObj(req.body, ...allowedFields);
