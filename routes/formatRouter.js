@@ -22,5 +22,7 @@ router.use(auth);
  *         description: Lỗi máy chủ
  */
 router.get('/', formatController.getAllFormats);
+router.post('/', formatController.createFormat);
+router.patch('/:id', formatController.updateFormat);
 
 module.exports = router;
