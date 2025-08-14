@@ -17,11 +17,6 @@ const foodSchema = new mongoose.Schema(
     },
     imageUrl: String,
     description: String,
-    quantity: {
-        type: Number,
-        min: [0, "Số lượng mua không thể âm"],
-        default: 0,
-    },
     inventoryCount: {
       type: Number,
       min: [0, "Số lượng tồn kho không thể âm"],
