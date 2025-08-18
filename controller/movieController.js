@@ -213,6 +213,7 @@ exports.getMovieRecommend = catchAsync(async (req, res, next) => {
     _id: { $nin: watchedMovieIds },
     isDeleted: false,
     publishStatus: "PUBLISHED",
+    status: "NOW_SHOWING"
   })
     .populate("castId genresId directorId")
     .limit(4);

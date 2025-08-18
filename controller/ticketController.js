@@ -681,7 +681,7 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                 qrUrl: 1,
                 movieTitle: '$showtimeId.movieId.name',
                 moviePoster: '$showtimeId.movieId.posterUrl',
-                movieFormat: '$showtimeId.movieId.format',
+                format: '$showtimeId.formatId.name',
                 showDate: '$showtimeId.showDate',
                 startTime: '$showtimeId.startTime',
                 endTime: '$showtimeId.endTime',
@@ -694,7 +694,8 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
                         as: 'seat',
                         in: {
                             seatNumber: '$$seat.seatNumber',
-                            seatRow: '$$seat.seatRow'
+                            seatRow: '$$seat.seatRow',
+                            seatType: '$$seat.seatType'
                         }
                     }
                 },
