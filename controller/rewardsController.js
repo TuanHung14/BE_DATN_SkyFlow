@@ -23,7 +23,7 @@ exports.createReward = catchAsync(async (req, res, next) => {
     if(reward.length > 0) {
         const probabilitySystem = reward.reduce((acc, cur) => acc + cur.probability, 0);
 
-        if((1 - probabilitySystem) < probability) {
+        if((1 - probabilitySystem) <= probability) {
             return next(new AppError('Xác suất phần thưởng vượt quá giới hạn cho phép', 400));
         }
     }
@@ -76,11 +76,11 @@ exports.getRewardById = Factory.getOne(Rewards);
 exports.updateReward = catchAsync(async (req, res, next) => {
     const { name, type, value, voucherId, probability, active } = req.body;
 
-    const reward = await Rewards.find({ active: true });
+    const reward = await Rewards.find({ active: true, _id: { $ne: req.params.id } });
 
     if(reward.length > 0) {
-        const probabilitySystem = reward.reduce((acc, cur) => acc + cur.probability, 0);
-
+        const result = reward.reduce((acc, cur) => acc + cur.probability, 0);
+        const probabilitySystem = Math.floor(result * 100) / 100;
         if((1 - probabilitySystem) < probability) {
             return next(new AppError('Xác suất phần thưởng vượt quá giới hạn cho phép', 400));
         }

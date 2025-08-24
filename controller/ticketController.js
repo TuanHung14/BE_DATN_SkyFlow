@@ -727,7 +727,7 @@ exports.getTicketById = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
+exports.getAllTicketsAdminDashboard = catchAsync(async (req, res, next) => {
     const filter = {
         'paymentStatus': { $ne: 'Failed' },
     };
@@ -760,6 +760,87 @@ exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
             select: 'showDate movieId roomId startTime',
             populate: [
                 { path: 'movieId', select: 'name format age posterUrl duration' },
+                { path: 'roomId', select: 'roomName', populate: { path: 'cinemaId' } }
+            ],
+        },
+        { path: 'userId', select: 'name email phone' },
+        { path: 'paymentMethodId', select: 'type status' },
+        { path: 'voucherUseId', select: 'voucherId', populate: { path: 'voucherId', select: 'voucherName discountValue' } }
+    ];
+
+    const tickets = await features.query
+        .select('ticketCode bookingDate totalAmount paymentStatus')
+        .populate(popOptions)
+        .lean();
+
+    const countQuery = new APIFeatures(Ticket.find(filter), req.query)
+        .filter()
+    const totalTickets = await countQuery.query.clone().countDocuments();
+
+    const ticketIds = tickets.map(ticket => ticket._id);
+    const ticketSeats = await TicketSeat.find({ ticketId: { $in: ticketIds }})
+        .select('ticketId seatId')
+        .populate("seatId", "seatRow seatNumber")
+        .lean();
+
+    const ticketFoods = await TicketFood.find({ticketId: {$in: ticketIds }})
+        .select('ticketId foodId quantity priceAtPurchase')
+        .populate("foodId", "name")
+        .lean();
+
+    const ticketsWithSeats = tickets.map(ticket => {
+        const seats = ticketSeats
+            .filter(ts => ts.ticketId.toString() === ticket._id.toString() && ts.seatId)
+            .map(ts => `${ts.seatId.seatRow}${ts.seatId.seatNumber}`);
+        const foods = ticketFoods
+            .filter(tf => tf.ticketId.toString() === ticket._id.toString() && tf.foodId)
+            .map(tf => `${tf.foodId.name} x ${tf.quantity}`);
+        return {
+            ...ticket,
+            seats,
+            foods,
+            seatCount: seats.length,
+        };
+    });
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const totalPages = Math.ceil(totalTickets / limit);
+
+    res.status(200).json({
+        status: 'success',
+        totalDocs: totalTickets,
+        totalPages,
+        page,
+        limit,
+        data: {
+            data: ticketsWithSeats,
+        },
+    });
+});
+
+exports.getAllTicketsAdmin = catchAsync(async (req, res, next) => {
+    const filter = {
+        'paymentStatus': { $ne: 'Failed' },
+    };
+
+    if (req.query.search) {
+        const searchTerm = req.query.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filter.ticketCode = { $regex: searchTerm, $options: 'i' };
+    }
+
+    const features = new APIFeatures(Ticket.find(filter), req.query)
+        .filter()
+        .sort()
+        .limitFields()
+        .pagination();
+
+    const popOptions = [
+        {
+            path: 'showtimeId',
+            select: 'showDate movieId roomId startTime',
+            populate: [
+                { path: 'movieId', select: 'name format age posterUrl duration', populate: { path: 'format' } },
                 { path: 'roomId', select: 'roomName', populate: { path: 'cinemaId' } }
             ],
         },
