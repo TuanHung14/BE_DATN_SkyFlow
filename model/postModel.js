@@ -32,6 +32,11 @@ const postSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  }
 });
 
 // Tự động tạo slug từ title trước khi lưu
