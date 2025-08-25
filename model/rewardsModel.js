@@ -31,7 +31,6 @@ const rewardsSchema = new mongoose.Schema(
         },
         "ID voucher không được để trống!",
       ],
-      unique: true,
     },
     probability: {
       type: Number,

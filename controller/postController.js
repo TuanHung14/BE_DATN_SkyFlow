@@ -5,6 +5,7 @@ const AppError = require("../utils/appError");
 const Factory = require("./handleFactory");
 const APIAggregate = require("../utils/apiAggregate");
 const searchDB = require("../utils/searchDB");
+
 exports.getAllPostsAdmin = catchAsync(async (req, res, next) => {
   const user = req.user;
 
@@ -31,6 +32,16 @@ exports.getAllPostsAdmin = catchAsync(async (req, res, next) => {
       },
     });
   }
+
+  pipeline.push({
+    $lookup: {
+      from: "users",
+      localField: "userId",
+      foreignField: "_id",
+      pipeline: [{ $project: { name: 1, email: 1 } }],
+      as: "user",
+    }
+  })
 
   // Join với bảng LikePost
   pipeline.push({
@@ -80,6 +91,7 @@ exports.getAllPostsAdmin = catchAsync(async (req, res, next) => {
 
   res.status(200).json(data);
 });
+
 exports.getAllPosts = catchAsync(async (req, res, next) => {
   const user = req.user;
 
@@ -106,6 +118,16 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
       },
     });
   }
+
+  pipeline.push({
+    $lookup: {
+      from: "users",
+      localField: "userId",
+      foreignField: "_id",
+      pipeline: [{ $project: { name: 1, email: 1 } }],
+      as: "user",
+    }
+  })
 
   // Join với bảng LikePost
   pipeline.push({
@@ -166,10 +188,20 @@ exports.getAllPosts = catchAsync(async (req, res, next) => {
   res.status(200).json(data);
 });
 
-exports.getPostById = Factory.getOne(Post);
+exports.getPostById = Factory.getOne(Post, {path: 'userId', select: 'name email'});
+
+exports.addFieldCreatePost = (req, res, next) => {
+    const user = req.user;
+    req.body.userId = user._id;
+    next();
+};
+
 exports.createPost = Factory.createOne(Post);
+
 exports.updatePost = Factory.updateOne(Post);
+
 exports.deletePost = Factory.deleteOne(Post);
+
 exports.likePost = catchAsync(async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;
@@ -201,6 +233,7 @@ exports.likePost = catchAsync(async (req, res, next) => {
     message: "Đã like bài viết",
   });
 });
+
 exports.getFavoritePosts = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
@@ -217,6 +250,7 @@ exports.getFavoritePosts = catchAsync(async (req, res, next) => {
     data: posts,
   });
 });
+
 exports.getPostBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
   const user = req.user;
@@ -225,7 +259,7 @@ exports.getPostBySlug = catchAsync(async (req, res, next) => {
     { slug, isPublished: true },
     { $inc: { views: 1 } },
     { new: true }
-  );
+  ).populate({path: 'userId', select: 'name email'});
 
   if (!post) return next(new AppError("Post not found", 404));
 
@@ -245,6 +279,7 @@ exports.getPostBySlug = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 exports.checkLikedPost = catchAsync(async (req, res, next) => {
   const { id: postId } = req.params;
   const userId = req.user.id;

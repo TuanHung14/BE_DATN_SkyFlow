@@ -58,7 +58,7 @@ const router = express.Router();
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post("/", auth, authorize(permissions['create']) ,postController.createPost);
+router.post("/", auth, authorize(permissions['create']), postController.addFieldCreatePost, postController.createPost);
 
 /**
  * @swagger
