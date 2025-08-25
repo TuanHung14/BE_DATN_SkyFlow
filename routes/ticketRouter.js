@@ -146,7 +146,25 @@ router.get('/me/:id', ticketController.getTicketById);
  *       401:
  *         description: Chưa xác thực
  */
-router.get("/admin", ticketController.getAllTicketsAdmin);
+router.get("/admin", ticketController.getAllTicketsAdminDashboard);
+
+/**
+ * @swagger
+ * /api/v1/tickets/admin:
+ *   get:
+ *     tags:
+ *       - Tickets
+ *     summary: Lấy danh sách tất cả vé
+ *     operationId: getAllTicketsAdmin
+ *     security:
+ *       - bearer: []
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách vé thành công
+ *       401:
+ *         description: Chưa xác thực
+ */
+router.get("/admins", ticketController.getAllTicketsAdmin);
 
 /**
  * @swagger

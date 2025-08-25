@@ -11,4 +11,4 @@ exports.getAllRooms = Factory.getAll(Room, 'cinemaId formats');
 exports.getRoom = Factory.getOne(Room, 'cinemaId formats');
 exports.createRoom = Factory.createOne(Room);
 exports.updateRoom = Factory.updateOne(Room);
-exports.deleteRoom = Factory.softDeleteOne(Room);
+exports.deleteRoom = Factory.deleteOne(Room);

@@ -108,7 +108,7 @@ exports.createSeat = catchAsync(async (req, res, next) => {
 });
 
 exports.updateSeat = catchAsync(async (req, res, next) => {
-    const { seats, seatType, roomId } = req.body;
+    const { seats, seatType, status ,roomId } = req.body;
     const seatList = seats.split(',').map(seat => seat.trim()).filter(seat => seat);
 
     if (!seatList.length) {
@@ -179,6 +179,7 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
                         { _id: seats[0]._id },
                         {
                             seatType: 'couple',
+                            status,
                             coupleId,
                             coupleDisplayName,
                             hidden: false
@@ -191,6 +192,7 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
                         { _id: seats[1]._id },
                         {
                             seatType: 'couple',
+                            status,
                             coupleId,
                             coupleDisplayName,
                             hidden: true
@@ -225,7 +227,7 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
 
                     await Seat.updateMany(
                         { coupleId: coupleSeat.coupleId, roomId },
-                        { seatType, coupleId: null, coupleDisplayName: null, hidden: false },
+                        { seatType, status ,coupleId: null, coupleDisplayName: null, hidden: false },
                         { session }
                     );
                     updatedSeatIds.push(...coupleSeats.map(s => s._id));
@@ -252,7 +254,7 @@ exports.updateSeat = catchAsync(async (req, res, next) => {
 
                     await Seat.updateOne(
                         { _id: seat._id },
-                        { seatType, coupleId: null, coupleDisplayName: null },
+                        { seatType, status ,coupleId: null, coupleDisplayName: null },
                         { session }
                     );
                     updatedSeatIds.push(seat._id);
