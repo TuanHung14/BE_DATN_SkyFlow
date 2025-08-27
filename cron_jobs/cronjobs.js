@@ -67,6 +67,9 @@ module.exports = () => {
         } catch (error) {
             console.error("Cronjob error:", error);
         }
+    }, {
+        scheduled: true,
+        timezone: "Asia/Ho_Chi_Minh",
     });
 
     // Cron job mỗi 5 phút
@@ -167,6 +170,9 @@ module.exports = () => {
         } catch (error) {
             console.error("❌ Error resetting points:", error);
         }
+    }, {
+        scheduled: true,
+        timezone: "Asia/Ho_Chi_Minh",
     });
 
     // Cron job chạy 1 tuần 1 lần
@@ -178,5 +184,8 @@ module.exports = () => {
         } catch (error) {
             console.error("❌ Error cleaning up expired:", error);
         }
+    }, {
+        scheduled: true,
+        timezone: "Asia/Ho_Chi_Minh",
     });
 };
