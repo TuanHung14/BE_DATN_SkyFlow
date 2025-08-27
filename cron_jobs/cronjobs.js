@@ -15,27 +15,10 @@ module.exports = () => {
     // Cron job chạy hàng ngày lúc 00:00
     cron.schedule("0 0 * * *", async () => {
         try {
-            const count = await updateMovieStatusLogic();
-
-            // Xóa các showtime có showDate trước 2 ngày
-            // const daysToKeep = 2;
-            // const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
-            //
-            // await Showtime.updateMany(
-            //     {
-            //         showDate: {$lt: cutoffDate},
-            //         isDeleted: { $ne: true }
-            //     },
-            //     {
-            //         $set: {
-            //             isDeleted: true
-            //         }
-            //     }
-            // );
+            const today = new Date();
+            const count = await updateMovieStatusLogic(today);
 
             // Check sinh nhật cua người dùng
-            const today = new Date();
-
             const usersWithBirthday = await User.find({
                 $expr: {
                     $and: [
