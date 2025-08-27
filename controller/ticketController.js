@@ -238,7 +238,12 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 as: 'ticketFoods'
             }
         },
-        { $unwind: "$ticketFoods" },
+        {
+            $unwind: {
+                path: "$ticketFoods",
+                preserveNullAndEmptyArrays: true
+            }
+        }
     );
 
     // Join Showtime
@@ -351,7 +356,12 @@ exports.getMyTickets = catchAsync(async (req, res, next) => {
                 as: "foodInfo"
             }
         },
-        { $unwind: "$foodInfo" },
+        {
+            $unwind: {
+                path: "$foodInfo",
+                preserveNullAndEmptyArrays: true
+            }
+        },
         {
             $addFields: {
                 "ticketFoods.foodInfo": "$foodInfo"
