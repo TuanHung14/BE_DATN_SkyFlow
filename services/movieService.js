@@ -15,7 +15,7 @@ async function updateMovieStatusLogic() {
     }
   );
 
-  return result.modifiedCount;
+  return result;
 }
 
 async function getMovies(){
