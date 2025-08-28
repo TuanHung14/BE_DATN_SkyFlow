@@ -951,7 +951,7 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
                 as: 'showtimeId',
                 pipeline: [
                     {
-                        $project: { showDate: 1, startTime: 1, endTime: 1, movieId: 1, roomId: 1 },
+                        $project: { showDate: 1, startTime: 1, endTime: 1, movieId: 1, roomId: 1, formatId: 1 },
                     },
                 ],
             }
@@ -961,6 +961,25 @@ exports.scanTicket = catchAsync(async (req, res, next) => {
                 path: '$showtimeId',
                 preserveNullAndEmptyArrays: true
             }
+        },
+        {
+            $lookup: {
+                from: "formats",
+                localField: "showtimeId.formatId",
+                foreignField: "_id",
+                as: "showtimeId.formatId"
+            }
+        },
+        {
+          $unwind: {
+              path: "$showtimeId.formatId",
+              preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $addFields: {
+              showtimeFormat: "$showtimeId.formatId.name"
+          }
         },
         {
             $lookup: {

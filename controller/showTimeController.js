@@ -226,7 +226,15 @@ exports.updateShowTime = catchAsync(async (req, res, next) => {
         }
     }
 
-    const doc = await Showtime.findByIdAndUpdate(req.params.id, req.body, {
+    // const doc = await Showtime.findByIdAndUpdate(req.params.id, req.body, {
+    //     new: true,
+    //     runValidators: true
+    // });
+
+    const doc = await Showtime.updateOne({
+        _id: req.params.id,
+        status: "scheduled"
+    }, req.body, {
         new: true,
         runValidators: true
     });
