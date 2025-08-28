@@ -2,7 +2,6 @@
 const Movie = require("../model/movieModel");
 
 async function updateMovieStatusLogic(today) {
-
     const result = await Movie.updateMany(
     {
       releaseDate: { $lte: today },
