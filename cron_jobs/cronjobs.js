@@ -13,7 +13,7 @@ const Email = require("../utils/email");
 
 module.exports = () => {
     // Cron job chạy hàng ngày lúc 00:00
-    cron.schedule("* * * * *", async () => {
+    cron.schedule("0 0 * * *", async () => {
         try {
             const today = new Date();
             const vietnamTime = new Date(today.getTime() + 7 * 60 * 60 * 1000);
@@ -29,10 +29,6 @@ module.exports = () => {
                     ]
                 }
             }).populate("level");
-
-            console.log(vietnamTime);
-
-            console.log(usersWithBirthday);
 
             if (usersWithBirthday.length > 0) {
                 for (const user of usersWithBirthday) {
