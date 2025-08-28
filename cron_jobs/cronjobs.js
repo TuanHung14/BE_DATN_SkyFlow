@@ -13,7 +13,7 @@ const Email = require("../utils/email");
 
 module.exports = () => {
     // Cron job chạy hàng ngày lúc 00:00
-    cron.schedule("0 0 * * *", async () => {
+    cron.schedule("* * * * *", async () => {
         try {
             const today = new Date();
             const count = await updateMovieStatusLogic(today);
