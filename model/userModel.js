@@ -54,7 +54,6 @@ const userSchema = new mongoose.Schema(
     totalEarnedPoints: {
       type: Number,
       default: 0,
-      select: false,
     },
     level: {
         type: mongoose.Schema.Types.ObjectId,
