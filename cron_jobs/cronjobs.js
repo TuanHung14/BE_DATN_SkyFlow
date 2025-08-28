@@ -16,17 +16,23 @@ module.exports = () => {
     cron.schedule("* * * * *", async () => {
         try {
             const today = new Date();
-            const count = await updateMovieStatusLogic(today);
+            const vietnamTime = new Date(today.getTime() + 7 * 60 * 60 * 1000);
+            vietnamTime.setUTCHours(0, 0, 0, 0);
+            const count = await updateMovieStatusLogic(vietnamTime);
 
             // Check sinh nhật cua người dùng
             const usersWithBirthday = await User.find({
                 $expr: {
                     $and: [
-                        { $eq: [{ $dayOfMonth: '$dateOfBirth' }, today.getDate()] },
-                        { $eq: [{ $month: '$dateOfBirth' }, today.getMonth() + 1] }
+                        { $eq: [{ $dayOfMonth: '$dateOfBirth' }, vietnamTime.getDate()] },
+                        { $eq: [{ $month: '$dateOfBirth' }, vietnamTime.getMonth() + 1] }
                     ]
                 }
             }).populate("level");
+
+            console.log(vietnamTime);
+
+            console.log(usersWithBirthday);
 
             if (usersWithBirthday.length > 0) {
                 for (const user of usersWithBirthday) {

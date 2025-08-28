@@ -2,12 +2,10 @@
 const Movie = require("../model/movieModel");
 
 async function updateMovieStatusLogic(today) {
-    const vietnamTime = new Date(today.getTime() + 7 * 60 * 60 * 1000);
-    vietnamTime.setUTCHours(0, 0, 0, 0);
 
     const result = await Movie.updateMany(
     {
-      releaseDate: { $lte: vietnamTime },
+      releaseDate: { $lte: today },
       status: "COMING_SOON",
     },
     {
