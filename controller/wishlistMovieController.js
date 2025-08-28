@@ -45,11 +45,51 @@ exports.toggeleWishlistMovie = catchAsync(async (req, res, next) => {
 exports.getWishlistMovies = catchAsync(async (req, res, next) => {
     const userId = req.user._id;
 
-    const movies = await WishlistMovie.find({ userId }, { movieId: 1 }, { $sort: { createdAt: -1 } })
-        .populate({
-            path: 'movieId',
-            select: 'name ratingsAverage status posterUrl trailerUrl slug',
-        });
+    // const movies = await WishlistMovie.find({ userId }, { movieId: 1 }, { $sort: { createdAt: -1 } })
+    //     .populate({
+    //         path: 'movieId',
+    //         // match: { publishStatus: "PUBLISHED" },
+    //         select: 'name ratingsAverage status posterUrl trailerUrl slug',
+    //     })
+
+    const movies = await WishlistMovie.aggregate([
+        {
+            $match: { userId }
+        },
+        {
+            $lookup: {
+                from: "movies", // collection movies
+                localField: "movieId",
+                foreignField: "_id",
+                as: "movie"
+            }
+        },
+        { $unwind: "$movie" }, // tách thành object
+        {
+            $match: { "movie.publishStatus": "PUBLISHED" } // lọc phim active
+        },
+        {
+            $sort: { createdAt: -1 }
+        },
+        {
+            $project: {
+                _id: 1,
+                movieId: {
+                    _id: "$movie._id",
+                    name: "$movie.name",
+                    ratingsAverage: "$movie.ratingsAverage",
+                    status: "$movie.status",
+                    posterUrl: "$movie.posterUrl",
+                    trailerUrl: "$movie.trailerUrl",
+                    slug: "$movie.slug"
+                }
+
+            }
+        }
+    ]);
+
+
+    console.log(movies);
 
     res.status(200).json({
         status: 'success',
