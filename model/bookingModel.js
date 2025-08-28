@@ -7,18 +7,6 @@ const bookingSchema = new mongoose.Schema(
             ref: 'Seat',
             required: [true, 'Seat ID is required']
         },
-        // seatId: {
-        //     type: String,
-        //     required: [true, 'Seat ID is required']
-        // },
-        // showtimeId: {
-        //     type: String,
-        //     required: [true, 'showtimeId ID is required']
-        // },
-        // userId: {
-        //     type: String,
-        //     required: [true, 'userId ID is required']
-        // },
         showtimeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Showtime',
