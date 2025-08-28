@@ -45,13 +45,6 @@ exports.toggeleWishlistMovie = catchAsync(async (req, res, next) => {
 exports.getWishlistMovies = catchAsync(async (req, res, next) => {
     const userId = req.user._id;
 
-    // const movies = await WishlistMovie.find({ userId }, { movieId: 1 }, { $sort: { createdAt: -1 } })
-    //     .populate({
-    //         path: 'movieId',
-    //         // match: { publishStatus: "PUBLISHED" },
-    //         select: 'name ratingsAverage status posterUrl trailerUrl slug',
-    //     })
-
     const movies = await WishlistMovie.aggregate([
         {
             $match: { userId }
@@ -87,9 +80,6 @@ exports.getWishlistMovies = catchAsync(async (req, res, next) => {
             }
         }
     ]);
-
-
-    console.log(movies);
 
     res.status(200).json({
         status: 'success',

@@ -162,7 +162,7 @@ module.exports = () => {
             const defaultLevel = await Level.findOne({ isDefault: true, active: true });
 
             await User.updateMany(
-                { points: { $gt: 0 } },
+                {},
                 { $set: { memberShipPoints: 0, totalEarnedPoints: 0, spinCount: 0, level: defaultLevel._id } }
             );
 
@@ -174,13 +174,14 @@ module.exports = () => {
         scheduled: true,
         timezone: "Asia/Ho_Chi_Minh",
     });
-
+    // "0 0 * * 0"
     // Cron job chạy 1 tuần 1 lần
     cron.schedule("0 0 * * 0", async () => {
         try {
             const today = new Date();
             await Otp.deleteMany({ expired: { $lt: today } });
             await ResetPassword.deleteMany({ expired: { $lt: today } });
+            console.log(`✅ Cleaned up expired OTPs and reset passwords`);
         } catch (error) {
             console.error("❌ Error cleaning up expired:", error);
         }
