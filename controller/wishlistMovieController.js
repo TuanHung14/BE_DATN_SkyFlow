@@ -48,6 +48,7 @@ exports.getWishlistMovies = catchAsync(async (req, res, next) => {
     const movies = await WishlistMovie.find({ userId }, { movieId: 1 }, { $sort: { createdAt: -1 } })
         .populate({
             path: 'movieId',
+            match: { publishStatus: "PUBLISHED" },
             select: 'name ratingsAverage status posterUrl trailerUrl slug',
         });
 
