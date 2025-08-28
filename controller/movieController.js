@@ -241,12 +241,12 @@ exports.getAllMovies = catchAsync(async (req, res, next) => {
   // Viết hàm chuyển đổi string id trong [] thành mảng ObjectId
   if (genresId) {
     let genresIdArray = Array.isArray(genresId) ? genresId : [genresId];
-    genresIdArray = genresId.map((id) => new mongoose.Types.ObjectId(id));
+    genresIdArray = genresIdArray.map((id) => new mongoose.Types.ObjectId(id));
     filter.genresId = { $in: genresIdArray };
   }
   if (castId) {
     let castIdArray = Array.isArray(castId) ? castId : [castId];
-    castIdArray = castId.map((id) => new mongoose.Types.ObjectId(id));
+    castIdArray = castIdArray.map((id) => new mongoose.Types.ObjectId(id));
     filter.castId = { $in: castIdArray };
   }
   if (directorId) {
