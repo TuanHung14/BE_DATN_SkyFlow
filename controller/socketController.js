@@ -50,9 +50,6 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
             return;
         }
 
-        console.log('Request to hold seat:', seatId);
-        console.log('Request to hold seat check:', mongoose.Types.ObjectId.isValid(seatId));
-
         // Check xem seatId có phải là ObjectId hợp lệ không
         if(!mongoose.Types.ObjectId.isValid(seatId)) {
             socket.emit('error', { message: 'Ghế không hợp lệ!' });
@@ -89,8 +86,6 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
             socket.emit('error', { message: 'Phòng chiếu hoặc ghế không tồn tại!' });
             return;
         }
-        console.log('Request to release seat:', seatId);
-        console.log('Request to release seat check:', mongoose.Types.ObjectId.isValid(seatId));
 
         if (!mongoose.Types.ObjectId.isValid(seatId)) {
             socket.emit('error', { message: 'Ghế không hợp lệ!' });
