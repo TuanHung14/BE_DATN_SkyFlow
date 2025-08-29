@@ -1,6 +1,7 @@
 const catchAsync = require("../utils/catchAsync");
 
 const Booking = require("../model/bookingModel");
+const mongoose = require("mongoose");
 
 exports.handleSocketEvents = catchAsync(async (io, socket) => {
     //Tham gia phòng chiếu kèm theo xóa showtimeId cũ nếu có
@@ -46,6 +47,12 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
 
         if (!showtimeId || !seatId || !userId) {
             socket.emit('error', { message: 'Phòng chiếu hoặc ghế không tồn tại!' });
+            return;
+        }
+
+        // Check xem seatId có phải là ObjectId hợp lệ không
+        if(!mongoose.Types.ObjectId.isValid(seatId)) {
+            socket.emit('error', { message: 'Ghế không hợp lệ!' });
             return;
         }
 
