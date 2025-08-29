@@ -87,6 +87,11 @@ exports.handleSocketEvents = catchAsync(async (io, socket) => {
             return;
         }
 
+        if (!mongoose.Types.ObjectId.isValid(seatId)) {
+            socket.emit('error', { message: 'Ghế không hợp lệ!' });
+            return;
+        }
+
         const result = await Booking.findOneAndDelete({
             seatId,
             showtimeId,
